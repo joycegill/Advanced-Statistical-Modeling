@@ -2,3 +2,5 @@ data/raw/*
 *.aux
 *.log
 *.html
+*.docx
+*.tex
