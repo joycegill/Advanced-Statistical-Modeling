@@ -1,0 +1,38 @@
+---
+title: "Data Cleaning"
+author: "Khanh Do, Joyce Gill"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+## Download data
+
+```{r}
+hd2024 <- read.csv("https://raw.githubusercontent.com/joycegill/Advanced-Statistical-Modeling/main/data/2024/hd2024.csv")
+ef2024d <- read.csv("https://raw.githubusercontent.com/joycegill/Advanced-Statistical-Modeling/main/data/2024/ef2024d.csv")
+dim(hd2024)
+dim(ef2024d)
+```
+
+```{r}
+# report 2-yr schools
+two_yr_schools <- hd2024 %>%
+  filter(SECTOR %in% c(4, 5, 6, 7, 8, 9, 99)) %>%
+  select(UNITID)
+
+# report < 500 population schools
+less_than_500_pop_schools <- ef2024d %>%
+  filter(UGENTERN <= 500 | is.na(UGENTERN)) %>%
+  select(UNITID)
+
+dim(two_yr_schools)
+head(two_yr_schools)
+dim(less_than_500_pop_schools)
+head(less_than_500_pop_schools)
+```
+
