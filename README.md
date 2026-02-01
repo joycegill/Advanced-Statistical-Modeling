@@ -3,9 +3,9 @@ Mentored Advanced Projects ([MAP](https://www.grinnell.edu/academics/experience/
 
 ## Authors
 
-[Khanh Do](https://github.com/khanhdo05)
-[Joyce Gill](https://github.com/joycegill)
-[Professor Shonda Kuiper](https://en.wikipedia.org/wiki/Shonda_Kuiper)
+- [Khanh Do](https://github.com/khanhdo05)
+- [Joyce Gill](https://github.com/joycegill)
+- [Professor Shonda Kuiper](https://en.wikipedia.org/wiki/Shonda_Kuiper)
 
 ---
 
