@@ -8,31 +8,78 @@ output: pdf_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+library(dplyr)
 ```
 
 ## Download data
+Instruction:
+
+1. Go to ![IPEDS Data Center](https://nces.ed.gov/ipeds/use-the-data), and click on **Complete Data Files**
+
+2. Download Data File HD2024, EF2024D, etc.
+
+3. Open the zipped file, extract and put the raw csv into this repo's data/raw/ folder
 
 ```{r}
-hd2024 <- read.csv("https://raw.githubusercontent.com/joycegill/Advanced-Statistical-Modeling/main/data/2024/hd2024.csv")
-ef2024d <- read.csv("https://raw.githubusercontent.com/joycegill/Advanced-Statistical-Modeling/main/data/2024/ef2024d.csv")
+# Directory
+hd2024 <- read.csv("data/raw/hd2024.csv")
+
+# Fall Enrollment
+ef2024d <- read.csv("data/raw/ef2024d.csv")
+ef2024b <- read.csv("data/raw/ef2024b.csv")
+
+# Check dim
 dim(hd2024)
 dim(ef2024d)
+dim(ef2024b)
 ```
 
+## Process tables with multiple id
 ```{r}
-# report 2-yr schools
-two_yr_schools <- hd2024 %>%
-  filter(SECTOR %in% c(4, 5, 6, 7, 8, 9, 99)) %>%
-  select(UNITID)
-
-# report < 500 population schools
-less_than_500_pop_schools <- ef2024d %>%
-  filter(UGENTERN <= 500 | is.na(UGENTERN)) %>%
-  select(UNITID)
-
-dim(two_yr_schools)
-head(two_yr_schools)
-dim(less_than_500_pop_schools)
-head(less_than_500_pop_schools)
+ef2024b_inst <- ef2024b %>%
+  group_by(UNITID) %>%
+  summarize(
+    total_enrollment = sum(EFAGE09, na.rm = TRUE),
+    total_men = sum(EFAGE07, na.rm = TRUE),
+    total_women = sum(EFAGE08, na.rm = TRUE)
+  )
 ```
 
+## Get removed UNITIDs
+```{r}
+remove_unitids <- bind_rows(
+  # 2-year schools
+  hd2024 %>%
+    filter(SECTOR %in% c(4, 5, 6, 7, 8, 9, 99)) %>%
+    select(UNITID),
+  
+  # < 500 population
+  ef2024b_inst %>%
+    filter(total_enrollment < 500 | is.na(total_enrollment)) %>%
+    select(UNITID)
+) %>%
+  distinct()
+```
+
+## Helper function to remove rows
+```{r}
+filter_ipeds_2024 <- function(df, remove_tbl) {
+  df %>%
+    anti_join(remove_tbl, by = "UNITID")
+}
+```
+
+## Remove rows and write tables
+```{r}
+hd2024_clean <- filter_ipeds_2024(hd2024, remove_unitids)
+ef2024d_clean <- filter_ipeds_2024(ef2024d, remove_unitids)
+ef2024b_clean <- filter_ipeds_2024(ef2024b, remove_unitids)
+
+dim(hd2024_clean)
+dim(ef2024d_clean)
+dim(ef2024b_clean)
+
+write.csv(hd2024_clean, "data/cleaned/hd2024_clean.csv", row.names = FALSE)
+write.csv(ef2024d_clean, "data/cleaned/ef2024d_clean.csv", row.names = FALSE)
+write.csv(ef2024b_clean, "data/cleaned/ef2024b_clean.csv", row.names = FALSE)
+```
