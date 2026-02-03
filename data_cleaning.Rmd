@@ -2,10 +2,7 @@
 title: "Data Cleaning"
 author: "Khanh Do, Joyce Gill"
 date: "`r Sys.Date()`"
-output:
-  word_document: default
-  html_document:
-    df_print: paged
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
@@ -31,10 +28,8 @@ hd2024 <- read.csv("data/raw/hd2024.csv")
 ef2024d <- read.csv("data/raw/ef2024d.csv")
 ef2024b <- read.csv("data/raw/ef2024b.csv")
 
-# Check dim
-dim(hd2024)
-dim(ef2024d)
-dim(ef2024b)
+# Cost
+cost1_2024 <- read.csv("data/raw/cost1_2024.csv")
 ```
 
 ## Process tables with multiple id
@@ -77,12 +72,10 @@ filter_ipeds_2024 <- function(df, remove_tbl) {
 hd2024_clean <- filter_ipeds_2024(hd2024, remove_unitids)
 ef2024d_clean <- filter_ipeds_2024(ef2024d, remove_unitids)
 ef2024b_clean <- filter_ipeds_2024(ef2024b, remove_unitids)
-
-dim(hd2024_clean)
-dim(ef2024d_clean)
-dim(ef2024b_clean)
+cost1_2024_clean <- filter_ipeds_2024(cost1_2024, remove_unitids)
 
 write.csv(hd2024_clean, "data/cleaned/hd2024_clean.csv", row.names = FALSE)
 write.csv(ef2024d_clean, "data/cleaned/ef2024d_clean.csv", row.names = FALSE)
 write.csv(ef2024b_clean, "data/cleaned/ef2024b_clean.csv", row.names = FALSE)
+write.csv(cost1_2024_clean, "data/cleaned/cost1_2024_clean.csv", row.names = FALSE)
 ```
