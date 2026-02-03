@@ -30,6 +30,7 @@ ef2024b <- read.csv("data/raw/ef2024b.csv")
 
 # Cost
 cost1_2024 <- read.csv("data/raw/cost1_2024.csv")
+cost2_2024 <- read.csv("data/raw/cost2_2024.csv")
 ```
 
 ## Process tables with multiple id
@@ -61,21 +62,38 @@ remove_unitids <- bind_rows(
 
 ## Helper function to remove rows
 ```{r}
-filter_ipeds_2024 <- function(df, remove_tbl) {
-  df %>%
-    anti_join(remove_tbl, by = "UNITID")
+filter_and_write_ipeds_2024 <- function(df, remove_tbl, out_path) {
+  df_clean <- df %>%
+    dplyr::anti_join(remove_tbl, by = "UNITID")
+
+  write.csv(df_clean, out_path, row.names = FALSE)
+
+  invisible(df_clean)
 }
 ```
 
 ## Remove rows and write tables
 ```{r}
-hd2024_clean <- filter_ipeds_2024(hd2024, remove_unitids)
-ef2024d_clean <- filter_ipeds_2024(ef2024d, remove_unitids)
-ef2024b_clean <- filter_ipeds_2024(ef2024b, remove_unitids)
-cost1_2024_clean <- filter_ipeds_2024(cost1_2024, remove_unitids)
+# All IPEDS 2024 tables are filtered to exclude:
+# (1) two-year institutions
+# (2) institutions with <= 500 total enrollment
+# using UNITID as the join key
 
-write.csv(hd2024_clean, "data/cleaned/hd2024_clean.csv", row.names = FALSE)
-write.csv(ef2024d_clean, "data/cleaned/ef2024d_clean.csv", row.names = FALSE)
-write.csv(ef2024b_clean, "data/cleaned/ef2024b_clean.csv", row.names = FALSE)
-write.csv(cost1_2024_clean, "data/cleaned/cost1_2024_clean.csv", row.names = FALSE)
+tables_2024 <- list(
+  hd2024       = hd2024,
+  ef2024d      = ef2024d,
+  ef2024b      = ef2024b,
+  cost1_2024   = cost1_2024,
+  cost2_2024   = cost2_2024
+)
+
+cleaned_tables <- lapply(names(tables_2024), function(name) {
+  filter_and_write_ipeds_2024(
+    tables_2024[[name]],
+    remove_unitids,
+    paste0("data/cleaned/", name, "_clean.csv")
+  )
+})
+
+names(cleaned_tables) <- paste0(names(tables_2024), "_clean")
 ```
