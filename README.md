@@ -13,30 +13,34 @@ Mentored Advanced Projects ([MAP](https://www.grinnell.edu/academics/experience/
 
 The goal of this project is to explore U.S. higher education data using government sources, such as **IPEDS** and **College Scorecard**, and to build **advanced statistical models** that provide new insights into college and university performance, enrollment trends, and rankings. 
 
+## Key Links
+
 Code Book [Private Link](https://docs.google.com/spreadsheets/d/15nn2SjonRKGXaUnBLJxZs6E04GZDL0sNgCyN5-q8Vig/edit?gid=0#gid=0)
 
 Shared Document [Private Link](https://docs.google.com/document/d/1MQ_aKizFGp35PtHlDsg5jPPBlRRzj7LNrtDTnOQaHXo/edit?tab=t.b5h7exbr8cju#heading=h.5b4lqfvc832d)
 
 ## Repository Structure
-(Obsolete, needs update)
 ```yaml
 Advanced-Statistical-Modeling/
 ├── data/
 │ ├── raw/     # Raw local CSV files (NOT tracked in Git)
-│ └── cleaned/ # Processed/cleaned CSV files used in analysis
-├── data_cleaning.Rmd # R scripts for cleaning data
-├── data_cleaning.pdf # Pdf report of data cleaning script
+│ └── cleaned/ # obsolete
+│ └── custom_data/ # FILTERED DATA RAW FROM IPEDS <- using this
+├── data_cleaning.Rmd # obsolete: R scripts for cleaning data
+├── data_cleaning.pdf # obsolete: Pdf report of data cleaning script
 ├── README.md # This file
+├── DataCollection.md # Detailed how we get custom_data/
 └── .gitignore # Ignores raw data and other unnecessary files
 ```
 
-## Data Instructions
-(Obsolete, needs update)
-1. **Download raw data**: Visit the [IPEDS Data Center](https://nces.ed.gov/ipeds/datacenter/) and download the necessary files (e.g., `HD2024`, `EF2024D`, etc.).  
-2. **Place files**: Extract the CSVs and save them in `data/raw/`.  
-3. **Do not commit raw data**: The `data/raw/` folder is ignored by Git due to file size and privacy considerations.  
+## Reproducibility Note
 
-The repository includes scripts that **clean and filter the raw data** (e.g., removing two-year schools and institutions with fewer than 500 students). After running these scripts, **cleaned data** is saved to `data/cleaned/` for analysis.
+IPEDS data downloads generate non-deterministic filenames and require
+manual UI-based selection. Original filenames were not preserved.
+Instead, this repository documents the exact IPEDS tables, components,
+survey years, and variable selections used to recreate each dataset.
+
+For more information, please refer to the [Data Collection Guide](./DataCollection.md).
 
 ---
 
