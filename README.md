@@ -18,7 +18,7 @@ Code Book [Private Link](https://docs.google.com/spreadsheets/d/15nn2SjonRKGXaUn
 Shared Document [Private Link](https://docs.google.com/document/d/1MQ_aKizFGp35PtHlDsg5jPPBlRRzj7LNrtDTnOQaHXo/edit?tab=t.b5h7exbr8cju#heading=h.5b4lqfvc832d)
 
 ## Repository Structure
-
+(Obsolete, needs update)
 ```yaml
 Advanced-Statistical-Modeling/
 ├── data/
@@ -31,7 +31,7 @@ Advanced-Statistical-Modeling/
 ```
 
 ## Data Instructions
-
+(Obsolete, needs update)
 1. **Download raw data**: Visit the [IPEDS Data Center](https://nces.ed.gov/ipeds/datacenter/) and download the necessary files (e.g., `HD2024`, `EF2024D`, etc.).  
 2. **Place files**: Extract the CSVs and save them in `data/raw/`.  
 3. **Do not commit raw data**: The `data/raw/` folder is ignored by Git due to file size and privacy considerations.  
