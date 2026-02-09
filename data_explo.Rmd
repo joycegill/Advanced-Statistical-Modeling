@@ -11,31 +11,22 @@ library(readr)
 library(tidyverse)
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+```{r}
+helper <- function(data) {
+  print(sum(!is.na(unique(data))))
+  print(sum(is.na(data)))
+  print(class(data))
+}
+```
 
 ```{r}
 INST_CHARS_DIR_2024_25 <- read_csv("data/custom_data/INST_CHARS_DIR_2024_25.csv",
                                    show_col_types = FALSE)
-sum(!is.na(unique(INST_CHARS_DIR_2024_25$`HD2024.Name of multi-institution or multi-campus organization`)))
-sum(is.na(unique(INST_CHARS_DIR_2024_25$`HD2024.Name of multi-institution or multi-campus organization`)))
-class(INST_CHARS_DIR_2024_25$`HD2024.Name of multi-institution or multi-campus organization`)
+head(INST_CHARS_DIR_2024_25)
 
 INST_CHARS_DIR_2024_25 %>%
-  count(`HD2024.CBSA Type Metropolitan or Micropolitan`) %>%
+  count(`HD2024.Highest degree offered`) %>%
   filter(n > 1)
-
+helper(INST_CHARS_DIR_2024_25$`HD2024.Highest degree offered`)
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
