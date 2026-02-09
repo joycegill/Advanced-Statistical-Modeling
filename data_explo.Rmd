@@ -8,6 +8,7 @@ output: pdf_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(readr)
+library(tidyverse)
 ```
 
 ## R Markdown
@@ -17,7 +18,16 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
 ```{r}
-INST_CHARS_DIR_2024_25 <- read.csv("data/custom_data/INST_CHARS_DIR_2024_25.csv")
+INST_CHARS_DIR_2024_25 <- read_csv("data/custom_data/INST_CHARS_DIR_2024_25.csv",
+                                   show_col_types = FALSE)
+sum(!is.na(unique(INST_CHARS_DIR_2024_25$`HD2024.Name of multi-institution or multi-campus organization`)))
+sum(is.na(unique(INST_CHARS_DIR_2024_25$`HD2024.Name of multi-institution or multi-campus organization`)))
+class(INST_CHARS_DIR_2024_25$`HD2024.Name of multi-institution or multi-campus organization`)
+
+INST_CHARS_DIR_2024_25 %>%
+  count(`HD2024.CBSA Type Metropolitan or Micropolitan`) %>%
+  filter(n > 1)
+
 ```
 
 ## Including Plots
