@@ -74,11 +74,12 @@ filter_and_write_ipeds_2024 <- function(df, remove_tbl, out_path) {
 
 ## Remove rows and write tables
 ```{r}
-# All IPEDS 2024 tables are filtered to exclude:
+# All IPEDS 2023-2024 tables are filtered to exclude:
 # (1) two-year institutions
 # (2) institutions with <= 500 total enrollment
 # using UNITID as the join key
 
+# add new table to this list
 tables_2024 <- list(
   hd2024       = hd2024,
   ef2024d      = ef2024d,
@@ -87,6 +88,7 @@ tables_2024 <- list(
   cost2_2024   = cost2_2024
 )
 
+# clean and write pipeline
 cleaned_tables <- lapply(names(tables_2024), function(name) {
   filter_and_write_ipeds_2024(
     tables_2024[[name]],

@@ -20,13 +20,13 @@ helper <- function(data) {
 ```
 
 ```{r}
-INST_CHARS_DIR_2024_25 <- read_csv("data/custom_data/INST_CHARS_DIR_2024_25.csv",
+f <- read_csv("data/custom_data/STAFF_FT_OCCUPATION_RACE_GENDER_F2024.csv",
                                    show_col_types = FALSE)
-head(INST_CHARS_DIR_2024_25)
+head(f)
 
-INST_CHARS_DIR_2024_25 %>%
-  count(`HD2024.Highest degree offered`) %>%
+f %>%
+  count(`S2024_IS.Grand total men`) %>%
   filter(n > 1)
-helper(INST_CHARS_DIR_2024_25$`HD2024.Highest degree offered`)
+helper(f$`S2024_IS.Grand total men`)
 ```
 
