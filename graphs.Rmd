@@ -1,0 +1,294 @@
+---
+title: "Graphs"
+author: "Joyce Gill"
+date: "2026-02-10"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(tidyverse)
+library(effectsize)
+```
+
+```{r}
+## Read Data
+adm_test_f2024 <- read.csv("data/custom_data/ADM_TEST_F2024.csv")
+inst_chars_dir_2024_25 <- read.csv("data/custom_data/INST_CHARS_DIR_2024_25.csv")
+fe_f2024 <- read.csv("data/custom_data/FE_F2024.csv")
+outcome_cohort_2016_17 <- read.csv("data/custom_data/OUTCOME_COHORT_2016_17.csv")
+grad_feq_var_cohort_2018_21 <- read.csv("data/custom_data/GRAD_FEQ_VAR_COHORT_2018_21.csv")
+finance_2023_24 <- read.csv("data/custom_data/FINANCE_2023_24.csv")
+costs_f2024 <- read.csv("data/custom_data/COSTS_F2024.csv")
+fin_aid_2023_24 <- read.csv("data/custom_data/FIN_AID_2023_24.csv")
+completion_cip_2023_24 <- read.csv("data/custom_data/COMPLETION_CIP_2023_24.csv")
+```
+## SAT Scores by Admission Requirement
+Do schools that require SAT scores have higher average SAT scores than schools that do not require them?
+
+```{r}
+# Create SAT requirement variable
+adm_test_f2024$sat_required <- ifelse(
+  adm_test_f2024$ADM2024.Admission.test.scores == "Required to be considered for admission",
+  "Required", "Not Required"
+)
+
+# Calculate total SAT score (Reading/Writing + Math)
+adm_test_f2024$sat_total <- adm_test_f2024$ADM2024.SAT.Evidence.Based.Reading.and.Writing.50th.percentile.score + 
+                            adm_test_f2024$ADM2024.SAT.Math.50th.percentile.score
+
+# Remove missing values
+adm_test_f2024_clean <- adm_test_f2024[!is.na(adm_test_f2024$sat_total), ]
+
+# Create boxplot
+ggplot(adm_test_f2024_clean, aes(x = sat_required, y = sat_total)) +
+  geom_boxplot() +
+  labs(x = "SAT Requirement", y = "Total SAT Score", 
+       title = "SAT Scores by Admission Requirement")
+
+# Statistical tests
+t.test(sat_total ~ sat_required, data = adm_test_f2024_clean)
+cohens_d(sat_total ~ sat_required, data = adm_test_f2024_clean)
+```
+
+## SAT Requirement vs Admission Rate
+Do schools that require SAT scores have different admission rates compared to schools that do not require them?
+
+```{r}
+# Create SAT requirement variable and convert admission rate to numeric
+sat_admission_rate <- adm_test_f2024 %>%
+  mutate(
+    sat_required = ifelse(
+      ADM2024.Admission.test.scores == "Required to be considered for admission",
+      "Required", "Not Required"
+    ),
+    admit_rate = as.numeric(DRVADM2024.Percent.admitted...total)
+  ) %>%
+  filter(between(admit_rate, 0, 100))
+
+# Create boxplot
+ggplot(sat_admission_rate, aes(x = sat_required, y = admit_rate)) +
+  geom_boxplot() +
+  labs(
+    x = "SAT Requirement",
+    y = "Admission Rate (%)",
+    title = "Admission Rate by SAT Requirement"
+  )
+
+# Statistical tests
+t.test(admit_rate ~ sat_required, data = sat_admission_rate)
+cohens_d(admit_rate ~ sat_required, data = sat_admission_rate)
+```
+
+## SAT Requirements by State
+Are SAT requirements geographically clustered across states?
+
+```{r}
+# Merge SAT requirement data with institutional characteristics
+sat_state_requirements <- adm_test_f2024 %>%
+  mutate(
+    unitid = as.character(unitid),
+    sat_required = ADM2024.Admission.test.scores == "Required to be considered for admission"
+  ) %>%
+  select(unitid, sat_required) %>%
+  inner_join(
+    inst_chars_dir_2024_25 %>%
+      mutate(unitid = as.character(unitid)) %>%
+      select(unitid, state = HD2024.State.abbreviation),
+    by = "unitid"
+  ) %>%
+  filter(!is.na(state))
+
+# Calculate SAT requirement rate by state (only states with at least 5 schools)
+state_rates <- sat_state_requirements %>%
+  group_by(state) %>%
+  summarise(rate = mean(sat_required), n = n(), .groups = "drop") %>%
+  filter(n >= 5)
+
+# Create bar chart
+ggplot(state_rates, aes(x = reorder(state, rate), y = rate)) +
+  geom_col() +
+  coord_flip() +
+  scale_y_continuous(labels = scales::percent) +
+  labs(
+    x = "State",
+    y = "Percent Requiring SAT",
+    title = "SAT Requirement Rate by State"
+  )
+```
+
+## SAT Requirements by State and Sector
+Are SAT requirements geographically clustered even after accounting for school type (public vs. private)?
+
+```{r}
+# Merge SAT requirement data with state and sector information
+sat_state_sector <- adm_test_f2024 %>%
+  mutate(
+    unitid = as.character(unitid),
+    sat_required = ADM2024.Admission.test.scores == "Required to be considered for admission"
+  ) %>%
+  select(unitid, sat_required) %>%
+  inner_join(
+    inst_chars_dir_2024_25 %>%
+      mutate(unitid = as.character(unitid)) %>%
+      select(unitid, state = HD2024.State.abbreviation, sector = HD2024.Sector.of.institution),
+    by = "unitid"
+  ) %>%
+  filter(
+    !is.na(state),
+    sector %in% c("Public, 4-year or above", "Private not-for-profit, 4-year or above")
+  )
+
+# Calculate SAT requirement rate by state and sector
+state_sector_rates <- sat_state_sector %>%
+  group_by(state, sector) %>%
+  summarise(rate = mean(sat_required), n = n(), .groups = "drop") %>%
+  filter(n >= 5)
+
+# Create faceted bar chart
+ggplot(state_sector_rates, aes(x = reorder(state, rate), y = rate)) +
+  geom_col() +
+  coord_flip() +
+  facet_wrap(~ sector) +
+  scale_y_continuous(labels = scales::percent) +
+  labs(
+    x = "State",
+    y = "Percent Requiring SAT",
+    title = "SAT Requirement Rates by State and Sector",
+    subtitle = "Restricted to 4-year institutions (states with ≥5 schools per sector)"
+  )
+```
+
+## Enrollment Growth vs Graduation Rates
+Do schools that grow enrollment faster sacrifice graduation rates, or do some manage both?
+
+```{r}
+# Calculate first-time enrollment as percentage of total enrollment
+enroll_prep <- fe_f2024 %>%
+  mutate(
+    unitid = as.character(unitid),
+    total_enroll = as.numeric(DRVEF2024.Total..enrollment),
+    first_time = as.numeric(DRVEF2024.First.time.degree.certificate.seeking.undergraduate.enrollment)
+  ) %>%
+  filter(!is.na(total_enroll), !is.na(first_time), total_enroll > 0, first_time > 0) %>%
+  mutate(growth_pct = 100 * first_time / total_enroll) %>%
+  select(unitid, growth_pct)
+
+# Get 6-year graduation rates
+grad_prep <- grad_feq_var_cohort_2018_21 %>%
+  mutate(unitid = as.character(unitid)) %>%
+  mutate(grad_rate = as.numeric(DRVGR2024.Graduation.rate...Bachelor.degree.within.6.years..total)) %>%
+  filter(!is.na(grad_rate), between(grad_rate, 0, 100)) %>%
+  select(unitid, grad_rate)
+
+# Merge enrollment and graduation data
+enrollment_growth_graduation <- enroll_prep %>%
+  inner_join(grad_prep, by = "unitid")
+
+# Create scatter plot
+ggplot(enrollment_growth_graduation, aes(x = growth_pct, y = grad_rate)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "lm") +
+  labs(
+    x = "First-Time Enrollment (%)",
+    y = "6-Year Graduation Rate (%)",
+    title = "Enrollment Growth vs Graduation Rates"
+  )
+
+# Correlation analysis
+cor.test(enrollment_growth_graduation$growth_pct, enrollment_growth_graduation$grad_rate)
+```
+## Enrollment Growth vs Graduation Rates by Sector
+Is the relationship between enrollment growth and graduation rates consistent across public and private institutions?
+
+```{r}
+# Add sector information to enrollment-graduation data
+growth_grad_sector <- enrollment_growth_graduation %>%
+  inner_join(
+    inst_chars_dir_2024_25 %>%
+      mutate(unitid = as.character(unitid)) %>%
+      select(unitid, sector = HD2024.Sector.of.institution),
+    by = "unitid"
+  ) %>%
+  filter(sector %in% c("Public, 4-year or above", "Private not-for-profit, 4-year or above"))
+
+# Create faceted scatter plot
+ggplot(growth_grad_sector, aes(x = growth_pct, y = grad_rate)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "lm") +
+  facet_wrap(~ sector) +
+  labs(
+    x = "First-Time Enrollment (%)",
+    y = "6-Year Graduation Rate (%)",
+    title = "Enrollment Growth vs Graduation Rate by Sector"
+  )
+```
+
+## Nonlinear Relationship: Enrollment Growth vs Graduation Rates
+Is there a nonlinear relationship between enrollment growth and graduation rates, suggesting an optimal growth rate?
+
+```{r}
+# Create scatter plot with loess smooth to explore nonlinearity
+ggplot(enrollment_growth_graduation, aes(x = growth_pct, y = grad_rate)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "loess", span = 0.5) +
+  labs(
+    title = "Nonlinear Relationship Between Growth and Graduation Rates",
+    x = "First-Time Enrollment (%)",
+    y = "6-Year Graduation Rate (%)"
+  )
+
+# Fit quadratic model to test for nonlinear relationship
+quad_model <- lm(grad_rate ~ growth_pct + I(growth_pct^2), data = enrollment_growth_graduation)
+summary(quad_model)
+```
+
+## Faculty-to-Student Ratio vs Graduation Rates
+Does having more faculty per student always translate to better graduation outcomes?
+
+```{r}
+# Get student-faculty ratio data
+faculty_data <- fe_f2024 %>%
+  mutate(
+    unitid = as.character(unitid),
+    student_faculty_ratio = as.numeric(EF2024D.Student.to.faculty.ratio)
+  ) %>%
+  filter(!is.na(student_faculty_ratio), between(student_faculty_ratio, 5, 50)) %>%
+  select(unitid, student_faculty_ratio)
+
+# Get graduation rates
+grad_data <- grad_feq_var_cohort_2018_21 %>%
+  mutate(unitid = as.character(unitid)) %>%
+  mutate(grad_rate = as.numeric(DRVGR2024.Graduation.rate...Bachelor.degree.within.6.years..total)) %>%
+  filter(!is.na(grad_rate), between(grad_rate, 0, 100)) %>%
+  select(unitid, grad_rate)
+
+# Merge data
+faculty_ratio_graduation <- faculty_data %>%
+  inner_join(grad_data, by = "unitid")
+
+# Create scatter plot with loess smooth
+ggplot(faculty_ratio_graduation, aes(x = student_faculty_ratio, y = grad_rate)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "loess") +
+  labs(
+    x = "Student–Faculty Ratio",
+    y = "6-Year Graduation Rate (%)",
+    title = "Student–Faculty Ratio vs Graduation Rate"
+  )
+
+# Correlation analysis
+cor.test(faculty_ratio_graduation$student_faculty_ratio, faculty_ratio_graduation$grad_rate)
+```
+
+## Potential Graphs:
+Tuition vs Post-Graduation Salary: Are Higher Tuition Levels Associated with Higher Earnings?
+
+Tuition vs Instructional Spending: Are Higher-Tuition Schools Actually Investing More?
+
