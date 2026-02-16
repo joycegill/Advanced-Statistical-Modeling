@@ -1,363 +1,363 @@
-UNITID,INSTNM,STUFACR,CLASIZUND20,CLASIZ2049,CLASIZOVE50
-138600,Agnes Scott College,10,0.77,0.23,0
-210669,Allegheny College,8,0.84,0.16,0
-131159,American University,10,0.58,0.42,0.004
-164465,Amherst College,7,0.67,0.32,0.02
-197869,Appalachian State University,16,0.41,0.52,0.07
-165866,Arizona State University,18,0.39,0.43,0.18
-100858,Auburn University,21,0.34,0.5,0.16
-164580,Babson College,15,0.19,0.8,0.01
-189088,Bard College,9,0.86,0.13,0
-189097,Barnard College,10,0.67,0.25,0.08
-160977,Bates College,9,0.61,0.39,0.01
-223232,Baylor University,15,0.49,0.42,0.09
-238333,Beloit College,12,0.72,0.28,0
-230418,Bennington College,9,0.62,0.37,0.01
-164739,Bentley University,12,0.22,0.78,0
-156295,Berea College,9,0.86,0.14,0.002
-164748,Berklee College of Music,9,0.88,0.12,0.002
-196079,Binghamton University,17,0.52,0.35,0.14
-142115,Boise State University,20,0.38,0.53,0.09
-164924,Boston College,10,0.49,0.46,0.06
-164988,Boston University,10,0.59,0.27,0.13
-161004,Bowdoin College,9,0.65,0.34,0.01
-165015,Brandeis University,9,0.59,0.33,0.09
-230038,Brigham Young University-Provo,22,0.45,0.41,0.13
-217156,Brown University,6,0.68,0.2,0.13
-217165,Bryant University,13,0.28,0.72,0
-211273,Bryn Mawr College,8,0.76,0.22,0.02
-211291,Bucknell University,9,0.53,0.46,0.01
-150163,Butler University,11,0.5,0.46,0.04
-110404,California Institute of Technology,3,0.71,0.22,0.07
-111081,California Institute of the Arts,7,NA,NA,NA
-110422,California Polytechnic State University-San Luis Obispo,18,0.18,0.71,0.12
-110529,California State Polytechnic University-Pomona,25,0.24,0.6,0.16
-110556,California State University-Fresno,23,0.16,0.78,0.06
-110565,California State University-Fullerton,25,0.22,0.72,0.06
-110583,California State University-Long Beach,26,0.21,0.71,0.08
-110592,California State University-Los Angeles,22,0.25,0.69,0.06
-173258,Carleton College,9,0.66,0.33,0.003
-211440,Carnegie Mellon University,6,0.68,0.21,0.11
-201645,Case Western Reserve University,9,0.52,0.31,0.17
-190503,Catholic University of America,11,0.6,0.37,0.04
-156408,Centre College,11,0.69,0.32,0
-230852,Champlain College,14,0.85,0.15,0
-111948,Chapman University,12,0.4,0.58,0.02
-112260,Claremont McKenna College,8,0.78,0.21,0.01
-165334,Clark University,9,0.62,0.36,0.02
-190044,Clarkson University,13,0.48,0.4,0.13
-217882,Clemson University,16,0.37,0.47,0.16
-161086,Colby College,10,0.66,0.32,0.02
-190099,Colgate University,9,0.71,0.28,0.01
-217819,College of Charleston,17,0.32,0.62,0.06
-226408,College of the Atlantic,10,0.97,0.03,0
-166124,College of the Holy Cross,9,0.64,0.36,0.01
-226408,College of William and Mary,13,0.46,0.45,0.09
-126678,Colorado College,9,0.72,0.28,0
-126775,Colorado School of Mines,18,0.16,0.58,0.26
-128106,Colorado State University,17,0.32,0.45,0.23
-190150,Columbia University in the City of New York,6,0.58,0.29,0.14
-128902,Connecticut College,9,0.67,0.32,0.01
-207722,Cooper Union for the Advancement of Science and Art,8,0.69,0.3,0.01
-153162,Cornell College,12,0.72,0.28,0
-190415,Cornell University,9,0.53,0.27,0.2
-181002,Creighton University,11,0.43,0.52,0.05
-190512,CUNY Bernard M Baruch College,21,0.22,0.61,0.17
-190594,CUNY Hunter College,13,0.42,0.51,0.08
-182670,Dartmouth College,6,0.58,0.36,0.06
-198385,Davidson College,8,0.74,0.26,0
-202523,Denison University,9,0.68,0.32,0.003
-144740,DePaul University,17,0.41,0.57,0.02
-150400,DePauw University,10,0.71,0.29,0.002
-212009,Dickinson College,11,0.65,0.35,0
-153269,Drake University,11,0.48,0.46,0.06
-184348,Drew University,11,0.75,0.26,0
-212054,Drexel University,9,0.42,0.49,0.09
-198419,Duke University,5,0.71,0.21,0.08
-212106,Duquesne University,13,0.44,0.48,0.09
-168591,Earlham College,7,0.8,0.19,0.01
-198464,East Carolina University,17,0.39,0.45,0.16
-133492,Eckerd College,11,0.55,0.44,0.002
-212197,Elizabethtown College,13,0.54,0.45,0.01
-198516,Elon University,11,0.5,0.5,0
-104586,Embry-Riddle Aeronautical University,18,0.15,0.82,0.03
-165662,Emerson College,13,0.74,0.26,0.002
-165671,Emmanuel College,13,0.43,0.57,0
-139658,Emory University,8,0.63,0.25,0.12
-129242,Fairfield University,12,0.4,0.59,0.01
-191126,Fashion Institute of Technology,16,0.31,0.69,0
-133669,Florida Atlantic University,24,0.39,0.49,0.12
-133881,Florida Institute of Technology,9,0.48,0.46,0.06
-133951,Florida International University,22,0.35,0.51,0.14
-134079,Florida Southern College,11,0.57,0.43,0
-134097,Florida State University,17,0.63,0.28,0.1
-191241,Fordham University,14,0.49,0.51,0.003
-212577,Franklin and Marshall College,9,0.63,0.36,0.01
-136774,Franklin W Olin College of Engineering,9,0.49,0.49,0.02
-218070,Furman University,10,0.75,0.25,0
-232186,George Mason University,16,0.33,0.53,0.14
-131469,George Washington University,13,0.52,0.37,0.11
-131496,Georgetown University,11,0.65,0.29,0.06
-139861,Georgia College & State University,17,0.44,0.55,0.01
-133881,Georgia Institute of Technology,21,0.36,0.37,0.27
-139940,Georgia State University,25,0.23,0.55,0.22
-212674,Gettysburg College,10,0.6,0.4,0.002
-235316,Gonzaga University,12,0.41,0.59,0.01
-162654,Goucher College,9,0.8,0.2,0
-153384,Grinnell College,9,0.63,0.36,0.01
-212805,Grove City College,13,0.52,0.45,0.04
-173647,Gustavus Adolphus College,11,0.64,0.36,0
-191515,Hamilton College,9,0.73,0.27,0.002
-164465,Hampshire College,17,0.6,0.4,0
-150756,Hanover College,12,0.63,0.37,0.004
-166027,Harvard University,7,0.72,0.17,0.12
-150756,Harvey Mudd College,8,0.62,0.33,0.05
-212911,Haverford College,9,0.72,0.28,0.01
-107080,Hendrix College,11,0.68,0.33,0
-170286,Hillsdale College,8,0.78,0.21,0.01
-191630,Hobart William Smith Colleges,11,0.67,0.33,0
-191649,Hofstra University,13,0.48,0.5,0.03
-170301,Hope College,9,0.49,0.5,0.003
-131520,Howard University,13,0.4,0.52,0.09
-145725,Illinois Institute of Technology,17,0.5,0.42,0.09
-145646,Illinois Wesleyan University,12,0.64,0.35,0.01
-151351,Indiana University-Bloomington,17,0.35,0.47,0.19
-153603,Iowa State University,18,0.33,0.43,0.24
-191968,Ithaca College,11,0.64,0.33,0.03
-232423,James Madison University,17,0.36,0.52,0.12
-162928,Johns Hopkins University,6,NA,NA,NA
-213251,Juniata College,11,0.64,0.35,0.01
-170532,Kalamazoo College,10,0.63,0.37,0
-155399,Kansas State University,19,0.45,0.43,0.12
-203535,Kenyon College,9,0.7,0.3,0.002
-169983,Kettering University,11,0.73,0.27,0
-146427,Knox College,11,0.84,0.16,0.004
-213385,Lafayette College,10,0.65,0.34,0.003
-146481,Lake Forest College,13,0.44,0.56,0
-239017,Lawrence University,7,0.79,0.2,0.01
-192323,Le Moyne College,12,0.51,0.48,0.01
-213543,Lehigh University,10,0.46,0.44,0.1
-209056,Lewis & Clark College,12,0.57,0.43,0.01
-159382,Louisiana State University,21,0.43,0.41,0.17
-117946,Loyola Marymount University,10,0.54,0.45,0.01
-146719,Loyola University Chicago,13,0.38,0.6,0.03
-163046,Loyola University Maryland,12,0.48,0.52,0.01
-173902,Macalester College,10,0.69,0.31,0.002
-166692,Maine Maritime Academy,10,0.55,0.45,0
-192819,Marist College,16,0.51,0.49,0
-239105,Marquette University,14,0.37,0.53,0.1
-166683,Massachusetts Institute of Technology,3,0.68,0.21,0.11
-140447,Mercer University,11,0.55,0.41,0.04
-204024,Miami University-Oxford,16,0.27,0.64,0.09
-171100,Michigan State University,17,NA,NA,NA
-171128,Michigan Technological University,13,0.47,0.39,0.14
-230959,Middlebury College,9,0.6,0.4,0.01
-239318,Milwaukee School of Engineering,12,0.46,0.54,0.002
-176080,Mississippi State University,16,0.43,0.43,0.14
-178411,Missouri University of Science and Technology,17,0.4,0.46,0.14
-180461,Montana State University,18,0.45,0.43,0.13
-140553,Morehouse College,15,0.51,0.48,0.02
-166939,Mount Holyoke College,9,0.72,0.27,0.01
-214175,Muhlenberg College,9,0.76,0.24,0.002
-133960,New College of Florida,8,0.82,0.18,0
-185828,New Jersey Institute of Technology,16,0.32,0.64,0.04
-187967,New Mexico Institute of Mining and Technology,9,0.66,0.31,0.03
-193900,New York University,8,0.59,0.31,0.1
-199193,North Carolina State University,15,0.32,0.48,0.2
-167358,Northeastern University,16,0.51,0.41,0.08
-147767,Northwestern University,6,0.76,0.17,0.07
-204501,Oberlin College,9,0.78,0.22,0.004
-120254,Occidental College,9,0.69,0.31,0.002
-232937,Ohio State University,14,0.39,0.42,0.19
-110778,Ohio University,18,0.27,0.57,0.16
-204909,Ohio Wesleyan University,12,0.53,0.47,0
-209542,Oregon State University,17,0.27,0.52,0.21
-214777,Pennsylvania State University,15,0.31,0.51,0.17
-121150,Pepperdine University,12,0.69,0.29,0.02
-121257,Pitzer College,10,0.77,0.23,0
-121345,Pomona College,7,0.72,0.27,0.01
-194578,Pratt Institute-Main,9,0.95,0.05,0.001
-186131,Princeton University,5,0.76,0.15,0.1
-217402,Providence College,11,0.53,0.44,0.03
-243780,Purdue University-Main Campus,15,0.41,0.39,0.2
-130226,Quinnipiac University,12,0.5,0.48,0.02
-186201,Ramapo College of New Jersey,17,0.41,0.59,0
-209922,Reed College,9,0.77,0.22,0.01
-194824,Rensselaer Polytechnic Institute,14,0.45,0.38,0.17
-217493,Rhode Island School of Design,8,NA,NA,NA
-221351,Rhodes College,9,0.8,0.2,0
-227757,Rice University,6,0.64,0.26,0.1
-195003,Rochester Institute of Technology,13,0.47,0.46,0.07
-136950,Rollins College,12,0.62,0.38,0.003
-152318,Rose-Hulman Institute of Technology,12,0.42,0.58,0.002
-184782,Rowan University,17,0.43,0.57,0.004
-186371,Rutgers University-Camden,12,0.55,0.41,0.05
-186380,Rutgers University-New Brunswick,16,0.37,0.42,0.21
-186399,Rutgers University-Newark,14,0.35,0.53,0.12
-183239,Saint Anselm College,12,0.61,0.37,0.02
-179159,Saint Louis University,9,NA,NA,NA
-231059,Saint Michael's College,10,0.73,0.27,0
-122409,San Diego State University,24,0.29,0.52,0.19
-122755,San Jose State University,26,0.18,0.71,0.12
-122931,Santa Clara University,11,0.43,0.56,0.01
-195304,Sarah Lawrence College,10,0.77,0.22,0.01
-123165,Scripps College,10,0.75,0.25,0
-236595,Seattle University,11,0.4,0.6,0.01
-195474,Siena College,12,0.37,0.63,0
-167783,Simmons University,9,0.55,0.43,0.01
-195526,Skidmore College,8,0.76,0.24,0.004
-167835,Smith College,8,0.68,0.29,0.03
-204848,Soka University of America,7,0.95,0.05,0
-228246,Southern Methodist University,11,0.54,0.35,0.11
-228343,Southwestern University,11,0.68,0.32,0
-141060,Spelman College,11,0.57,0.41,0.01
-230597,St. John's College (MD),7,0.99,0.01,0.01
-230597,St. John's College (NM),7,0.98,0.02,0
-195216,St. Lawrence University,11,0.66,0.33,0.01
-163912,St. Mary's College of Maryland,10,0.69,0.3,0.01
-174844,St. Olaf College,12,0.41,0.58,0.02
-243744,Stanford University,6,0.7,0.19,0.11
-196176,State University of New York at New Paltz,16,0.43,0.54,0.03
-137546,Stetson University,10,0.73,0.26,0.01
-186867,Stevens Institute of Technology,11,0.31,0.55,0.14
-167996,Stonehill College,12,0.52,0.47,0.01
-196097,Stony Brook University,19,0.36,0.44,0.21
-196219,SUNY at Purchase College,12,0.69,0.29,0.03
-196167,SUNY College at Geneseo,16,0.36,0.55,0.09
-196103,SUNY College of Environmental Science and Forestry,14,0.6,0.31,0.1
-216287,Swarthmore College,7,0.71,0.27,0.03
-196413,Syracuse University,15,0.61,0.3,0.09
-216339,Temple University,12,0.44,0.51,0.06
-228723,Texas A&M University-College Station,21,0.27,0.47,0.26
-228875,Texas Christian University,14,0.39,0.55,0.06
-229115,Texas Tech University,20,0.33,0.46,0.21
-187134,The College of New Jersey,14,0.35,0.65,0.003
-206589,The College of Wooster,10,0.64,0.36,0.002
-193654,The New School,9,0.95,0.04,0.001
-100751,The University of Alabama,19,0.42,0.38,0.2
-180489,The University of Montana,18,0.47,0.43,0.1
-137847,The University of Tampa,17,0.32,0.67,0.02
-221759,The University of Tennessee-Knoxville,18,0.29,0.54,0.17
-228778,The University of Texas at Austin,18,0.37,0.39,0.24
-228787,The University of Texas at Dallas,23,0.24,0.47,0.29
-221519,The University of the South,9,0.66,0.33,0.01
-161563,Thomas Aquinas College,10,1,0,0
-216366,Thomas Jefferson University,12,0.61,0.37,0.02
-164076,Towson University,14,0.38,0.59,0.03
-130590,Trinity College,9,0.67,0.33,0.004
-229267,Trinity University,9,0.69,0.31,0.01
-178615,Truman State University,12,0.62,0.37,0.003
-168148,Tufts University,10,0.59,0.33,0.08
-160755,Tulane University of Louisiana,7,0.61,0.32,0.08
-157863,Union College,9,0.69,0.31,0.003
-128328,United States Air Force Academy,8,0.6,0.4,0
-130624,United States Coast Guard Academy,7,NA,NA,NA
-128328,United States Merchant Marine Academy,9,NA,NA,NA
-197036,United States Military Academy,6,0.97,0.03,0
-164155,United States Naval Academy,8,0.67,0.33,0.004
-196088,University at Buffalo,11,0.35,0.45,0.2
-100663,University of Alabama at Birmingham,18,0.5,0.38,0.12
-104179,University of Arizona,20,0.28,0.54,0.18
-106397,University of Arkansas,20,0.39,0.42,0.2
-110635,University of California-Berkeley,18,0.5,0.3,0.21
-110644,University of California-Davis,22,0.31,0.35,0.34
-110653,University of California-Irvine,19,0.46,0.33,0.22
-110662,University of California-Los Angeles,20,0.47,0.29,0.24
-445188,University of California-Merced,20,0.23,0.45,0.32
-110671,University of California-Riverside,22,0.27,0.41,0.32
-110680,University of California-San Diego,19,0.39,0.34,0.27
-110705,University of California-Santa Barbara,17,0.57,0.25,0.19
-110714,University of California-Santa Cruz,22,0.27,0.47,0.27
-132903,University of Central Florida,28,0.28,0.47,0.25
-144050,University of Chicago,5,0.78,0.16,0.07
-201885,University of Cincinnati-Main Campus,19,0.33,0.47,0.2
-126614,University of Colorado-Boulder,19,0.4,0.41,0.2
-129020,University of Connecticut,17,0.53,0.3,0.17
-224323,University of Dallas,11,0.64,0.35,0.01
-130943,University of Delaware,13,0.32,0.5,0.19
-127060,University of Denver,9,0.54,0.39,0.07
-134130,University of Florida,16,0.5,0.39,0.1
-139959,University of Georgia,17,0.45,0.43,0.12
-225511,University of Houston,22,0.33,0.44,0.24
-142285,University of Idaho,18,0.58,0.32,0.1
-145600,University of Illinois at Chicago,17,0.32,0.49,0.19
-145637,University of Illinois at Urbana-Champaign,20,0.38,0.42,0.2
-153658,University of Iowa,16,0.49,0.37,0.14
-155317,University of Kansas,18,0.4,0.43,0.17
-157085,University of Kentucky,18,0.35,0.5,0.15
-157289,University of Louisville,14,0.4,0.5,0.1
-161253,University of Maine,15,0.42,0.44,0.15
-232681,University of Mary Washington,14,0.57,0.39,0.05
-163268,University of Maryland-Baltimore County,17,0.43,0.45,0.12
-163286,University of Maryland-College Park,17,0.46,0.36,0.18
-166629,University of Massachusetts-Amherst,17,0.47,0.35,0.18
-166638,University of Massachusetts-Boston,15,0.4,0.54,0.06
-166513,University of Massachusetts-Lowell,17,0.45,0.5,0.05
-135726,University of Miami,11,0.53,0.4,0.07
-171146,University of Michigan,15,0.52,0.29,0.19
-174233,University of Minnesota-Duluth,16,0.42,0.47,0.11
-174075,University of Minnesota-Morris,9,0.82,0.18,0.003
-174066,University of Minnesota-Twin Cities,17,0.36,0.44,0.2
-176017,University of Mississippi,18,0.46,0.38,0.16
-178396,University of Missouri-Columbia,17,0.42,0.4,0.18
-181464,University of Nebraska-Lincoln,17,0.31,0.49,0.2
-182281,University of Nevada-Las Vegas,19,0.46,0.42,0.12
-182290,University of Nevada-Reno,17,0.37,0.45,0.18
-183044,University of New Hampshire,17,0.35,0.49,0.16
-199111,University of North Carolina at Asheville,13,0.52,0.47,0.01
-199120,University of North Carolina at Chapel Hill,15,0.42,0.45,0.13
-199139,University of North Carolina at Charlotte,21,0.25,0.45,0.3
-199148,University of North Carolina at Greensboro,18,0.33,0.5,0.18
-199218,University of North Carolina-Wilmington,17,0.36,0.55,0.09
-152080,University of Notre Dame,8,0.6,0.32,0.09
-200280,University of Oklahoma,18,0.41,0.48,0.11
-209551,University of Oregon,18,0.36,0.46,0.18
-215062,University of Pennsylvania,8,0.59,0.22,0.2
-215266,University of Pittsburgh,13,0.4,0.42,0.17
-209825,University of Portland,9,0.45,0.55,0.003
-236328,University of Puget Sound,10,0.67,0.33,0.01
-121691,University of Redlands,10,0.65,0.35,0.004
-217484,University of Rhode Island,17,0.38,0.52,0.11
-233374,University of Richmond,7,0.76,0.24,0.001
-195030,University of Rochester,9,0.68,0.21,0.12
-122436,University of San Diego,13,0.41,0.59,0.002
-122612,University of San Francisco,11,0.43,0.57,0.004
-215929,University of Scranton,11,0.52,0.48,0.001
-218645,University of South Carolina,19,0.34,0.51,0.16
-137351,University of South Florida,22,0.37,0.48,0.15
-123961,University of Southern California,8,0.61,0.27,0.12
-174914,University of St. Thomas (MN),13,0.35,0.65,0.01
-230764,University of Utah,19,0.43,0.37,0.21
-231174,University of Vermont,17,0.41,0.41,0.18
-234076,University of Virginia,14,0.47,0.36,0.16
-377555,University of Washington-Bothell Campus,22,0.16,0.79,0.05
-236948,University of Washington-Seattle,20,0.29,0.44,0.27
-240444,University of Wisconsin-Madison,18,0.42,0.34,0.24
-216524,Ursinus College,10,0.6,0.4,0.01
-221999,Vanderbilt University,8,0.59,0.33,0.08
-197133,Vassar College,7,0.72,0.28,0.001
-216597,Villanova University,10,0.44,0.54,0.03
-234030,Virginia Commonwealth University,17,0.33,0.52,0.15
-234030,Virginia Tech,17,0.33,0.46,0.21
-123299,Wabash College,9,0.71,0.29,0.004
-199847,Wake Forest University,10,0.64,0.35,0.01
-234207,Washington and Lee University,7,0.8,0.2,0
-206507,Washington College,8,0.86,0.14,0
-236939,Washington State University,13,0.34,0.46,0.2
-179867,Washington University in St. Louis,7,0.65,0.26,0.1
-168218,Wellesley College,8,0.68,0.32,0.002
-168227,Wentworth Institute of Technology,17,0.37,0.62,0.01
-130697,Wesleyan University,7,0.74,0.24,0.01
-216764,West Chester University of Pennsylvania,20,0.3,0.67,0.04
-238032,West Virginia University,19,0.43,0.4,0.17
-125727,Westmont College,11,0.59,0.4,0.01
-149781,Wheaton College (IL),10,0.61,0.32,0.06
-149781,Wheaton College (MA),12,0.61,0.38,0.01
-237057,Whitman College,10,0.69,0.31,0
-121257,Whittier College,8,0.77,0.23,0
-210401,Willamette University,12,0.75,0.25,0
-168342,Williams College,7,0.71,0.27,0.02
-218973,Wofford College,12,0.56,0.44,0
-168421,Worcester Polytechnic Institute,13,0.66,0.24,0.11
-130794,Yale University,5,0.73,0.18,0.09
-197708,Yeshiva University,7,0.62,0.38,0.003
+UNITID,INSTNM,STUFACR,STUFACR_nr,CLASIZUND20,CLASIZUND20_nr,CLASIZ2049,CLASIZ2049_nr,CLASIZOVE50,CLASIZOVE50_nr
+138600,Agnes Scott College,10,FALSE,0.77,FALSE,0.23,FALSE,0,FALSE
+210669,Allegheny College,8,FALSE,0.84,FALSE,0.16,FALSE,0,FALSE
+131159,American University,10,FALSE,0.58,FALSE,0.42,FALSE,0.004,FALSE
+164465,Amherst College,7,FALSE,0.67,FALSE,0.32,FALSE,0.02,FALSE
+197869,Appalachian State University,16,FALSE,0.41,FALSE,0.52,FALSE,0.07,FALSE
+165866,Arizona State University,18,FALSE,0.39,FALSE,0.43,FALSE,0.18,FALSE
+100858,Auburn University,21,FALSE,0.34,FALSE,0.5,FALSE,0.16,FALSE
+164580,Babson College,15,FALSE,0.19,FALSE,0.8,FALSE,0.01,FALSE
+189088,Bard College,9,FALSE,0.86,FALSE,0.13,FALSE,0,FALSE
+189097,Barnard College,10,FALSE,0.67,FALSE,0.25,FALSE,0.08,FALSE
+160977,Bates College,9,FALSE,0.61,FALSE,0.39,FALSE,0.01,FALSE
+223232,Baylor University,15,FALSE,0.49,FALSE,0.42,FALSE,0.09,FALSE
+238333,Beloit College,12,FALSE,0.72,FALSE,0.28,FALSE,0,FALSE
+230418,Bennington College,9,FALSE,0.62,FALSE,0.37,FALSE,0.01,FALSE
+164739,Bentley University,12,FALSE,0.22,FALSE,0.78,FALSE,0,FALSE
+156295,Berea College,9,FALSE,0.86,FALSE,0.14,FALSE,0.002,FALSE
+164748,Berklee College of Music,9,FALSE,0.88,FALSE,0.12,FALSE,0.002,FALSE
+196079,Binghamton University,17,FALSE,0.52,FALSE,0.35,FALSE,0.14,FALSE
+142115,Boise State University,20,FALSE,0.38,FALSE,0.53,FALSE,0.09,FALSE
+164924,Boston College,10,FALSE,0.49,FALSE,0.46,FALSE,0.06,FALSE
+164988,Boston University,10,FALSE,0.59,FALSE,0.27,FALSE,0.13,FALSE
+161004,Bowdoin College,9,FALSE,0.65,FALSE,0.34,FALSE,0.01,FALSE
+165015,Brandeis University,9,FALSE,0.59,FALSE,0.33,FALSE,0.09,FALSE
+230038,Brigham Young University-Provo,22,FALSE,0.45,FALSE,0.41,FALSE,0.13,FALSE
+217156,Brown University,6,FALSE,0.68,FALSE,0.2,FALSE,0.13,FALSE
+217165,Bryant University,13,FALSE,0.28,FALSE,0.72,FALSE,0,FALSE
+211273,Bryn Mawr College,8,FALSE,0.76,FALSE,0.22,FALSE,0.02,FALSE
+211291,Bucknell University,9,FALSE,0.53,FALSE,0.46,FALSE,0.01,FALSE
+150163,Butler University,11,FALSE,0.5,FALSE,0.46,FALSE,0.04,FALSE
+110404,California Institute of Technology,3,FALSE,0.71,FALSE,0.22,FALSE,0.07,FALSE
+111081,California Institute of the Arts,7,FALSE,NA,TRUE,NA,TRUE,NA,TRUE
+110422,California Polytechnic State University-San Luis Obispo,18,FALSE,0.18,FALSE,0.71,FALSE,0.12,FALSE
+110529,California State Polytechnic University-Pomona,25,FALSE,0.24,FALSE,0.6,FALSE,0.16,FALSE
+110556,California State University-Fresno,23,FALSE,0.16,FALSE,0.78,FALSE,0.06,FALSE
+110565,California State University-Fullerton,25,FALSE,0.22,FALSE,0.72,FALSE,0.06,FALSE
+110583,California State University-Long Beach,26,FALSE,0.21,FALSE,0.71,FALSE,0.08,FALSE
+110592,California State University-Los Angeles,22,FALSE,0.25,FALSE,0.69,FALSE,0.06,FALSE
+173258,Carleton College,9,FALSE,0.66,FALSE,0.33,FALSE,0.003,FALSE
+211440,Carnegie Mellon University,6,FALSE,0.68,FALSE,0.21,FALSE,0.11,FALSE
+201645,Case Western Reserve University,9,FALSE,0.52,FALSE,0.31,FALSE,0.17,FALSE
+190503,Catholic University of America,11,FALSE,0.6,FALSE,0.37,FALSE,0.04,FALSE
+156408,Centre College,11,FALSE,0.69,FALSE,0.32,FALSE,0,FALSE
+230852,Champlain College,14,FALSE,0.85,FALSE,0.15,FALSE,0,FALSE
+111948,Chapman University,12,FALSE,0.4,FALSE,0.58,FALSE,0.02,FALSE
+112260,Claremont McKenna College,8,FALSE,0.78,FALSE,0.21,FALSE,0.01,FALSE
+165334,Clark University,9,FALSE,0.62,FALSE,0.36,FALSE,0.02,FALSE
+190044,Clarkson University,13,FALSE,0.48,FALSE,0.4,FALSE,0.13,FALSE
+217882,Clemson University,16,FALSE,0.37,FALSE,0.47,FALSE,0.16,FALSE
+161086,Colby College,10,FALSE,0.66,FALSE,0.32,FALSE,0.02,FALSE
+190099,Colgate University,9,FALSE,0.71,FALSE,0.28,FALSE,0.01,FALSE
+217819,College of Charleston,17,FALSE,0.32,FALSE,0.62,FALSE,0.06,FALSE
+226408,College of the Atlantic,10,FALSE,0.97,FALSE,0.03,FALSE,0,FALSE
+166124,College of the Holy Cross,9,FALSE,0.64,FALSE,0.36,FALSE,0.01,FALSE
+226408,College of William and Mary,13,FALSE,0.46,FALSE,0.45,FALSE,0.09,FALSE
+126678,Colorado College,9,FALSE,0.72,FALSE,0.28,FALSE,0,FALSE
+126775,Colorado School of Mines,18,FALSE,0.16,FALSE,0.58,FALSE,0.26,FALSE
+128106,Colorado State University,17,FALSE,0.32,FALSE,0.45,FALSE,0.23,FALSE
+190150,Columbia University in the City of New York,6,FALSE,0.58,FALSE,0.29,FALSE,0.14,FALSE
+128902,Connecticut College,9,FALSE,0.67,FALSE,0.32,FALSE,0.01,FALSE
+207722,Cooper Union for the Advancement of Science and Art,8,FALSE,0.69,FALSE,0.3,FALSE,0.01,FALSE
+153162,Cornell College,12,FALSE,0.72,FALSE,0.28,FALSE,0,FALSE
+190415,Cornell University,9,FALSE,0.53,FALSE,0.27,FALSE,0.2,FALSE
+181002,Creighton University,11,FALSE,0.43,FALSE,0.52,FALSE,0.05,FALSE
+190512,CUNY Bernard M Baruch College,21,FALSE,0.22,FALSE,0.61,FALSE,0.17,FALSE
+190594,CUNY Hunter College,13,FALSE,0.42,FALSE,0.51,FALSE,0.08,FALSE
+182670,Dartmouth College,6,FALSE,0.58,FALSE,0.36,FALSE,0.06,FALSE
+198385,Davidson College,8,FALSE,0.74,FALSE,0.26,FALSE,0,FALSE
+202523,Denison University,9,FALSE,0.68,FALSE,0.32,FALSE,0.003,FALSE
+144740,DePaul University,17,FALSE,0.41,FALSE,0.57,FALSE,0.02,FALSE
+150400,DePauw University,10,FALSE,0.71,FALSE,0.29,FALSE,0.002,FALSE
+212009,Dickinson College,11,FALSE,0.65,FALSE,0.35,FALSE,0,FALSE
+153269,Drake University,11,FALSE,0.48,FALSE,0.46,FALSE,0.06,FALSE
+184348,Drew University,11,FALSE,0.75,FALSE,0.26,FALSE,0,FALSE
+212054,Drexel University,9,FALSE,0.42,FALSE,0.49,FALSE,0.09,FALSE
+198419,Duke University,5,FALSE,0.71,FALSE,0.21,FALSE,0.08,FALSE
+212106,Duquesne University,13,FALSE,0.44,FALSE,0.48,FALSE,0.09,FALSE
+168591,Earlham College,7,FALSE,0.8,FALSE,0.19,FALSE,0.01,FALSE
+198464,East Carolina University,17,FALSE,0.39,FALSE,0.45,FALSE,0.16,FALSE
+133492,Eckerd College,11,FALSE,0.55,FALSE,0.44,FALSE,0.002,FALSE
+212197,Elizabethtown College,13,FALSE,0.54,FALSE,0.45,FALSE,0.01,FALSE
+198516,Elon University,11,FALSE,0.5,FALSE,0.5,FALSE,0,FALSE
+104586,Embry-Riddle Aeronautical University,18,FALSE,0.15,FALSE,0.82,FALSE,0.03,FALSE
+165662,Emerson College,13,FALSE,0.74,FALSE,0.26,FALSE,0.002,FALSE
+165671,Emmanuel College,13,FALSE,0.43,FALSE,0.57,FALSE,0,FALSE
+139658,Emory University,8,FALSE,0.63,FALSE,0.25,FALSE,0.12,FALSE
+129242,Fairfield University,12,FALSE,0.4,FALSE,0.59,FALSE,0.01,FALSE
+191126,Fashion Institute of Technology,16,FALSE,0.31,FALSE,0.69,FALSE,0,FALSE
+133669,Florida Atlantic University,24,FALSE,0.39,FALSE,0.49,FALSE,0.12,FALSE
+133881,Florida Institute of Technology,9,FALSE,0.48,FALSE,0.46,FALSE,0.06,FALSE
+133951,Florida International University,22,FALSE,0.35,FALSE,0.51,FALSE,0.14,FALSE
+134079,Florida Southern College,11,FALSE,0.57,FALSE,0.43,FALSE,0,FALSE
+134097,Florida State University,17,FALSE,0.63,FALSE,0.28,FALSE,0.1,FALSE
+191241,Fordham University,14,FALSE,0.49,FALSE,0.51,FALSE,0.003,FALSE
+212577,Franklin and Marshall College,9,FALSE,0.63,FALSE,0.36,FALSE,0.01,FALSE
+136774,Franklin W Olin College of Engineering,9,FALSE,0.49,FALSE,0.49,FALSE,0.02,FALSE
+218070,Furman University,10,FALSE,0.75,FALSE,0.25,FALSE,0,FALSE
+232186,George Mason University,16,FALSE,0.33,FALSE,0.53,FALSE,0.14,FALSE
+131469,George Washington University,13,FALSE,0.52,FALSE,0.37,FALSE,0.11,FALSE
+131496,Georgetown University,11,FALSE,0.65,FALSE,0.29,FALSE,0.06,FALSE
+139861,Georgia College & State University,17,FALSE,0.44,FALSE,0.55,FALSE,0.01,FALSE
+133881,Georgia Institute of Technology,21,FALSE,0.36,FALSE,0.37,FALSE,0.27,FALSE
+139940,Georgia State University,25,FALSE,0.23,FALSE,0.55,FALSE,0.22,FALSE
+212674,Gettysburg College,10,FALSE,0.6,FALSE,0.4,FALSE,0.002,FALSE
+235316,Gonzaga University,12,FALSE,0.41,FALSE,0.59,FALSE,0.01,FALSE
+162654,Goucher College,9,FALSE,0.8,FALSE,0.2,FALSE,0,FALSE
+153384,Grinnell College,9,FALSE,0.63,FALSE,0.36,FALSE,0.01,FALSE
+212805,Grove City College,13,FALSE,0.52,FALSE,0.45,FALSE,0.04,FALSE
+173647,Gustavus Adolphus College,11,FALSE,0.64,FALSE,0.36,FALSE,0,FALSE
+191515,Hamilton College,9,FALSE,0.73,FALSE,0.27,FALSE,0.002,FALSE
+164465,Hampshire College,17,FALSE,0.6,FALSE,0.4,FALSE,0,FALSE
+150756,Hanover College,12,FALSE,0.63,FALSE,0.37,FALSE,0.004,FALSE
+166027,Harvard University,7,FALSE,0.72,FALSE,0.17,FALSE,0.12,FALSE
+150756,Harvey Mudd College,8,FALSE,0.62,FALSE,0.33,FALSE,0.05,FALSE
+212911,Haverford College,9,FALSE,0.72,FALSE,0.28,FALSE,0.01,FALSE
+107080,Hendrix College,11,FALSE,0.68,FALSE,0.33,FALSE,0,FALSE
+170286,Hillsdale College,8,FALSE,0.78,FALSE,0.21,FALSE,0.01,FALSE
+191630,Hobart William Smith Colleges,11,FALSE,0.67,FALSE,0.33,FALSE,0,FALSE
+191649,Hofstra University,13,FALSE,0.48,FALSE,0.5,FALSE,0.03,FALSE
+170301,Hope College,9,FALSE,0.49,FALSE,0.5,FALSE,0.003,FALSE
+131520,Howard University,13,FALSE,0.4,FALSE,0.52,FALSE,0.09,FALSE
+145725,Illinois Institute of Technology,17,FALSE,0.5,FALSE,0.42,FALSE,0.09,FALSE
+145646,Illinois Wesleyan University,12,FALSE,0.64,FALSE,0.35,FALSE,0.01,FALSE
+151351,Indiana University-Bloomington,17,FALSE,0.35,FALSE,0.47,FALSE,0.19,FALSE
+153603,Iowa State University,18,FALSE,0.33,FALSE,0.43,FALSE,0.24,FALSE
+191968,Ithaca College,11,FALSE,0.64,FALSE,0.33,FALSE,0.03,FALSE
+232423,James Madison University,17,FALSE,0.36,FALSE,0.52,FALSE,0.12,FALSE
+162928,Johns Hopkins University,6,FALSE,NA,TRUE,NA,TRUE,NA,TRUE
+213251,Juniata College,11,FALSE,0.64,FALSE,0.35,FALSE,0.01,FALSE
+170532,Kalamazoo College,10,FALSE,0.63,FALSE,0.37,FALSE,0,FALSE
+155399,Kansas State University,19,FALSE,0.45,FALSE,0.43,FALSE,0.12,FALSE
+203535,Kenyon College,9,FALSE,0.7,FALSE,0.3,FALSE,0.002,FALSE
+169983,Kettering University,11,FALSE,0.73,FALSE,0.27,FALSE,0,FALSE
+146427,Knox College,11,FALSE,0.84,FALSE,0.16,FALSE,0.004,FALSE
+213385,Lafayette College,10,FALSE,0.65,FALSE,0.34,FALSE,0.003,FALSE
+146481,Lake Forest College,13,FALSE,0.44,FALSE,0.56,FALSE,0,FALSE
+239017,Lawrence University,7,FALSE,0.79,FALSE,0.2,FALSE,0.01,FALSE
+192323,Le Moyne College,12,FALSE,0.51,FALSE,0.48,FALSE,0.01,FALSE
+213543,Lehigh University,10,FALSE,0.46,FALSE,0.44,FALSE,0.1,FALSE
+209056,Lewis & Clark College,12,FALSE,0.57,FALSE,0.43,FALSE,0.01,FALSE
+159382,Louisiana State University,21,FALSE,0.43,FALSE,0.41,FALSE,0.17,FALSE
+117946,Loyola Marymount University,10,FALSE,0.54,FALSE,0.45,FALSE,0.01,FALSE
+146719,Loyola University Chicago,13,FALSE,0.38,FALSE,0.6,FALSE,0.03,FALSE
+163046,Loyola University Maryland,12,FALSE,0.48,FALSE,0.52,FALSE,0.01,FALSE
+173902,Macalester College,10,FALSE,0.69,FALSE,0.31,FALSE,0.002,FALSE
+166692,Maine Maritime Academy,10,FALSE,0.55,FALSE,0.45,FALSE,0,FALSE
+192819,Marist College,16,FALSE,0.51,FALSE,0.49,FALSE,0,FALSE
+239105,Marquette University,14,FALSE,0.37,FALSE,0.53,FALSE,0.1,FALSE
+166683,Massachusetts Institute of Technology,3,FALSE,0.68,FALSE,0.21,FALSE,0.11,FALSE
+140447,Mercer University,11,FALSE,0.55,FALSE,0.41,FALSE,0.04,FALSE
+204024,Miami University-Oxford,16,FALSE,0.27,FALSE,0.64,FALSE,0.09,FALSE
+171100,Michigan State University,17,FALSE,NA,TRUE,NA,TRUE,NA,TRUE
+171128,Michigan Technological University,13,FALSE,0.47,FALSE,0.39,FALSE,0.14,FALSE
+230959,Middlebury College,9,FALSE,0.6,FALSE,0.4,FALSE,0.01,FALSE
+239318,Milwaukee School of Engineering,12,FALSE,0.46,FALSE,0.54,FALSE,0.002,FALSE
+176080,Mississippi State University,16,FALSE,0.43,FALSE,0.43,FALSE,0.14,FALSE
+178411,Missouri University of Science and Technology,17,FALSE,0.4,FALSE,0.46,FALSE,0.14,FALSE
+180461,Montana State University,18,FALSE,0.45,FALSE,0.43,FALSE,0.13,FALSE
+140553,Morehouse College,15,FALSE,0.51,FALSE,0.48,FALSE,0.02,FALSE
+166939,Mount Holyoke College,9,FALSE,0.72,FALSE,0.27,FALSE,0.01,FALSE
+214175,Muhlenberg College,9,FALSE,0.76,FALSE,0.24,FALSE,0.002,FALSE
+133960,New College of Florida,8,FALSE,0.82,FALSE,0.18,FALSE,0,FALSE
+185828,New Jersey Institute of Technology,16,FALSE,0.32,FALSE,0.64,FALSE,0.04,FALSE
+187967,New Mexico Institute of Mining and Technology,9,FALSE,0.66,FALSE,0.31,FALSE,0.03,FALSE
+193900,New York University,8,FALSE,0.59,FALSE,0.31,FALSE,0.1,FALSE
+199193,North Carolina State University,15,FALSE,0.32,FALSE,0.48,FALSE,0.2,FALSE
+167358,Northeastern University,16,FALSE,0.51,FALSE,0.41,FALSE,0.08,FALSE
+147767,Northwestern University,6,FALSE,0.76,FALSE,0.17,FALSE,0.07,FALSE
+204501,Oberlin College,9,FALSE,0.78,FALSE,0.22,FALSE,0.004,FALSE
+120254,Occidental College,9,FALSE,0.69,FALSE,0.31,FALSE,0.002,FALSE
+232937,Ohio State University,14,FALSE,0.39,FALSE,0.42,FALSE,0.19,FALSE
+110778,Ohio University,18,FALSE,0.27,FALSE,0.57,FALSE,0.16,FALSE
+204909,Ohio Wesleyan University,12,FALSE,0.53,FALSE,0.47,FALSE,0,FALSE
+209542,Oregon State University,17,FALSE,0.27,FALSE,0.52,FALSE,0.21,FALSE
+214777,Pennsylvania State University,15,FALSE,0.31,FALSE,0.51,FALSE,0.17,FALSE
+121150,Pepperdine University,12,FALSE,0.69,FALSE,0.29,FALSE,0.02,FALSE
+121257,Pitzer College,10,FALSE,0.77,FALSE,0.23,FALSE,0,FALSE
+121345,Pomona College,7,FALSE,0.72,FALSE,0.27,FALSE,0.01,FALSE
+194578,Pratt Institute-Main,9,FALSE,0.95,FALSE,0.05,FALSE,0.001,FALSE
+186131,Princeton University,5,FALSE,0.76,FALSE,0.15,FALSE,0.1,FALSE
+217402,Providence College,11,FALSE,0.53,FALSE,0.44,FALSE,0.03,FALSE
+243780,Purdue University-Main Campus,15,FALSE,0.41,FALSE,0.39,FALSE,0.2,FALSE
+130226,Quinnipiac University,12,FALSE,0.5,FALSE,0.48,FALSE,0.02,FALSE
+186201,Ramapo College of New Jersey,17,FALSE,0.41,FALSE,0.59,FALSE,0,FALSE
+209922,Reed College,9,FALSE,0.77,FALSE,0.22,FALSE,0.01,FALSE
+194824,Rensselaer Polytechnic Institute,14,FALSE,0.45,FALSE,0.38,FALSE,0.17,FALSE
+217493,Rhode Island School of Design,8,FALSE,NA,TRUE,NA,TRUE,NA,TRUE
+221351,Rhodes College,9,FALSE,0.8,FALSE,0.2,FALSE,0,FALSE
+227757,Rice University,6,FALSE,0.64,FALSE,0.26,FALSE,0.1,FALSE
+195003,Rochester Institute of Technology,13,FALSE,0.47,FALSE,0.46,FALSE,0.07,FALSE
+136950,Rollins College,12,FALSE,0.62,FALSE,0.38,FALSE,0.003,FALSE
+152318,Rose-Hulman Institute of Technology,12,FALSE,0.42,FALSE,0.58,FALSE,0.002,FALSE
+184782,Rowan University,17,FALSE,0.43,FALSE,0.57,FALSE,0.004,FALSE
+186371,Rutgers University-Camden,12,FALSE,0.55,FALSE,0.41,FALSE,0.05,FALSE
+186380,Rutgers University-New Brunswick,16,FALSE,0.37,FALSE,0.42,FALSE,0.21,FALSE
+186399,Rutgers University-Newark,14,FALSE,0.35,FALSE,0.53,FALSE,0.12,FALSE
+183239,Saint Anselm College,12,FALSE,0.61,FALSE,0.37,FALSE,0.02,FALSE
+179159,Saint Louis University,9,FALSE,NA,TRUE,NA,TRUE,NA,TRUE
+231059,Saint Michael's College,10,FALSE,0.73,FALSE,0.27,FALSE,0,FALSE
+122409,San Diego State University,24,FALSE,0.29,FALSE,0.52,FALSE,0.19,FALSE
+122755,San Jose State University,26,FALSE,0.18,FALSE,0.71,FALSE,0.12,FALSE
+122931,Santa Clara University,11,FALSE,0.43,FALSE,0.56,FALSE,0.01,FALSE
+195304,Sarah Lawrence College,10,FALSE,0.77,FALSE,0.22,FALSE,0.01,FALSE
+123165,Scripps College,10,FALSE,0.75,FALSE,0.25,FALSE,0,FALSE
+236595,Seattle University,11,FALSE,0.4,FALSE,0.6,FALSE,0.01,FALSE
+195474,Siena College,12,FALSE,0.37,FALSE,0.63,FALSE,0,FALSE
+167783,Simmons University,9,FALSE,0.55,FALSE,0.43,FALSE,0.01,FALSE
+195526,Skidmore College,8,FALSE,0.76,FALSE,0.24,FALSE,0.004,FALSE
+167835,Smith College,8,FALSE,0.68,FALSE,0.29,FALSE,0.03,FALSE
+204848,Soka University of America,7,FALSE,0.95,FALSE,0.05,FALSE,0,FALSE
+228246,Southern Methodist University,11,FALSE,0.54,FALSE,0.35,FALSE,0.11,FALSE
+228343,Southwestern University,11,FALSE,0.68,FALSE,0.32,FALSE,0,FALSE
+141060,Spelman College,11,FALSE,0.57,FALSE,0.41,FALSE,0.01,FALSE
+230597,St. John's College (MD),7,FALSE,0.99,FALSE,0.01,FALSE,0.01,FALSE
+230597,St. John's College (NM),7,FALSE,0.98,FALSE,0.02,FALSE,0,FALSE
+195216,St. Lawrence University,11,FALSE,0.66,FALSE,0.33,FALSE,0.01,FALSE
+163912,St. Mary's College of Maryland,10,FALSE,0.69,FALSE,0.3,FALSE,0.01,FALSE
+174844,St. Olaf College,12,FALSE,0.41,FALSE,0.58,FALSE,0.02,FALSE
+243744,Stanford University,6,FALSE,0.7,FALSE,0.19,FALSE,0.11,FALSE
+196176,State University of New York at New Paltz,16,FALSE,0.43,FALSE,0.54,FALSE,0.03,FALSE
+137546,Stetson University,10,FALSE,0.73,FALSE,0.26,FALSE,0.01,FALSE
+186867,Stevens Institute of Technology,11,FALSE,0.31,FALSE,0.55,FALSE,0.14,FALSE
+167996,Stonehill College,12,FALSE,0.52,FALSE,0.47,FALSE,0.01,FALSE
+196097,Stony Brook University,19,FALSE,0.36,FALSE,0.44,FALSE,0.21,FALSE
+196219,SUNY at Purchase College,12,FALSE,0.69,FALSE,0.29,FALSE,0.03,FALSE
+196167,SUNY College at Geneseo,16,FALSE,0.36,FALSE,0.55,FALSE,0.09,FALSE
+196103,SUNY College of Environmental Science and Forestry,14,FALSE,0.6,FALSE,0.31,FALSE,0.1,FALSE
+216287,Swarthmore College,7,FALSE,0.71,FALSE,0.27,FALSE,0.03,FALSE
+196413,Syracuse University,15,FALSE,0.61,FALSE,0.3,FALSE,0.09,FALSE
+216339,Temple University,12,FALSE,0.44,FALSE,0.51,FALSE,0.06,FALSE
+228723,Texas A&M University-College Station,21,FALSE,0.27,FALSE,0.47,FALSE,0.26,FALSE
+228875,Texas Christian University,14,FALSE,0.39,FALSE,0.55,FALSE,0.06,FALSE
+229115,Texas Tech University,20,FALSE,0.33,FALSE,0.46,FALSE,0.21,FALSE
+187134,The College of New Jersey,14,FALSE,0.35,FALSE,0.65,FALSE,0.003,FALSE
+206589,The College of Wooster,10,FALSE,0.64,FALSE,0.36,FALSE,0.002,FALSE
+193654,The New School,9,FALSE,0.95,FALSE,0.04,FALSE,0.001,FALSE
+100751,The University of Alabama,19,FALSE,0.42,FALSE,0.38,FALSE,0.2,FALSE
+180489,The University of Montana,18,FALSE,0.47,FALSE,0.43,FALSE,0.1,FALSE
+137847,The University of Tampa,17,FALSE,0.32,FALSE,0.67,FALSE,0.02,FALSE
+221759,The University of Tennessee-Knoxville,18,FALSE,0.29,FALSE,0.54,FALSE,0.17,FALSE
+228778,The University of Texas at Austin,18,FALSE,0.37,FALSE,0.39,FALSE,0.24,FALSE
+228787,The University of Texas at Dallas,23,FALSE,0.24,FALSE,0.47,FALSE,0.29,FALSE
+221519,The University of the South,9,FALSE,0.66,FALSE,0.33,FALSE,0.01,FALSE
+161563,Thomas Aquinas College,10,FALSE,1,FALSE,0,FALSE,0,FALSE
+216366,Thomas Jefferson University,12,FALSE,0.61,FALSE,0.37,FALSE,0.02,FALSE
+164076,Towson University,14,FALSE,0.38,FALSE,0.59,FALSE,0.03,FALSE
+130590,Trinity College,9,FALSE,0.67,FALSE,0.33,FALSE,0.004,FALSE
+229267,Trinity University,9,FALSE,0.69,FALSE,0.31,FALSE,0.01,FALSE
+178615,Truman State University,12,FALSE,0.62,FALSE,0.37,FALSE,0.003,FALSE
+168148,Tufts University,10,FALSE,0.59,FALSE,0.33,FALSE,0.08,FALSE
+160755,Tulane University of Louisiana,7,FALSE,0.61,FALSE,0.32,FALSE,0.08,FALSE
+157863,Union College,9,FALSE,0.69,FALSE,0.31,FALSE,0.003,FALSE
+128328,United States Air Force Academy,8,FALSE,0.6,FALSE,0.4,FALSE,0,FALSE
+130624,United States Coast Guard Academy,7,FALSE,NA,TRUE,NA,TRUE,NA,TRUE
+128328,United States Merchant Marine Academy,9,FALSE,NA,TRUE,NA,TRUE,NA,TRUE
+197036,United States Military Academy,6,FALSE,0.97,FALSE,0.03,FALSE,0,FALSE
+164155,United States Naval Academy,8,FALSE,0.67,FALSE,0.33,FALSE,0.004,FALSE
+196088,University at Buffalo,11,FALSE,0.35,FALSE,0.45,FALSE,0.2,FALSE
+100663,University of Alabama at Birmingham,18,FALSE,0.5,FALSE,0.38,FALSE,0.12,FALSE
+104179,University of Arizona,20,FALSE,0.28,FALSE,0.54,FALSE,0.18,FALSE
+106397,University of Arkansas,20,FALSE,0.39,FALSE,0.42,FALSE,0.2,FALSE
+110635,University of California-Berkeley,18,FALSE,0.5,FALSE,0.3,FALSE,0.21,FALSE
+110644,University of California-Davis,22,FALSE,0.31,FALSE,0.35,FALSE,0.34,FALSE
+110653,University of California-Irvine,19,FALSE,0.46,FALSE,0.33,FALSE,0.22,FALSE
+110662,University of California-Los Angeles,20,FALSE,0.47,FALSE,0.29,FALSE,0.24,FALSE
+445188,University of California-Merced,20,FALSE,0.23,FALSE,0.45,FALSE,0.32,FALSE
+110671,University of California-Riverside,22,FALSE,0.27,FALSE,0.41,FALSE,0.32,FALSE
+110680,University of California-San Diego,19,FALSE,0.39,FALSE,0.34,FALSE,0.27,FALSE
+110705,University of California-Santa Barbara,17,FALSE,0.57,FALSE,0.25,FALSE,0.19,FALSE
+110714,University of California-Santa Cruz,22,FALSE,0.27,FALSE,0.47,FALSE,0.27,FALSE
+132903,University of Central Florida,28,FALSE,0.28,FALSE,0.47,FALSE,0.25,FALSE
+144050,University of Chicago,5,FALSE,0.78,FALSE,0.16,FALSE,0.07,FALSE
+201885,University of Cincinnati-Main Campus,19,FALSE,0.33,FALSE,0.47,FALSE,0.2,FALSE
+126614,University of Colorado-Boulder,19,FALSE,0.4,FALSE,0.41,FALSE,0.2,FALSE
+129020,University of Connecticut,17,FALSE,0.53,FALSE,0.3,FALSE,0.17,FALSE
+224323,University of Dallas,11,FALSE,0.64,FALSE,0.35,FALSE,0.01,FALSE
+130943,University of Delaware,13,FALSE,0.32,FALSE,0.5,FALSE,0.19,FALSE
+127060,University of Denver,9,FALSE,0.54,FALSE,0.39,FALSE,0.07,FALSE
+134130,University of Florida,16,FALSE,0.5,FALSE,0.39,FALSE,0.1,FALSE
+139959,University of Georgia,17,FALSE,0.45,FALSE,0.43,FALSE,0.12,FALSE
+225511,University of Houston,22,FALSE,0.33,FALSE,0.44,FALSE,0.24,FALSE
+142285,University of Idaho,18,FALSE,0.58,FALSE,0.32,FALSE,0.1,FALSE
+145600,University of Illinois at Chicago,17,FALSE,0.32,FALSE,0.49,FALSE,0.19,FALSE
+145637,University of Illinois at Urbana-Champaign,20,FALSE,0.38,FALSE,0.42,FALSE,0.2,FALSE
+153658,University of Iowa,16,FALSE,0.49,FALSE,0.37,FALSE,0.14,FALSE
+155317,University of Kansas,18,FALSE,0.4,FALSE,0.43,FALSE,0.17,FALSE
+157085,University of Kentucky,18,FALSE,0.35,FALSE,0.5,FALSE,0.15,FALSE
+157289,University of Louisville,14,FALSE,0.4,FALSE,0.5,FALSE,0.1,FALSE
+161253,University of Maine,15,FALSE,0.42,FALSE,0.44,FALSE,0.15,FALSE
+232681,University of Mary Washington,14,FALSE,0.57,FALSE,0.39,FALSE,0.05,FALSE
+163268,University of Maryland-Baltimore County,17,FALSE,0.43,FALSE,0.45,FALSE,0.12,FALSE
+163286,University of Maryland-College Park,17,FALSE,0.46,FALSE,0.36,FALSE,0.18,FALSE
+166629,University of Massachusetts-Amherst,17,FALSE,0.47,FALSE,0.35,FALSE,0.18,FALSE
+166638,University of Massachusetts-Boston,15,FALSE,0.4,FALSE,0.54,FALSE,0.06,FALSE
+166513,University of Massachusetts-Lowell,17,FALSE,0.45,FALSE,0.5,FALSE,0.05,FALSE
+135726,University of Miami,11,FALSE,0.53,FALSE,0.4,FALSE,0.07,FALSE
+171146,University of Michigan,15,FALSE,0.52,FALSE,0.29,FALSE,0.19,FALSE
+174233,University of Minnesota-Duluth,16,FALSE,0.42,FALSE,0.47,FALSE,0.11,FALSE
+174075,University of Minnesota-Morris,9,FALSE,0.82,FALSE,0.18,FALSE,0.003,FALSE
+174066,University of Minnesota-Twin Cities,17,FALSE,0.36,FALSE,0.44,FALSE,0.2,FALSE
+176017,University of Mississippi,18,FALSE,0.46,FALSE,0.38,FALSE,0.16,FALSE
+178396,University of Missouri-Columbia,17,FALSE,0.42,FALSE,0.4,FALSE,0.18,FALSE
+181464,University of Nebraska-Lincoln,17,FALSE,0.31,FALSE,0.49,FALSE,0.2,FALSE
+182281,University of Nevada-Las Vegas,19,FALSE,0.46,FALSE,0.42,FALSE,0.12,FALSE
+182290,University of Nevada-Reno,17,FALSE,0.37,FALSE,0.45,FALSE,0.18,FALSE
+183044,University of New Hampshire,17,FALSE,0.35,FALSE,0.49,FALSE,0.16,FALSE
+199111,University of North Carolina at Asheville,13,FALSE,0.52,FALSE,0.47,FALSE,0.01,FALSE
+199120,University of North Carolina at Chapel Hill,15,FALSE,0.42,FALSE,0.45,FALSE,0.13,FALSE
+199139,University of North Carolina at Charlotte,21,FALSE,0.25,FALSE,0.45,FALSE,0.3,FALSE
+199148,University of North Carolina at Greensboro,18,FALSE,0.33,FALSE,0.5,FALSE,0.18,FALSE
+199218,University of North Carolina-Wilmington,17,FALSE,0.36,FALSE,0.55,FALSE,0.09,FALSE
+152080,University of Notre Dame,8,FALSE,0.6,FALSE,0.32,FALSE,0.09,FALSE
+200280,University of Oklahoma,18,FALSE,0.41,FALSE,0.48,FALSE,0.11,FALSE
+209551,University of Oregon,18,FALSE,0.36,FALSE,0.46,FALSE,0.18,FALSE
+215062,University of Pennsylvania,8,FALSE,0.59,FALSE,0.22,FALSE,0.2,FALSE
+215266,University of Pittsburgh,13,FALSE,0.4,FALSE,0.42,FALSE,0.17,FALSE
+209825,University of Portland,9,FALSE,0.45,FALSE,0.55,FALSE,0.003,FALSE
+236328,University of Puget Sound,10,FALSE,0.67,FALSE,0.33,FALSE,0.01,FALSE
+121691,University of Redlands,10,FALSE,0.65,FALSE,0.35,FALSE,0.004,FALSE
+217484,University of Rhode Island,17,FALSE,0.38,FALSE,0.52,FALSE,0.11,FALSE
+233374,University of Richmond,7,FALSE,0.76,FALSE,0.24,FALSE,0.001,FALSE
+195030,University of Rochester,9,FALSE,0.68,FALSE,0.21,FALSE,0.12,FALSE
+122436,University of San Diego,13,FALSE,0.41,FALSE,0.59,FALSE,0.002,FALSE
+122612,University of San Francisco,11,FALSE,0.43,FALSE,0.57,FALSE,0.004,FALSE
+215929,University of Scranton,11,FALSE,0.52,FALSE,0.48,FALSE,0.001,FALSE
+218645,University of South Carolina,19,FALSE,0.34,FALSE,0.51,FALSE,0.16,FALSE
+137351,University of South Florida,22,FALSE,0.37,FALSE,0.48,FALSE,0.15,FALSE
+123961,University of Southern California,8,FALSE,0.61,FALSE,0.27,FALSE,0.12,FALSE
+174914,University of St. Thomas (MN),13,FALSE,0.35,FALSE,0.65,FALSE,0.01,FALSE
+230764,University of Utah,19,FALSE,0.43,FALSE,0.37,FALSE,0.21,FALSE
+231174,University of Vermont,17,FALSE,0.41,FALSE,0.41,FALSE,0.18,FALSE
+234076,University of Virginia,14,FALSE,0.47,FALSE,0.36,FALSE,0.16,FALSE
+377555,University of Washington-Bothell Campus,22,FALSE,0.16,FALSE,0.79,FALSE,0.05,FALSE
+236948,University of Washington-Seattle,20,FALSE,0.29,FALSE,0.44,FALSE,0.27,FALSE
+240444,University of Wisconsin-Madison,18,FALSE,0.42,FALSE,0.34,FALSE,0.24,FALSE
+216524,Ursinus College,10,FALSE,0.6,FALSE,0.4,FALSE,0.01,FALSE
+221999,Vanderbilt University,8,FALSE,0.59,FALSE,0.33,FALSE,0.08,FALSE
+197133,Vassar College,7,FALSE,0.72,FALSE,0.28,FALSE,0.001,FALSE
+216597,Villanova University,10,FALSE,0.44,FALSE,0.54,FALSE,0.03,FALSE
+234030,Virginia Commonwealth University,17,FALSE,0.33,FALSE,0.52,FALSE,0.15,FALSE
+234030,Virginia Tech,17,FALSE,0.33,FALSE,0.46,FALSE,0.21,FALSE
+123299,Wabash College,9,FALSE,0.71,FALSE,0.29,FALSE,0.004,FALSE
+199847,Wake Forest University,10,FALSE,0.64,FALSE,0.35,FALSE,0.01,FALSE
+234207,Washington and Lee University,7,FALSE,0.8,FALSE,0.2,FALSE,0,FALSE
+206507,Washington College,8,FALSE,0.86,FALSE,0.14,FALSE,0,FALSE
+236939,Washington State University,13,FALSE,0.34,FALSE,0.46,FALSE,0.2,FALSE
+179867,Washington University in St. Louis,7,FALSE,0.65,FALSE,0.26,FALSE,0.1,FALSE
+168218,Wellesley College,8,FALSE,0.68,FALSE,0.32,FALSE,0.002,FALSE
+168227,Wentworth Institute of Technology,17,FALSE,0.37,FALSE,0.62,FALSE,0.01,FALSE
+130697,Wesleyan University,7,FALSE,0.74,FALSE,0.24,FALSE,0.01,FALSE
+216764,West Chester University of Pennsylvania,20,FALSE,0.3,FALSE,0.67,FALSE,0.04,FALSE
+238032,West Virginia University,19,FALSE,0.43,FALSE,0.4,FALSE,0.17,FALSE
+125727,Westmont College,11,FALSE,0.59,FALSE,0.4,FALSE,0.01,FALSE
+149781,Wheaton College (IL),10,FALSE,0.61,FALSE,0.32,FALSE,0.06,FALSE
+149781,Wheaton College (MA),12,FALSE,0.61,FALSE,0.38,FALSE,0.01,FALSE
+237057,Whitman College,10,FALSE,0.69,FALSE,0.31,FALSE,0,FALSE
+121257,Whittier College,8,FALSE,0.77,FALSE,0.23,FALSE,0,FALSE
+210401,Willamette University,12,FALSE,0.75,FALSE,0.25,FALSE,0,FALSE
+168342,Williams College,7,FALSE,0.71,FALSE,0.27,FALSE,0.02,FALSE
+218973,Wofford College,12,FALSE,0.56,FALSE,0.44,FALSE,0,FALSE
+168421,Worcester Polytechnic Institute,13,FALSE,0.66,FALSE,0.24,FALSE,0.11,FALSE
+130794,Yale University,5,FALSE,0.73,FALSE,0.18,FALSE,0.09,FALSE
+197708,Yeshiva University,7,FALSE,0.62,FALSE,0.38,FALSE,0.003,FALSE

@@ -50,6 +50,11 @@ class_size_clean <- class_size %>%
 # handle not reported
 class_size_clean <- class_size_clean %>%
   mutate(
+    STUFACR_nr = STUFACR == "Not Reported",
+    CLASIZUND20_nr = CLASIZUND20 == "Not Reported",
+    CLASIZ2049_nr = CLASIZ2049 == "Not Reported",
+    CLASIZOVE50_nr = CLASIZOVE50 == "Not Reported",
+    
     STUFACR = parse_number(STUFACR, na = c("Not Reported")),
     CLASIZUND20 = parse_number(CLASIZUND20, na = c("Not Reported")),
     CLASIZ2049 = parse_number(CLASIZ2049, na = c("Not Reported")),
@@ -102,7 +107,7 @@ ipeds_clean_unique <- ipeds_clean %>%
 final_data <- class_size_clean %>%
   left_join(ipeds_clean_unique %>% select(UNITID, INSTNM_clean),
             by = join_by(matched_name == INSTNM_clean)) %>%
-  select(UNITID, INSTNM, STUFACR, CLASIZUND20, CLASIZ2049, CLASIZOVE50) %>%
+  select(UNITID, INSTNM, STUFACR, STUFACR_nr, CLASIZUND20, CLASIZUND20_nr, CLASIZ2049, CLASIZ2049_nr, CLASIZOVE50, CLASIZOVE50_nr) %>%
   filter(!UNITID %in% remove_unitids$UNITID)
 
 # write to table
