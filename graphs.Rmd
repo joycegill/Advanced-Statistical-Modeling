@@ -1,23 +1,25 @@
 ---
 title: "Graphs"
-author: "Joyce Gill"
+author: "Joyce Gill, Khanh Do"
 date: "2026-02-10"
-output: pdf_document
+output:
+  word_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-```
-
-```{r}
 library(ggplot2)
 library(dplyr)
 library(tidyr)
 library(tidyverse)
 library(effectsize)
+library(corrplot)
+library(patchwork)
 ```
 
-```{r}
+
+```{r echo=FALSE}
 ## Read Data
 adm_test_f2024 <- read.csv("data/custom_data/ADM_TEST_F2024.csv")
 inst_chars_dir_2024_25 <- read.csv("data/custom_data/INST_CHARS_DIR_2024_25.csv")
@@ -28,6 +30,7 @@ finance_2023_24 <- read.csv("data/custom_data/FINANCE_2023_24.csv")
 costs_f2024 <- read.csv("data/custom_data/COSTS_F2024.csv")
 fin_aid_2023_24 <- read.csv("data/custom_data/FIN_AID_2023_24.csv")
 completion_cip_2023_24 <- read.csv("data/custom_data/COMPLETION_CIP_2023_24.csv")
+class_size <- read.csv("data/custom_data/CLASS_SIZE_2024_25.csv")
 ```
 ## SAT Scores by Admission Requirement
 Do schools that require SAT scores have higher average SAT scores than schools that do not require them?
@@ -291,4 +294,81 @@ cor.test(faculty_ratio_graduation$student_faculty_ratio, faculty_ratio_graduatio
 Tuition vs Post-Graduation Salary: Are Higher Tuition Levels Associated with Higher Earnings?
 
 Tuition vs Instructional Spending: Are Higher-Tuition Schools Actually Investing More?
+
+## Class-size vs Tuition Cost
+```{r}
+# MERGE THE DATASETS
+# We join your already loaded 'class_size' and 'costs_f2024' on 'UNITID'
+# UNITID is the unique identifier for all IPEDS institutions [3, 4].
+
+analysis_df <- class_size %>%
+  inner_join(costs_f2024, by = c("UNITID" = "unitid")) %>%
+  select(UNITID, STUFACR, CLASIZUND20, CLASIZOVE50, `COST1_2024.Out.of.state.average.tuition.for.full.time.undergraduates`) %>%
+  filter(!is.na(`COST1_2024.Out.of.state.average.tuition.for.full.time.undergraduates`) & !is.na(STUFACR))
+
+# Predicting Out of state average tuition for full time undergraduates
+# based on Student-to-Faculty Ratio and Class Size
+ggplot(analysis_df, aes(x = STUFACR, y = `COST1_2024.Out.of.state.average.tuition.for.full.time.undergraduates`)) +
+  geom_point(aes(size = CLASIZUND20), alpha = 0.3, color = "darkblue") +
+  geom_smooth(method = "lm", formula = y ~ x, color = "red", se = TRUE) +
+  labs(title = "Predicting 2024-25 Tuition by Student-Faculty Ratio",
+       subtitle = "Bubbles sized by probability of classes having <20 students",
+       x = "Student-to-Faculty Ratio",
+       y = "Out of state average tuition",
+       size = "Prob. Small Classes") +
+  theme_minimal()
+
+ggplot(analysis_df, aes(x = STUFACR, y = `COST1_2024.Out.of.state.average.tuition.for.full.time.undergraduates`)) +
+  geom_point(aes(size = CLASIZOVE50), alpha = 0.3, color = "darkblue") +
+  geom_smooth(method = "lm", formula = y ~ x, color = "red", se = TRUE) +
+  labs(title = "Predicting 2024-25 Tuition by Student-Faculty Ratio",
+       subtitle = "Bubbles sized by probability of classes having >50 students",
+       x = "Student-to-Faculty Ratio",
+       y = "Out of state average tuition",
+       size = "Prob. Big Classes") +
+  theme_minimal()
+
+# Correlation Test
+cor.test(analysis_df$STUFACR, analysis_df$COST1_2024.Out.of.state.average.tuition.for.full.time.undergraduates)
+cor.test(analysis_df$CLASIZUND20, analysis_df$COST1_2024.Out.of.state.average.tuition.for.full.time.undergraduates) 
+cor.test(analysis_df$CLASIZOVE50, analysis_df$COST1_2024.Out.of.state.average.tuition.for.full.time.undergraduates)
+```
+
+
+## Average Tuition vs Combined Food and Housing Charge
+
+```{r}
+df_costs <- costs_f2024 %>%
+  select(
+    unitid,
+    InState = COST1_2024.In.state.average.tuition.for.full.time.undergraduates,
+    OutState = COST1_2024.Out.of.state.average.tuition.for.full.time.undergraduates,
+    RoomBoard = COST1_2024.Combined.food.and.housing.charge
+  ) %>%
+  filter(!is.na(InState) & !is.na(OutState) & !is.na(RoomBoard))
+
+# MULTIPLE LINEAR REGRESSION
+# Model: Does tuition (In vs Out) predict housing costs?
+cost_model <- lm(RoomBoard ~ InState + OutState, data = df_costs)
+summary(cost_model)
+
+# 3. VISUALIZATION: Dual-Panel Comparison
+# Plot A: In-State Tuition vs Room & Board
+p1 <- ggplot(df_costs, aes(x = InState, y = RoomBoard)) +
+  geom_point(alpha = 0.3, color = "darkblue") +
+  geom_smooth(method = "lm", color = "blue") +
+  labs(title = "In-State Tuition vs. Living Costs",
+       x = "Avg In-State Tuition", y = "Combined Food/Housing") +
+  theme_minimal()
+
+# Plot B: Out-of-State Tuition vs Room & Board
+p2 <- ggplot(df_costs, aes(x = OutState, y = RoomBoard)) +
+  geom_point(alpha = 0.3, color = "darkred") +
+  geom_smooth(method = "lm", color = "red") +
+  labs(title = "Out-of-State Tuition vs. Living Costs",
+       x = "Avg Out-of-State Tuition", y = "Combined Food/Housing") +
+  theme_minimal()
+
+p1 + p2 + plot_annotation(title = "Tuition Levels as Predictors of Housing Charges (2024-25)")
+```
 
