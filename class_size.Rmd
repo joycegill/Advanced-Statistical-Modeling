@@ -107,6 +107,7 @@ ipeds_clean_unique <- ipeds_clean %>%
 final_data <- class_size_clean %>%
   left_join(ipeds_clean_unique %>% select(UNITID, INSTNM_clean),
             by = join_by(matched_name == INSTNM_clean)) %>%
+  mutate(UNITID = as.character(UNITID)) %>%
   select(UNITID, INSTNM, STUFACR, STUFACR_nr, CLASIZUND20, CLASIZUND20_nr, CLASIZ2049, CLASIZ2049_nr, CLASIZOVE50, CLASIZOVE50_nr) %>%
   filter(!UNITID %in% remove_unitids$UNITID)
 
