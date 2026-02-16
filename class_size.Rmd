@@ -1,0 +1,110 @@
+---
+title: "class_size"
+author: "Khanh Do"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(stringr)
+library(readr)
+library(stringdist)
+```
+
+Class size data [source](https://www.collegetransitions.com/dataverse/class-size-and-student-to-faculty-ratio). Only for 300 of the most selective postsecondary institutions.
+
+```{r}
+# helper
+clean_names <- function(x) {
+  x %>%
+    str_to_lower() %>%
+    str_replace_all("&", "and") %>%
+    str_replace_all("[[:punct:]]", "") %>%
+    str_squish()
+}
+```
+
+```{r}
+# read data
+class_size <- read_csv("data/raw/CLASS_SIZE_2024_25.csv",
+                       quote = "\"",
+                       trim_ws = TRUE,
+                       show_col_types = FALSE)
+
+INST_CHARS_DIR_2024_25 <- read_csv("data/custom_data/INST_CHARS_DIR_2024_25.csv", show_col_types = FALSE)
+
+remove_unitids <- read_csv("data/remove_unitids.csv", show_col_types = FALSE)
+
+# clean and rename variable
+class_size_clean <- class_size %>%
+  rename(
+    INSTNM = Institution,
+    STUFACR = `Student-to-Faculty Ratio`,
+    CLASIZUND20 = `Class Size (% of Classes Under 20)`,
+    CLASIZ2049 = `Class Size (% of Classes 20-49)`,
+    CLASIZOVE50 = `Class Size (% of Classes 50 or more)`
+  )
+
+# handle not reported
+class_size_clean <- class_size_clean %>%
+  mutate(
+    STUFACR = parse_number(STUFACR, na = c("Not Reported")),
+    CLASIZUND20 = parse_number(CLASIZUND20, na = c("Not Reported")),
+    CLASIZ2049 = parse_number(CLASIZ2049, na = c("Not Reported")),
+    CLASIZOVE50 = parse_number(CLASIZOVE50, na = c("Not Reported"))
+  )
+
+
+# convert to numeric
+class_size_clean <- class_size_clean %>%
+  mutate(
+    # extract numeric part of ratio (e.g., "10:1" -> 10)
+    STUFACR = as.numeric(str_extract(STUFACR, "^[0-9]+")),
+    
+    # remove % and convert to numeric
+    CLASIZUND20 = as.numeric(str_remove(CLASIZUND20, "%")),
+    CLASIZ2049 = as.numeric(str_remove(CLASIZ2049, "%")),
+    CLASIZOVE50 = as.numeric(str_remove(CLASIZOVE50, "%"))
+  )
+
+# make sure names are trimmed and lowercase
+class_size_clean <- class_size_clean %>%
+  mutate(INSTNM_clean = tolower(trimws(INSTNM)))
+
+ipeds_clean <- INST_CHARS_DIR_2024_25 %>%
+  select(UNITID = unitid, `institution name...2`) %>%
+  mutate(INSTNM_clean = tolower(trimws(`institution name...2`)))
+
+# function to find closest match
+find_closest <- function(name, choices) {
+  distances <- stringdist::stringdist(name, choices, method = "jw")
+  choices[which.min(distances)]
+}
+
+# apply for each institution in class_size
+class_size_clean <- class_size_clean %>%
+  rowwise() %>%
+  mutate(
+    # be extra careful with duplicated data when doing analysis
+    matched_name = find_closest(INSTNM_clean, ipeds_clean$INSTNM_clean)
+  ) %>%
+  ungroup()
+
+ipeds_clean_unique <- ipeds_clean %>%
+  group_by(INSTNM_clean) %>%
+  slice(1) %>%   # take the first UNITID for each name
+  ungroup()
+
+
+# join UNITID
+final_data <- class_size_clean %>%
+  left_join(ipeds_clean_unique %>% select(UNITID, INSTNM_clean),
+            by = join_by(matched_name == INSTNM_clean)) %>%
+  select(UNITID, INSTNM, STUFACR, CLASIZUND20, CLASIZ2049, CLASIZOVE50) %>%
+  filter(!UNITID %in% remove_unitids$UNITID)
+
+# write to table
+write_csv(final_data, "data/custom_data/CLASS_SIZE_2024_25.csv")
+```

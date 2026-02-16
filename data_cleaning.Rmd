@@ -97,5 +97,7 @@ cleaned_tables <- lapply(names(tables_2024), function(name) {
   )
 })
 
+write_csv(remove_unitids, "data/remove_unitids.csv")
+
 names(cleaned_tables) <- paste0(names(tables_2024), "_clean")
 ```
