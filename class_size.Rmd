@@ -64,9 +64,9 @@ class_size_clean <- class_size_clean %>%
     STUFACR = as.numeric(str_extract(STUFACR, "^[0-9]+")),
     
     # remove % and convert to numeric
-    CLASIZUND20 = as.numeric(str_remove(CLASIZUND20, "%")),
-    CLASIZ2049 = as.numeric(str_remove(CLASIZ2049, "%")),
-    CLASIZOVE50 = as.numeric(str_remove(CLASIZOVE50, "%"))
+    CLASIZUND20 = as.numeric(str_remove(CLASIZUND20, "%")) / 100,
+    CLASIZ2049 = as.numeric(str_remove(CLASIZ2049, "%")) / 100,
+    CLASIZOVE50 = as.numeric(str_remove(CLASIZOVE50, "%")) / 100
   )
 
 # make sure names are trimmed and lowercase
