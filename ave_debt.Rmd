@@ -1,0 +1,37 @@
+---
+title: "ave_debt"
+author: "Khanh Do"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(stringr)
+library(readr)
+library(stringdist)
+```
+
+Average total debt data [source](https://www.collegetransitions.com/dataverse/average-student-debt). Only for 300 of the most selective postsecondary institutions.
+
+```{r}
+# read_data
+ave_debt <- read_csv("data/raw/AVE_DEBT_2024_25.csv",
+                       quote = "\"",
+                       trim_ws = TRUE,
+                       show_col_types = FALSE)
+
+# convert to the right type
+ave_debt_clean <- ave_debt_clean %>%
+  mutate(
+    UNITID = as.character(UNITID),
+    PERCBOR = as.numeric(PERCBOR),
+    PROPBOR = as.numeric(PROPBOR),
+    AVEDEBT = as.numeric(AVEDEBT)
+  ) %>% 
+  select(!PERCBOR)
+
+# write to table
+write_csv(ave_debt_clean, "data/custom_data/AVE_DEBT_2024_25.csv")
+```
