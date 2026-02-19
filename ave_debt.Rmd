@@ -66,9 +66,7 @@ ave_debt <- ave_debt %>%
 
 # Check for any missing UNITID
 missing_unitid <- ave_debt %>% 
-  filter(is.na(UNITID)) %>%
-  # remove extra < 500 population school
-  filter(!INSTNM %in% c("St. John's College (MD)", "St. John's College (NM)", "College of the Atlantic"))
+  filter(is.na(UNITID))
 
 if(nrow(missing_unitid) > 0) {
   print("Some institutions could not be matched to a UNITID:")
@@ -82,12 +80,19 @@ ave_debt_clean <- ave_debt %>%
     PROPBOR = as.numeric(PROPBOR),
     AVEDEBT = as.numeric(AVEDEBT)
   ) %>% 
-  select(UNITID, everything(), -match_distance, -INSTNM_clean)
+  select(UNITID, everything(), -match_distance, -INSTNM_clean) %>%
+  # remove schools
+  filter(!UNITID %in% remove_unitids$UNITID) %>%
+  # remove extra < 500 population school
+  filter(!INSTNM %in% c("St. John's College (MD)", "St. John's College (NM)", "College of the Atlantic"))
 
 ## check for dup
 # ave_debt_clean %>%
 #      count(UNITID) %>%
 #      filter(n > 1)
+# 
+# ave_debt_clean %>%
+#   filter(is.na(UNITID))
 
 # write to table
 write_csv(ave_debt_clean, "data/custom_data/AVE_DEBT_2024_25.csv")
