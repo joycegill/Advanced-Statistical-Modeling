@@ -15,22 +15,79 @@ library(stringdist)
 
 Average total debt data [source](https://www.collegetransitions.com/dataverse/average-student-debt). Only for 300 of the most selective postsecondary institutions.
 
+Helper
+```{r}
+clean_names <- function(x) {
+  x %>%
+    str_to_lower() %>%
+    str_replace_all("&", "and") %>%
+    str_replace_all("[[:punct:]]", "") %>%
+    str_squish()
+}
+```
+
 ```{r}
 # read_data
 ave_debt <- read_csv("data/raw/AVE_DEBT_2024_25.csv",
                        quote = "\"",
                        trim_ws = TRUE,
                        show_col_types = FALSE)
+class_size_clean <- read_csv("data/custom_data/CLASS_SIZE_2024_25.csv")
+remove_unitids <- read_csv("data/remove_unitids.csv", show_col_types = FALSE)
+
+ave_debt <- ave_debt %>%
+  mutate(INSTNM_clean = clean_names(INSTNM))
+class_size_clean <- class_size_clean %>%
+  mutate(INSTNM_clean = clean_names(INSTNM))
+
+# Compute string distance matrix
+dist_matrix <- stringdist::stringdistmatrix(
+  ave_debt$INSTNM_clean,
+  class_size_clean$INSTNM_clean,
+  method = "jw"
+)
+
+best_match_index <- apply(dist_matrix, 1, which.min)
+best_match_dist  <- apply(dist_matrix, 1, min)
+
+# Join UNITID from class_size_clean
+ave_debt <- ave_debt %>%
+  mutate(
+    UNITID = class_size_clean$UNITID[best_match_index],
+    match_distance = best_match_dist
+  )
+
+# Apply strict threshold to prevent bad matches
+threshold <- 0.08
+ave_debt <- ave_debt %>%
+  mutate(
+    UNITID = ifelse(match_distance <= threshold, as.character(UNITID), NA)
+  )
+
+# Check for any missing UNITID
+missing_unitid <- ave_debt %>% 
+  filter(is.na(UNITID)) %>%
+  # remove extra < 500 population school
+  filter(!INSTNM %in% c("St. John's College (MD)", "St. John's College (NM)", "College of the Atlantic"))
+
+if(nrow(missing_unitid) > 0) {
+  print("Some institutions could not be matched to a UNITID:")
+  print(missing_unitid$Institution)
+}
 
 # convert to the right type
-ave_debt_clean <- ave_debt_clean %>%
+ave_debt_clean <- ave_debt %>%
   mutate(
-    UNITID = as.character(UNITID),
     PERCBOR = as.numeric(PERCBOR),
     PROPBOR = as.numeric(PROPBOR),
     AVEDEBT = as.numeric(AVEDEBT)
   ) %>% 
-  select(!PERCBOR)
+  select(UNITID, everything(), -match_distance, -INSTNM_clean)
+
+## check for dup
+# ave_debt_clean %>%
+#      count(UNITID) %>%
+#      filter(n > 1)
 
 # write to table
 write_csv(ave_debt_clean, "data/custom_data/AVE_DEBT_2024_25.csv")

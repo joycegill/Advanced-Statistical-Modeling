@@ -102,6 +102,27 @@ ipeds_clean_unique <- ipeds_clean %>%
   slice(1) %>%   # take the first UNITID for each name
   ungroup()
 
+# duplicated unitids
+manual_unitid_fix <- tribble(
+  ~INSTNM, ~UNITID,
+  "Virginia Tech", 233921,
+  "St. Laurence University", 195216,
+  "St. Olaf College", 174844,
+  "College of William and Mary", 231624,
+  "Amherst College", 164465,
+  "Hampshire College", 183257,
+  "Hanover College", 150756,
+  "Harvey Mudd College", 115409,
+  "Wheaton College (IL)", 149781,
+  "Wheaton College (MA)", 168281,
+  "Florida Institute of Technology", 133881,
+  "Georgia Institute of Technology", 139755,
+  "United States Air Force Academy", 128328,
+  "United States Merchant Marine Academy", 197027,
+  "Pitzer College", 121257,
+  "Whittier College", 125763
+)
+
 
 # join UNITID
 final_data <- class_size_clean %>%
@@ -109,8 +130,31 @@ final_data <- class_size_clean %>%
             by = join_by(matched_name == INSTNM_clean)) %>%
   mutate(UNITID = as.character(UNITID)) %>%
   select(UNITID, INSTNM, STUFACR, STUFACR_nr, CLASIZUND20, CLASIZUND20_nr, CLASIZ2049, CLASIZ2049_nr, CLASIZOVE50, CLASIZOVE50_nr) %>%
-  filter(!UNITID %in% remove_unitids$UNITID)
+  filter(!UNITID %in% remove_unitids$UNITID) %>%
+  # remove extra < 500 population school
+  filter(!INSTNM %in% c("St. John's College (MD)", "St. John's College (NM)", "College of the Atlantic"))
+
+# fix dup unitids
+final_data <- final_data %>%
+  left_join(manual_unitid_fix, by = "INSTNM") %>%
+  mutate(
+    # convert both to character first
+    UNITID.x = as.character(UNITID.x),
+    UNITID.y = as.character(UNITID.y),
+    # then coalesce
+    UNITID = coalesce(UNITID.y, UNITID.x)
+  ) %>%
+  select(
+    UNITID, everything(),  # put UNITID as the first column
+    -UNITID.x, -UNITID.y
+  )
+
+## check for dup
+# final_data %>%
+#      count(UNITID) %>%
+#      filter(n > 1)
 
 # write to table
 write_csv(final_data, "data/custom_data/CLASS_SIZE_2024_25.csv")
 ```
+
