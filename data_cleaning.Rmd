@@ -100,10 +100,44 @@ FINAL_JOINED_DATA <- reduce(tables_to_join, full_join, by = "unitid")
 #   lapply(function(x) any(duplicated(x$unitid)))
 ```
 
+## Change Names and types
+
+```{r}
+colnames(FINAL_JOINED_DATA)
+FINAL_JOINED_DATA <- FINAL_JOINED_DATA %>%
+  mutate(
+    unitid = as.character(unitid)
+  ) %>%
+  rename(
+    UNITID = unitid,
+    INSTNM = `institution name...2`,
+    CITY = `HD2024.City location of institution`,
+    STATE = `HD2024.State abbreviation`,
+    ZIP = `HD2024.ZIP code`,
+    WEBSITE = `HD2024.Institution's internet website address`,
+    OPENPUBL = `HD2024.Institution open to the general public`,
+    OBEREG = `HD2024.Bureau of Economic Analysis (BEA) regions`,
+    CALSYS = `IC2024.Calendar system`,
+    CONTROL = `HD2024.Control of institution...55`,
+    HDEGOFR1 = `HD2024.Highest degree offered`,
+    UGOFFER = `HD2024.Undergraduate offering`,
+    HBCU = `HD2024.Historically Black College or University`,
+    HOSPITAL = `HD2024.Institution has hospital`,
+    LOCALE = `HD2024.Degree of urbanization (Urban-centric locale)`,
+    CARNEGIEIC = `HD2024.Carnegie Classification 2025: Institutional Classification`,
+    CARNEGIESAEC = `HD2024.Carnegie Classification 2025: Student Access and Earnings`,
+    CARNEGIERSCH = `HD2024.Carnegie Classification 2025: Research Activity Designation`,
+    CARNEGIESIZE = `HD2024.Carnegie Classification 2025: Institutional Size`,
+    CARNEGIEAPM = `HD2024.Carnegie Classification 2025: Undergraduate Academic Program Mix`,
+    ATHASSOC = `IC2024.Member of National Athletic Association`,
+    ASSOC1 = `IC2024.Member of National Collegiate Athletic Association (NCAA)`,
+    RELAFFIL = `IC2024.Religious affiliation`
+  )
+```
 
 
 
-## Obsolete Data Cleaning
+# Obsolete Data Cleaning
 Instruction:
 
 1. Go to [IPEDS Data Center](https://nces.ed.gov/ipeds/use-the-data), and click on **Complete Data Files**
