@@ -17,18 +17,53 @@ library(readr)
 # Directory information, institution classifications, and response status information: 2024-25
 INST_CHARS_DIR_2024_25 <- read_csv("data/custom_data/INST_CHARS_DIR_2024_25.csv", show_col_types = FALSE)
 INST_CHARS_DIR_2024_25 <- INST_CHARS_DIR_2024_25 %>%
-  select(unitid, `institution name...2`, `HD2024.City location of institution`, `HD2024.State abbreviation`, `HD2024.ZIP code`, `HD2024.Institution's internet website address`, `HD2024.Institution open to the general public`, `HD2024.Bureau of Economic Analysis (BEA) regions`, `IC2024.Calendar system`, `HD2024.Control of institution...55`, `HD2024.Highest degree offered`, `HD2024.Undergraduate offering`, `HD2024.Historically Black College or University`, `HD2024.Institution has hospital`, `HD2024.Degree of urbanization (Urban-centric locale)`, `HD2024.Carnegie Classification 2025: Institutional Classification`, `HD2024.Carnegie Classification 2025: Student Access and Earnings`, `HD2024.Carnegie Classification 2025: Research Activity Designation`, `HD2024.Carnegie Classification 2025: Institutional Size`, `HD2024.Carnegie Classification 2025: Undergraduate Academic Program Mix`, `IC2024.Member of National Athletic Association`, `IC2024.Member of National Collegiate Athletic Association (NCAA)`, `IC2024.Religious affiliation`)
+  select(unitid, 
+         `institution name...2`, 
+         `HD2024.City location of institution`, 
+         `HD2024.State abbreviation`, `HD2024.ZIP code`, 
+         `HD2024.Institution's internet website address`, 
+         `HD2024.Institution open to the general public`, 
+         `HD2024.Bureau of Economic Analysis (BEA) regions`, 
+         `IC2024.Calendar system`, 
+         `HD2024.Institution has hospital`,
+         `HD2024.Control of institution...55`, 
+         `HD2024.Highest degree offered`, 
+         `HD2024.Undergraduate offering`, 
+         `HD2024.Historically Black College or University`,
+         `HD2024.Degree of urbanization (Urban-centric locale)`, 
+         `HD2024.Carnegie Classification 2025: Institutional Classification`, 
+         `HD2024.Carnegie Classification 2025: Student Access and Earnings`, 
+         `HD2024.Carnegie Classification 2025: Research Activity Designation`, 
+         `HD2024.Carnegie Classification 2025: Institutional Size`, 
+         `HD2024.Carnegie Classification 2025: Undergraduate Academic Program Mix`, 
+         `IC2024.Member of National Athletic Association`, 
+         `IC2024.Member of National Collegiate Athletic Association (NCAA)`, 
+         `IC2024.Religious affiliation`)
 
 # Special learning opportunities and disability services
 INST_CHARS_SPECIAL_F2024 <- read_csv("data/custom_data/INST_CHARS_SPECIAL_F2024.csv", show_col_types = FALSE)
 INST_CHARS_SPECIAL_F2024 <- INST_CHARS_SPECIAL_F2024 %>%
-  select(unitid, `IC2024.Study abroad`, `IC2024.Undergraduate research (co-curricula)`,
-  `IC2024.Teacher certification (below the postsecondary level)`, `IC2024.Teacher certification: Approved by the state for initial certifcation or licensure of teachers.`, `IC2024.Comprehensive transition and postsecondary program for students with intellectual disabilities`, `IC2024.Academic/career counseling service`, `IC2024.Employment services for students`, `IC2024.Placement services for completers`, `IC2024.Percent of undergraduates, who are formally registered as students with disabilities, when percentage is more than 3 percent`)
+  select(unitid, 
+         `IC2024.Study abroad`, 
+         `IC2024.Undergraduate research (co-curricula)`,
+         `IC2024.Comprehensive transition and postsecondary program for students with intellectual disabilities`, 
+         `IC2024.Academic/career counseling service`, 
+         `IC2024.Employment services for students`, 
+         `IC2024.Percent of undergraduates, who are formally registered as students with disabilities, when percentage is more than 3 percent`)
 
 # Admission considerations, applications, admissions, enrollees and test scores
 ADM_TEST_F2024 <- read_csv("data/custom_data/ADM_TEST_F2024.csv", show_col_types = FALSE)
 ADM_TEST_F2024 <- ADM_TEST_F2024 %>%
-  select(unitid, `ADM2024.Secondary school GPA`, `ADM2024.Secondary school rank`, `ADM2024.Admission test scores`, `DRVADM2024.Percent admitted - total`, `DRVADM2024.Admissions yield - total`, `ADM2024.Admissions total`, `ADM2024.Enrolled total`, `ADM2024.ACT Composite 50th percentile score`, `ADM2024.ACT English 50th percentile score`, `ADM2024.ACT Math 50th percentile score`, `ADM2024.SAT Evidence-Based Reading and Writing 50th percentile score`, `ADM2024.SAT Math 50th percentile score`, `ADM2024.Number of first-time degree/certificate-seeking students submitting SAT scores`, `ADM2024.Percent of first-time degree/certificate-seeking students submitting SAT scores`, `ADM2024.Number of first-time degree/certificate-seeking students submitting ACT scores`, `ADM2024.Percent of first-time degree/certificate-seeking students submitting ACT scores`)
+  select(unitid, 
+         `ADM2024.Secondary school GPA`, 
+         `ADM2024.Secondary school rank`, 
+         `ADM2024.Admission test scores`, 
+         `DRVADM2024.Percent admitted - total`, 
+         `DRVADM2024.Admissions yield - total`, 
+         `ADM2024.Admissions total`, 
+         `ADM2024.Enrolled total`, 
+         `ADM2024.ACT Composite 50th percentile score`, `ADM2024.ACT English 50th percentile score`, `ADM2024.ACT Math 50th percentile score`, `ADM2024.SAT Evidence-Based Reading and Writing 50th percentile score`, `ADM2024.SAT Math 50th percentile score`, 
+         `ADM2024.Number of first-time degree/certificate-seeking students submitting SAT scores`, `ADM2024.Percent of first-time degree/certificate-seeking students submitting SAT scores`, `ADM2024.Number of first-time degree/certificate-seeking students submitting ACT scores`, `ADM2024.Percent of first-time degree/certificate-seeking students submitting ACT scores`)
 
 # Average Student Debt (by Institution)
 AVE_DEBT_2024_25 <- read_csv("data/custom_data/AVE_DEBT_2024_25.csv", show_col_types = FALSE)
@@ -45,7 +80,25 @@ CLASS_SIZE_2024_25 <- CLASS_SIZE_2024_25 %>%
 # Application fees, tuition and required fees, food and housing, and average net price
 COSTS_F2024 <- read_csv("data/custom_data/COSTS_F2024.csv", show_col_types = FALSE)
 COSTS_F2024 <- COSTS_F2024 %>%
-  select(unitid, `COST1_2024.Institution provide Institutionally-controlled housing (on-campus and/or off-campus)`, `COST1_2024.Full-time, first-time degree/certificate-seeking students required to live on campus`, `COST1_2024.Institution offers food or meal plans`, `COST1_2024.Undergraduate program application fee`, `COST1_2024.Undergraduate program application fee waiver`, `COST1_2024.Tuition guaranteed plan`, `COST1_2024.Tuition payment plan`, `COST1_2024.Typical housing charges for an academic year`, `COST1_2024.Typical housing charges for an academic year`, `COST1_2024.Typical food charge for academic year`, `COST1_2024.Combined food and housing charge`, `COST1_2024.In-state average tuition for full-time undergraduates`, `COST1_2024.Out-of-state average tuition for full-time undergraduates`, `COST1_2024.CIP code of 2nd largest program`, `COST1_2024.CIP code of 3rd largest program`, `COST1_2024.CIP code of 4th largest program`, `COST1_2024.CIP code of 5th largest program`, `COST1_2024.CIP code of 6th largest program`, `COST2_2024.Total cost of attendance -students awarded grant and scholarsip aid, 2023-24`, `COST2_2024.Average net price-students awarded grant or scholarship aid, 2023-24...137`, `COST2_2024.Total cost of attendance -students awarded Title IV federal financial aid, 2023-24`, `COST1_2024.Published in-state tuition 2024-25`, `COST1_2024.Published out-of-state tuition 2024-25`)
+  select(unitid, 
+         `COST1_2024.Institution provide Institutionally-controlled housing (on-campus and/or off-campus)`, 
+         `COST1_2024.Full-time, first-time degree/certificate-seeking students required to live on campus`, 
+         `COST1_2024.Institution offers food or meal plans`, 
+         `COST1_2024.Undergraduate program application fee`, 
+         `COST1_2024.Undergraduate program application fee waiver`, 
+         `COST1_2024.Tuition guaranteed plan`, 
+         `COST1_2024.Tuition payment plan`, 
+         `COST1_2024.Combined food and housing charge`, 
+         `COST1_2024.In-state average tuition for full-time undergraduates`, 
+         `COST1_2024.Out-of-state average tuition for full-time undergraduates`, 
+         `COST1_2024.CIP code of 2nd largest program`, 
+         `COST1_2024.CIP code of 3rd largest program`, 
+         `COST1_2024.CIP code of 4th largest program`, 
+         `COST2_2024.Total cost of attendance -students awarded grant and scholarsip aid, 2023-24`, 
+         `COST2_2024.Average net price-students awarded grant or scholarship aid, 2023-24...137`,
+         `COST2_2024.Total cost of attendance -students awarded Title IV federal financial aid, 2023-24`, 
+         `COST1_2024.Published in-state tuition 2024-25`, 
+         `COST1_2024.Published out-of-state tuition 2024-25`)
 
 # Fall Enrollment, Retention Rates, and Derived Variables: Fall 2024
 FE_F2024 <- read_csv("data/custom_data/FE_F2024.csv", show_col_types = FALSE)
@@ -56,7 +109,7 @@ FE_F2024 <- FE_F2024 %>%
 FE_GENDER_F2024 <- read_csv("data/custom_data/FE_GENDER_F2024.csv", show_col_types = FALSE)
 FE_GENDER_F2024 <- FE_GENDER_F2024 %>%
   filter(`EF2024.Level of student` == "All students, Undergraduate total") %>%
-  select(unitid, `EF2024.Grand total`, `EF2024.Total men`, `EF2024.Total women`)
+  select(unitid, `EF2024.Grand total`, `EF2024.Full time total`, `EF2024.Total men`, `EF2024.Total women`)
 
 # Race/ethnicity, gender, attendance status, and level of student: Fall 2024
 FE_RACE_GENDER_F2024 <- read_csv("data/custom_data/FE_RACE_GENDER_F2024.csv", show_col_types = FALSE)
@@ -93,17 +146,26 @@ tables_to_join <- list(
 )
 
 # Full join them all by unitid
-FINAL_JOINED_DATA <- reduce(tables_to_join, full_join, by = "unitid")
+FINAL_JOINED_DATA <- reduce(tables_to_join, full_join, by = "unitid") 
 
 ## Check for duplicate unitid rows
 # tables_to_join %>%
 #   lapply(function(x) any(duplicated(x$unitid)))
+
+# Remove no undergraduate offering schools
+FINAL_JOINED_DATA %>%
+  filter(`HD2024.Undergraduate offering` == "No undergraduate offering") %>%
+  # print out schools to remove
+  select(`institution name...2`)
+FINAL_JOINED_DATA <- FINAL_JOINED_DATA %>%
+  # remove
+  filter(!`HD2024.Undergraduate offering` == "No undergraduate offering") %>%
+  select(!`HD2024.Undergraduate offering`)
 ```
 
 ## Change Names and types
 
 ```{r}
-colnames(FINAL_JOINED_DATA)
 FINAL_JOINED_DATA <- FINAL_JOINED_DATA %>%
   mutate(
     unitid = as.character(unitid)
@@ -114,13 +176,12 @@ FINAL_JOINED_DATA <- FINAL_JOINED_DATA %>%
     CITY = `HD2024.City location of institution`,
     STATE = `HD2024.State abbreviation`,
     ZIP = `HD2024.ZIP code`,
-    WEBSITE = `HD2024.Institution's internet website address`,
+    WEBADDR = `HD2024.Institution's internet website address`,
     OPENPUBL = `HD2024.Institution open to the general public`,
     OBEREG = `HD2024.Bureau of Economic Analysis (BEA) regions`,
     CALSYS = `IC2024.Calendar system`,
     CONTROL = `HD2024.Control of institution...55`,
     HDEGOFR1 = `HD2024.Highest degree offered`,
-    UGOFFER = `HD2024.Undergraduate offering`,
     HBCU = `HD2024.Historically Black College or University`,
     HOSPITAL = `HD2024.Institution has hospital`,
     LOCALE = `HD2024.Degree of urbanization (Urban-centric locale)`,
@@ -131,11 +192,77 @@ FINAL_JOINED_DATA <- FINAL_JOINED_DATA %>%
     CARNEGIEAPM = `HD2024.Carnegie Classification 2025: Undergraduate Academic Program Mix`,
     ATHASSOC = `IC2024.Member of National Athletic Association`,
     ASSOC1 = `IC2024.Member of National Collegiate Athletic Association (NCAA)`,
-    RELAFFIL = `IC2024.Religious affiliation`
+    RELAFFIL = `IC2024.Religious affiliation`,
+    SLO6 = `IC2024.Study abroad`,
+    SLOA = `IC2024.Undergraduate research (co-curricula)`,
+    SLOB = `IC2024.Comprehensive transition and postsecondary program for students with intellectual disabilities`,
+    STUSRV2 = `IC2024.Academic/career counseling service`,
+    STUSRV3 = `IC2024.Employment services for students`,
+    DISABPCT = `IC2024.Percent of undergraduates, who are formally registered as students with disabilities, when percentage is more than 3 percent`,
+    ADMCON1 = `ADM2024.Secondary school GPA`,                  ADMCON2 = `ADM2024.Secondary school rank`,                 ADMCON7 = `ADM2024.Admission test scores`,                 DVADM01 = `DRVADM2024.Percent admitted - total`,           DVADM04 = `DRVADM2024.Admissions yield - total`,
+    ADMSSN = `ADM2024.Admissions total`,
+    ENRLT = `ADM2024.Enrolled total`,
+    ACTCM50 = `ADM2024.ACT Composite 50th percentile score`,
+    ACTEN50 = `ADM2024.ACT English 50th percentile score`,
+    ACTMT50 = `ADM2024.ACT Math 50th percentile score`,
+    SATVR50 = `ADM2024.SAT Evidence-Based Reading and Writing 50th percentile score`,
+    SATMT50 = `ADM2024.SAT Math 50th percentile score`,
+    SATNUM = `ADM2024.Number of first-time degree/certificate-seeking students submitting SAT scores`,
+    SATPCT = `ADM2024.Percent of first-time degree/certificate-seeking students submitting SAT scores`,
+    ACTNUM = `ADM2024.Number of first-time degree/certificate-seeking students submitting ACT scores`,
+    ACTPCT = `ADM2024.Percent of first-time degree/certificate-seeking students submitting ACT scores`,
+    ROOM = `COST1_2024.Institution provide Institutionally-controlled housing (on-campus and/or off-campus)`,
+    ALLONCAM = `COST1_2024.Full-time, first-time degree/certificate-seeking students required to live on campus`,
+    BOARD = `COST1_2024.Institution offers food or meal plans`,
+    APPLFEEU = `COST1_2024.Undergraduate program application fee`,
+    APPFEEUW = `COST1_2024.Undergraduate program application fee waiver`,
+    TUITPL1 = `COST1_2024.Tuition guaranteed plan`,
+    TUITPL3 = `COST1_2024.Tuition payment plan`,
+    RMBRDAMT = `COST1_2024.Combined food and housing charge`,
+    TUITION2 = `COST1_2024.In-state average tuition for full-time undergraduates`,
+    TUITION3 = `COST1_2024.Out-of-state average tuition for full-time undergraduates`,
+    CIPCODE2 = `COST1_2024.CIP code of 2nd largest program`,
+    CIPCODE3 = `COST1_2024.CIP code of 3rd largest program`,
+    CIPCODE4 = `COST1_2024.CIP code of 4th largest program`,
+    COAISGS2 = `COST2_2024.Total cost of attendance -students awarded grant and scholarsip aid, 2023-24`,
+    NPIST2 = `COST2_2024.Average net price-students awarded grant or scholarship aid, 2023-24...137`,
+    COAIST42 = `COST2_2024.Total cost of attendance -students awarded Title IV federal financial aid, 2023-24`,
+    CHG2AT3 = `COST1_2024.Published in-state tuition 2024-25`,
+    CHG3AT3 = `COST1_2024.Published out-of-state tuition 2024-25`,
+    STUFACR = `EF2024D.Student-to-faculty ratio`,
+    EFTOTAL = `EF2024.Grand total`,
+    EFFT = `EF2024.Full time total`,
+    EFFTMEN = `EF2024.Total men`,
+    EFFTWOM = `EF2024.Total women`,
+    EFAIANT = `EF2024A.American Indian or Alaska Native total`,
+    EFASIAT = `EF2024A.Asian total`,
+    EFBKAAT = `EF2024A.Black or African American total`,
+    EFHISPT = `EF2024A.Hispanic total`,
+    EFNHPIT = `EF2024A.Native Hawaiian or Other Pacific Islander total`,
+    EFWHITT = `EF2024A.White total`,
+    EF2MORT = `EF2024A.Two or more races total`,
+    EFUNKNT = `EF2024A.Race/ethnicity unknown total`,
+    EFNRALT = `EF2024A.U.S. Nonresident total`,
+    EFGNDRUA = `EF2024A.Total of gender unknown and another gender`,
+    EFGNDRKN = `EF2024A.Total gender reported as one of the mutually exclusive binary categories (Men/Women)`,
+    UAGRNTP = `SFA2324.Percent of undergraduate students awarded federal, state, local, institutional or other sources of grant aid`,
+    AGRNT_T = `SFA2324.Total amount of federal, state, local or institutional grant aid awarded to full-time first-time undergraduates`,
+    UFLOANN = `SFA2324.Number of undergraduate students awarded federal student loans`,
+    AGRNT_N = `SFA2324.Number of full-time first-time undergraduates awarded federal, state, local or institutional grant aid`,
+    UDGPGRNTN = `SFA2324.Number of degree/certificate-seeking undergraduate students awarded Federal Pell Grants`,
+    GBA6RTT = `DRVGR2024.Graduation rate - Bachelor degree within 6 years, total`,
+    GBA4RTT = `DRVGR2024.Graduation rate - Bachelor degree within 4 years, total`,
+    TRRTTOT = `DRVGR2024.Transfer-out rate, total cohort`,
+    PGGRRTT = `DRVGR2024.Pell Grant recipients - Overall graduation rate within 150 percent of normal time`,
+    GRRTM = `DRVGR2024.Graduation rate, men`,
+    GRRTW = `DRVGR2024.Graduation rate, women`
   )
 ```
 
-
+## Write to folder
+```{r}
+write_csv(FINAL_JOINED_DATA, "data/cleaned/FINAL_DATA.csv")
+```
 
 # Obsolete Data Cleaning
 Instruction:
