@@ -3,13 +3,15 @@ title: "Graphs"
 author: "Joyce Gill, Khanh Do"
 date: "2026-02-10"
 output:
-  pdf_document: default
-  word_document: default
+  html_document:
+    toc: true
+    toc_float: true
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(ggplot2)
+library(plotly)
 library(dplyr)
 library(tidyr)
 library(tidyverse)
@@ -59,13 +61,14 @@ adm_test_f2024_clean <- adm_test_f2024_prep %>%
   )
 
 # Create boxplot with individual school points
-ggplot(adm_test_f2024_clean, aes(x = sat_required, y = sat_total)) +
+p1 <- ggplot(adm_test_f2024_clean, aes(x = sat_required, y = sat_total, text = paste("School:", institution_name, "<br>SAT Score:", sat_total))) +
   geom_boxplot(outlier.shape = NA) +
   geom_jitter(alpha = 0.3, width = 0.2, aes(color = sat_required)) +
   labs(x = "SAT Requirement", y = "Total SAT Score", 
        title = "SAT Scores by Admission Requirement",
-       subtitle = "Each point represents a school") +
+       subtitle = "Each point represents a school (hover for details)") +
   theme(legend.position = "none")
+ggplotly(p1, tooltip = "text")
 
 # Statistical tests
 t.test(sat_total ~ sat_required, data = adm_test_f2024_clean)
@@ -96,16 +99,17 @@ sat_admission_rate <- adm_test_f2024 %>%
   )
 
 # Create boxplot with individual school points
-ggplot(sat_admission_rate, aes(x = sat_required, y = admit_rate)) +
+p2 <- ggplot(sat_admission_rate, aes(x = sat_required, y = admit_rate, text = paste("School:", institution_name, "<br>Admission Rate:", round(admit_rate, 1), "%"))) +
   geom_boxplot(outlier.shape = NA) +
   geom_jitter(alpha = 0.3, width = 0.2, aes(color = sat_required)) +
   labs(
     x = "SAT Requirement",
     y = "Admission Rate (%)",
     title = "Admission Rate by SAT Requirement",
-    subtitle = "Each point represents a school"
+    subtitle = "Each point represents a school (hover for details)"
   ) +
   theme(legend.position = "none")
+ggplotly(p2, tooltip = "text")
 
 # Statistical tests
 t.test(admit_rate ~ sat_required, data = sat_admission_rate)
@@ -139,7 +143,7 @@ state_rates <- sat_state_requirements %>%
   filter(n >= 5)
 
 # Create bar chart with school count labels
-ggplot(state_rates, aes(x = reorder(state, rate), y = rate)) +
+p3 <- ggplot(state_rates, aes(x = reorder(state, rate), y = rate, text = paste("State:", state, "<br>Rate:", round(rate * 100, 1), "%<br>Schools:", n))) +
   geom_col() +
   geom_text(aes(label = paste0("n=", n)), hjust = -0.1, size = 2.5) +
   coord_flip() +
@@ -148,8 +152,9 @@ ggplot(state_rates, aes(x = reorder(state, rate), y = rate)) +
     x = "State",
     y = "Percent Requiring SAT",
     title = "SAT Requirement Rate by State",
-    subtitle = "Labels show number of schools per state"
+    subtitle = "Labels show number of schools per state (hover for details)"
   )
+ggplotly(p3, tooltip = "text")
 ```
 
 ## SAT Requirements by State and Sector
@@ -182,7 +187,7 @@ state_sector_rates <- sat_state_sector %>%
   filter(n >= 5)
 
 # Create faceted bar chart with school count labels
-ggplot(state_sector_rates, aes(x = reorder(state, rate), y = rate)) +
+p4 <- ggplot(state_sector_rates, aes(x = reorder(state, rate), y = rate, text = paste("State:", state, "<br>Sector:", sector, "<br>Rate:", round(rate * 100, 1), "%<br>Schools:", n))) +
   geom_col() +
   geom_text(aes(label = paste0("n=", n)), hjust = -0.1, size = 2.5) +
   coord_flip() +
@@ -192,8 +197,9 @@ ggplot(state_sector_rates, aes(x = reorder(state, rate), y = rate)) +
     x = "State",
     y = "Percent Requiring SAT",
     title = "SAT Requirement Rates by State and Sector",
-    subtitle = "Restricted to 4-year institutions (states with 5 or more schools per sector). Labels show number of schools."
+    subtitle = "Restricted to 4-year institutions (states with 5 or more schools per sector). Labels show number of schools (hover for details)."
   )
+ggplotly(p4, tooltip = "text")
 ```
 ## SAT Requirements by Region
 
@@ -219,14 +225,19 @@ sat_region <- adm_test_f2024 %>%
   ) %>%
   filter(!is.na(region))
 
+# Calculate SAT requirement rate by region
+region_rates <- sat_region %>%
+  group_by(region) %>%
+  summarise(rate = mean(sat_required), n = n(), .groups = "drop")
+
 # Count schools by region and SAT requirement
 region_counts <- sat_region %>%
   mutate(sat_required = ifelse(sat_required, "Required", "Not required")) %>%
   group_by(region, sat_required) %>%
   summarise(n = n(), .groups = "drop")
 
-## Bar Chart
-ggplot(region_rates, aes(x = reorder(region, rate), y = rate)) +
+## Bar Chart - Percentages
+p5a <- ggplot(region_rates, aes(x = reorder(region, rate), y = rate, text = paste("Region:", region, "<br>Rate:", round(rate * 100, 1), "%<br>Schools:", n))) +
   geom_col() +
   geom_text(aes(label = paste0("n=", n)), hjust = -0.1, size = 2.8) +
   coord_flip() +
@@ -235,8 +246,17 @@ ggplot(region_rates, aes(x = reorder(region, rate), y = rate)) +
     x = "Region",
     y = "Percent Requiring SAT",
     title = "SAT Requirement Rates by Region",
-    subtitle = "Labels show total number of schools per region"
+    subtitle = "Labels show total number of schools per region (hover for details)"
   )
+ggplotly(p5a, tooltip = "text")
+
+## Bar Chart - Raw Counts
+p5b <- ggplot(region_counts, aes(x = reorder(region, n), y = n, fill = sat_required, text = paste("Region:", region, "<br>Policy:", sat_required, "<br>Count:", n))) +
+  geom_col(position = "dodge") +
+  coord_flip() +
+  labs(x = "Region", y = "Number of Schools", fill = "SAT policy",
+       title = "Number of Schools Requiring vs Not Requiring SAT by Region")
+ggplotly(p5b, tooltip = "text")
 ```
 
 ## Enrollment Growth vs Graduation Rates
@@ -281,7 +301,7 @@ outliers <- enrollment_growth_graduation %>%
   filter(grad_rate_rank >= 0.95 | grad_rate_rank <= 0.05 | growth_rank >= 0.95 | growth_rank <= 0.05)
 
 # Create scatter plot with labeled outliers
-ggplot(enrollment_growth_graduation, aes(x = growth_pct, y = grad_rate)) +
+p6 <- ggplot(enrollment_growth_graduation, aes(x = growth_pct, y = grad_rate, text = paste("School:", institution_name, "<br>Growth:", round(growth_pct, 1), "%<br>Grad Rate:", round(grad_rate, 1), "%"))) +
   geom_point(alpha = 0.4) +
   geom_smooth(method = "lm") +
   geom_text(data = outliers, aes(label = institution_name), 
@@ -290,8 +310,9 @@ ggplot(enrollment_growth_graduation, aes(x = growth_pct, y = grad_rate)) +
     x = "First-Time Enrollment (%)",
     y = "6-Year Graduation Rate (%)",
     title = "Enrollment Growth vs Graduation Rates",
-    subtitle = "Labels show schools in top/bottom 5% by graduation rate or growth"
+    subtitle = "Labels show schools in top/bottom 5% by graduation rate or growth (hover for details)"
   )
+ggplotly(p6, tooltip = "text")
 ```
 ## Enrollment Growth vs Graduation Rates by Sector
 Is the relationship between enrollment growth and graduation rates consistent across public and private institutions?
@@ -318,7 +339,7 @@ outliers_sector <- growth_grad_sector %>%
   filter(grad_rate_rank >= 0.95 | grad_rate_rank <= 0.05 | growth_rank >= 0.95 | growth_rank <= 0.05)
 
 # Create faceted scatter plot with labeled outliers
-ggplot(growth_grad_sector, aes(x = growth_pct, y = grad_rate)) +
+p7 <- ggplot(growth_grad_sector, aes(x = growth_pct, y = grad_rate, text = paste("School:", institution_name, "<br>Sector:", sector, "<br>Growth:", round(growth_pct, 1), "%<br>Grad Rate:", round(grad_rate, 1), "%"))) +
   geom_point(alpha = 0.4) +
   geom_smooth(method = "lm") +
   geom_text(data = outliers_sector, aes(label = institution_name), 
@@ -328,8 +349,9 @@ ggplot(growth_grad_sector, aes(x = growth_pct, y = grad_rate)) +
     x = "First-Time Enrollment (%)",
     y = "6-Year Graduation Rate (%)",
     title = "Enrollment Growth vs Graduation Rate by Sector",
-    subtitle = "Labels show schools in top/bottom 5% by graduation rate or growth within each sector"
+    subtitle = "Labels show schools in top/bottom 5% by graduation rate or growth within each sector (hover for details)"
   )
+ggplotly(p7, tooltip = "text")
 ```
 
 ## Nonlinear Relationship: Enrollment Growth vs Graduation Rates
@@ -345,7 +367,7 @@ outliers_nonlinear <- enrollment_growth_graduation %>%
   filter(grad_rate_rank >= 0.95 | grad_rate_rank <= 0.05 | growth_rank >= 0.95 | growth_rank <= 0.05)
 
 # Create scatter plot with loess smooth to explore nonlinearity
-ggplot(enrollment_growth_graduation, aes(x = growth_pct, y = grad_rate)) +
+p8 <- ggplot(enrollment_growth_graduation, aes(x = growth_pct, y = grad_rate, text = paste("School:", institution_name, "<br>Growth:", round(growth_pct, 1), "%<br>Grad Rate:", round(grad_rate, 1), "%"))) +
   geom_point(alpha = 0.3) +
   geom_smooth(method = "loess", span = 0.5) +
   geom_text(data = outliers_nonlinear, aes(label = institution_name), 
@@ -354,8 +376,9 @@ ggplot(enrollment_growth_graduation, aes(x = growth_pct, y = grad_rate)) +
     title = "Nonlinear Relationship Between Growth and Graduation Rates",
     x = "First-Time Enrollment (%)",
     y = "6-Year Graduation Rate (%)",
-    subtitle = "Labels show schools in top/bottom 5% by graduation rate or growth"
+    subtitle = "Labels show schools in top/bottom 5% by graduation rate or growth (hover for details)"
   )
+ggplotly(p8, tooltip = "text")
 
 # Fit quadratic model to test for nonlinear relationship
 quad_model <- lm(grad_rate ~ growth_pct + I(growth_pct^2), data = enrollment_growth_graduation)
@@ -401,7 +424,7 @@ outliers_faculty <- faculty_ratio_graduation %>%
   filter(grad_rate_rank >= 0.95 | grad_rate_rank <= 0.05 | ratio_rank >= 0.95 | ratio_rank <= 0.05)
 
 # Create scatter plot with loess smooth
-ggplot(faculty_ratio_graduation, aes(x = student_faculty_ratio, y = grad_rate)) +
+p9 <- ggplot(faculty_ratio_graduation, aes(x = student_faculty_ratio, y = grad_rate, text = paste("School:", institution_name, "<br>Ratio:", round(student_faculty_ratio, 1), "<br>Grad Rate:", round(grad_rate, 1), "%"))) +
   geom_point(alpha = 0.4) +
   geom_smooth(method = "loess") +
   geom_text(data = outliers_faculty, aes(label = institution_name), 
@@ -410,8 +433,9 @@ ggplot(faculty_ratio_graduation, aes(x = student_faculty_ratio, y = grad_rate)) 
     x = "Student–Faculty Ratio",
     y = "6-Year Graduation Rate (%)",
     title = "Student–Faculty Ratio vs Graduation Rate",
-    subtitle = "Labels show schools in top/bottom 5% by graduation rate or faculty ratio"
+    subtitle = "Labels show schools in top/bottom 5% by graduation rate or faculty ratio (hover for details)"
   )
+ggplotly(p9, tooltip = "text")
 ```
 
 ## Class-size vs Tuition Cost
@@ -459,29 +483,33 @@ outliers_class <- analysis_df %>%
 
 # Predicting Out of state average tuition for full time undergraduates
 # based on Student-to-Faculty Ratio and Class Size
-ggplot(analysis_df, aes(x = STUFACR, y = `COST1_2024.Out.of.state.average.tuition.for.full.time.undergraduates`)) +
-  geom_point(aes(size = CLASIZUND20), alpha = 0.3, color = "darkblue") +
+p10a <- ggplot(analysis_df, aes(x = STUFACR, y = `COST1_2024.Out.of.state.average.tuition.for.full.time.undergraduates`,
+                                size = CLASIZUND20, text = paste("School:", institution_name, "<br>Ratio:", round(STUFACR, 1), "<br>Tuition: $", round(`COST1_2024.Out.of.state.average.tuition.for.full.time.undergraduates`, 0), "<br>Small Class Prob:", round(CLASIZUND20, 2)))) +
+  geom_point(alpha = 0.3, color = "darkblue") +
   geom_smooth(method = "lm", formula = y ~ x, color = "red", se = TRUE) +
   geom_text(data = outliers_class, aes(label = institution_name), 
             size = 2, hjust = 0, vjust = 0, check_overlap = TRUE, nudge_x = 0.5, nudge_y = 500) +
   labs(title = "Predicting 2024-25 Tuition by Student-Faculty Ratio",
-       subtitle = "Bubbles sized by probability of classes having <20 students. Labels show outliers.",
+       subtitle = "Bubbles sized by probability of classes having <20 students. Labels show outliers (hover for details).",
        x = "Student-to-Faculty Ratio",
        y = "Out of state average tuition",
        size = "Prob. Small Classes") +
   theme_minimal()
+ggplotly(p10a, tooltip = "text")
 
-ggplot(analysis_df, aes(x = STUFACR, y = `COST1_2024.Out.of.state.average.tuition.for.full.time.undergraduates`)) +
-  geom_point(aes(size = CLASIZOVE50), alpha = 0.3, color = "darkblue") +
+p10b <- ggplot(analysis_df, aes(x = STUFACR, y = `COST1_2024.Out.of.state.average.tuition.for.full.time.undergraduates`,
+                                size = CLASIZOVE50, text = paste("School:", institution_name, "<br>Ratio:", round(STUFACR, 1), "<br>Tuition: $", round(`COST1_2024.Out.of.state.average.tuition.for.full.time.undergraduates`, 0), "<br>Large Class Prob:", round(CLASIZOVE50, 2)))) +
+  geom_point(alpha = 0.3, color = "darkblue") +
   geom_smooth(method = "lm", formula = y ~ x, color = "red", se = TRUE) +
   geom_text(data = outliers_class, aes(label = institution_name), 
             size = 2, hjust = 0, vjust = 0, check_overlap = TRUE, nudge_x = 0.5, nudge_y = 500) +
   labs(title = "Predicting 2024-25 Tuition by Student-Faculty Ratio",
-       subtitle = "Bubbles sized by probability of classes having >50 students. Labels show outliers.",
+       subtitle = "Bubbles sized by probability of classes having >50 students. Labels show outliers (hover for details).",
        x = "Student-to-Faculty Ratio",
        y = "Out of state average tuition",
        size = "Prob. Big Classes") +
   theme_minimal()
+ggplotly(p10b, tooltip = "text")
 ```
 
 
@@ -522,28 +550,28 @@ outliers_costs <- df_costs %>%
 
 # 3. VISUALIZATION: Dual-Panel Comparison
 # Plot A: In-State Tuition vs Room & Board
-p1 <- ggplot(df_costs, aes(x = InState, y = RoomBoard)) +
+p11a <- ggplot(df_costs, aes(x = InState, y = RoomBoard, text = paste("School:", institution_name, "<br>In-State Tuition: $", round(InState, 0), "<br>Room & Board: $", round(RoomBoard, 0)))) +
   geom_point(alpha = 0.3, color = "darkblue") +
   geom_smooth(method = "lm", color = "blue") +
   geom_text(data = outliers_costs, aes(label = institution_name), 
             size = 2, hjust = 0, vjust = 0, check_overlap = TRUE, nudge_x = 500, nudge_y = 500) +
   labs(title = "In-State Tuition vs. Living Costs",
        x = "Avg In-State Tuition", y = "Combined Food/Housing",
-       subtitle = "Labels show outliers") +
+       subtitle = "Labels show outliers (hover for details)") +
   theme_minimal()
+ggplotly(p11a, tooltip = "text")
 
 # Plot B: Out-of-State Tuition vs Room & Board
-p2 <- ggplot(df_costs, aes(x = OutState, y = RoomBoard)) +
+p11b <- ggplot(df_costs, aes(x = OutState, y = RoomBoard, text = paste("School:", institution_name, "<br>Out-of-State Tuition: $", round(OutState, 0), "<br>Room & Board: $", round(RoomBoard, 0)))) +
   geom_point(alpha = 0.3, color = "darkred") +
   geom_smooth(method = "lm", color = "red") +
   geom_text(data = outliers_costs, aes(label = institution_name), 
             size = 2, hjust = 0, vjust = 0, check_overlap = TRUE, nudge_x = 500, nudge_y = 500) +
   labs(title = "Out-of-State Tuition vs. Living Costs",
        x = "Avg Out-of-State Tuition", y = "Combined Food/Housing",
-       subtitle = "Labels show outliers") +
+       subtitle = "Labels show outliers (hover for details)") +
   theme_minimal()
-
-p1 + p2 + plot_annotation(title = "Tuition Levels as Predictors of Housing Charges (2024-25)")
+ggplotly(p11b, tooltip = "text")
 ```
 ## Potential Graphs:
 Tuition vs Post-Graduation Salary: Are Higher Tuition Levels Associated with Higher Earnings?

@@ -24,8 +24,10 @@ Shared Document [Private Link](https://docs.google.com/document/d/1MQ_aKizFGp35P
 Advanced-Statistical-Modeling/
 ├── data/
 │ ├── raw/     # Raw local CSV files (NOT tracked in Git)
-│ └── cleaned/ # obsolete
+│ ├── cleaned/ # obsolete
 │ └── custom_data/ # FILTERED DATA RAW FROM IPEDS <- using this
+├── app.R # Shiny app for interactive visualizations
+├── graphs.Rmd # obsolete: R Markdown for static/exploratory graphs
 ├── data_cleaning.Rmd # obsolete: R scripts for cleaning data
 ├── data_cleaning.pdf # obsolete: Pdf report of data cleaning script
 ├── README.md # This file
@@ -52,8 +54,13 @@ git clone git@github.com:joycegill/Advanced-Statistical-Modeling.git
 ```
 
 2. Install dependencies in R
-```bash
-install.packages(c("dplyr", "tidyr", "mosaic", "ggplot2"))
+```r
+install.packages(c("shiny", "plotly", "tidyverse", "ggplot2", "effectsize", "corrplot", "patchwork", "readr", "stringr", "stringdist"))
+```
+
+3. Run the Shiny app (from the project root)
+```r
+shiny::runApp("app.R")
 ```
 
 
