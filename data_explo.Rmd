@@ -17,7 +17,7 @@ df <- read_csv(url, show_col_types = FALSE)
 ```
 
 ## Notes
-Please refer to the [codebook](https://docs.google.com/spreadsheets/d/15nn2SjonRKGXaUnBLJxZs6E04GZDL0sNgCyN5-q8Vig/edit?gid=1289751215#gid=1289751215) for information on the data, especially on understanding what the variables mean.
+Please refer to the [codebook (click here)](https://docs.google.com/spreadsheets/d/15nn2SjonRKGXaUnBLJxZs6E04GZDL0sNgCyN5-q8Vig/edit?gid=1289751215#gid=1289751215) for information on the data, especially on understanding what the variables mean.
 
 # Predict TUITION2 and TUITION3 (In-state/Out-of-state Tuition)
 
@@ -70,8 +70,8 @@ best_in  <- get_best_subsets_modern(df_in, "TUITION2")
 best_out <- get_best_subsets_modern(df_out, "TUITION3")
 
 # Visual comparison of models
-plot(regsubsets(TUITION2 ~ ., data = df_in, nvmax=10), scale="adjr2", main="In-State Best Subsets")
-plot(regsubsets(TUITION3 ~ ., data = df_out, nvmax=10), scale="adjr2", main="Out-of-State Best Subsets")
+plot(regsubsets(TUITION2 ~ ., data = df_in, nvmax=24), scale="adjr2", main="In-State Best Subsets")
+plot(regsubsets(TUITION3 ~ ., data = df_out, nvmax=24), scale="adjr2", main="Out-of-State Best Subsets")
 
 # Display numerical results
 head(best_in, 5)
@@ -91,6 +91,10 @@ summary(lm(TUITION3 ~ ACTCM50 + DVADM04 + STUFACR + APPLFEEU + ENRTOT + RMINSTTP
 - ENRTOT (Total enrollment)
 
 - AGRNT_T (Total amount of federal, state, local or institutional grant aid awarded to full-time first-time undergraduates)
+
+- STUFACR (Student-faculty ratio)
+
+- GBA6RTT (Graduation rate - Bachelor degree within 6 years, total)
 
 **Key Differences**:
 
