@@ -1,6 +1,6 @@
 ---
-title: "data_exploration"
-author: "Khanh Do, Joyce Gill"
+title: "Data Exploration"
+author: "Khanh Do"
 date: "`r Sys.Date()`"
 output: pdf_document
 ---
@@ -9,24 +9,91 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 library(readr)
 library(tidyverse)
+library(corrplot)
+require(leaps)
+library(patchwork)
+url <- "https://raw.githubusercontent.com/joycegill/Advanced-Statistical-Modeling/main/data/cleaned/FINAL_DATA.csv"
+df <- read_csv(url, show_col_types = FALSE)
 ```
 
+## Notes
+Please refer to the [codebook](https://docs.google.com/spreadsheets/d/15nn2SjonRKGXaUnBLJxZs6E04GZDL0sNgCyN5-q8Vig/edit?gid=1289751215#gid=1289751215) for information on the data, especially on understanding what the variables mean.
+
+# Predict TUITION2 and TUITION3 (In-state/Out-of-state Tuition)
+
+### Helper
 ```{r}
-helper <- function(data) {
-  print(sum(!is.na(unique(data))))
-  print(sum(is.na(data)))
-  print(class(data))
+VARS_TO_KEEP <- c(
+  "CONTROL", "LOCALE", "ACTCM50", "SATVR50", "SATMT50", 
+  "DVADM01", "DVADM04", "STUFACR", "APPLFEEU", "ENRTOT", 
+  "RMFRGNCP", "RMINSTTP", "RMOUSTTP", "SLO6", "SLOA", 
+  "CLASIZUND20", "CLASIZOVE50", "PROPBOR", "AVEDEBT", 
+  "AGRNT_T", "GBA6RTT", "GBA4RTT", "TRRTTOT", "EFNRALT"
+)
+
+prep_data <- function(data, target) {
+  data %>%
+    filter(!is.na(.data[[target]]), .data[[target]] > 0) %>%
+    select(all_of(target), all_of(VARS_TO_KEEP)) %>%
+    mutate(across(any_of(c("SLO6", "SLOA")), ~ ifelse(. == "Yes", 1, 0))) %>%
+    select(where(is.numeric)) %>%
+    na.omit()
+}
+
+get_best_subsets_modern <- function(df_clean, target_var) {
+  form <- as.formula(paste(target_var, "~ ."))
+  reg_fit <- regsubsets(form, data = df_clean, nvmax = 10, nbest = 1)
+  res_sum <- summary(reg_fit)
+  
+  data.frame(
+    NumVars = 1:length(res_sum$adjr2),
+    AdjR2   = res_sum$adjr2,
+    res_sum$which
+  ) %>% arrange(desc(AdjR2))
 }
 ```
 
+## Corr Plot
 ```{r}
-f <- read_csv("data/custom_data/STAFF_FT_OCCUPATION_RACE_GENDER_F2024.csv",
-                                   show_col_types = FALSE)
-head(f)
+# Generate the correlation matrices
+df_in  <- prep_data(df, "TUITION2")
+df_out <- prep_data(df, "TUITION3")
 
-f %>%
-  count(`S2024_IS.Grand total men`) %>%
-  filter(n > 1)
-helper(f$`S2024_IS.Grand total men`)
+corrplot(cor(df_in), title = "In-State (TUITION2)", mar = c(0,0,1,0), tl.cex = 0.8)
+corrplot(cor(df_out), title = "Out-of-State (TUITION3)", mar = c(0,0,1,0), tl.cex = 0.8)
 ```
 
+## Best Subsets
+```{r}
+# Run the Analysis
+best_in  <- get_best_subsets_modern(df_in, "TUITION2")
+best_out <- get_best_subsets_modern(df_out, "TUITION3")
+
+# Visual comparison of models
+plot(regsubsets(TUITION2 ~ ., data = df_in, nvmax=10), scale="adjr2", main="In-State Best Subsets")
+plot(regsubsets(TUITION3 ~ ., data = df_out, nvmax=10), scale="adjr2", main="Out-of-State Best Subsets")
+
+# Display numerical results
+head(best_in, 5)
+head(best_out, 5)
+```
+### Interpretation of Results
+The 6, 7, 8, 9, and 10 variables-models all have high Adjusted $R^2$. The top model is:
+```{r}
+summary(lm(TUITION2 ~ ACTCM50 + STUFACR + ENRTOT + RMINSTTP + RMOUSTTP + SLO6 + CLASIZOVE50 + PROPBOR + AGRNT_T + GBA6RTT, data = df_in))
+summary(lm(TUITION3 ~ ACTCM50 + DVADM04 + STUFACR + APPLFEEU + ENRTOT + RMINSTTP + RMOUSTTP + SLO6 + AGRNT_T + GBA6RTT, data = df_out))
+```
+
+**Consistent Drivers (Vertical Columns)**:
+
+- RMINSTTP (Percent of first-time undergraduates - in-state)
+
+- ENRTOT (Total enrollment)
+
+- AGRNT_T (Total amount of federal, state, local or institutional grant aid awarded to full-time first-time undergraduates)
+
+**Key Differences**:
+
+- In-State: More sensitive to CLASIZOVE50 (Big class size) than Out-of-state
+
+- Out-of-State: More sensitive to ACTCM50 (ACT Composite 50th percentile score) and APPLFEEU (Undergraduate program application fee) than In-state
