@@ -4,13 +4,7 @@ library(shiny)
 library(plotly)
 library(tidyverse)
 library(effectsize)
-
-# Return first column name matching pattern (e.g. "institution.name").
-get_col_name <- function(df, pattern) {
-  matches <- grep(pattern, names(df), value = TRUE, ignore.case = TRUE)
-  if (length(matches) > 0) return(matches[1])
-  stop(paste("Column matching pattern", pattern, "not found"))
-}
+library(readr)
 
 # On plot error: log real message to console
 safe_error_text <- function(e) {
@@ -23,40 +17,8 @@ safe_error_text <- function(e) {
 }
 
 # ---- Data ----
-adm_test_f2024 <- read.csv("data/custom_data/ADM_TEST_F2024.csv")
-inst_chars_dir_2024_25 <- read.csv("data/custom_data/INST_CHARS_DIR_2024_25.csv")
-fe_f2024 <- read.csv("data/custom_data/FE_F2024.csv")
-grad_feq_var_cohort_2018_21 <- read.csv("data/custom_data/GRAD_FEQ_VAR_COHORT_2018_21.csv")
-costs_f2024 <- read.csv("data/custom_data/COSTS_F2024.csv")
-class_size <- read.csv("data/custom_data/CLASS_SIZE_2024_25.csv")
-
-# One row per unitid with institution name; fill from FE, GRAD, COSTS where INST is missing.
-inst_name_col <- get_col_name(inst_chars_dir_2024_25, "^institution\\.name$")
-inst_names_combined <- inst_chars_dir_2024_25 %>%
-  mutate(unitid = as.character(unitid)) %>%
-  distinct(unitid, .keep_all = TRUE) %>%
-  select(unitid, institution_name = all_of(inst_name_col))
-fe_inst_col <- get_col_name(fe_f2024, "institution\\.name")
-fe_extra <- fe_f2024 %>%
-  mutate(unitid = as.character(unitid)) %>%
-  filter(!unitid %in% inst_names_combined$unitid) %>%
-  distinct(unitid, .keep_all = TRUE) %>%
-  select(unitid, institution_name = all_of(fe_inst_col))
-inst_names_combined <- bind_rows(inst_names_combined, fe_extra)
-grad_inst_col <- get_col_name(grad_feq_var_cohort_2018_21, "institution\\.name")
-grad_extra <- grad_feq_var_cohort_2018_21 %>%
-  mutate(unitid = as.character(unitid)) %>%
-  filter(!unitid %in% inst_names_combined$unitid) %>%
-  distinct(unitid, .keep_all = TRUE) %>%
-  select(unitid, institution_name = all_of(grad_inst_col))
-inst_names_combined <- bind_rows(inst_names_combined, grad_extra)
-costs_inst_col <- get_col_name(costs_f2024, "institution\\.name")
-costs_extra <- costs_f2024 %>%
-  mutate(unitid = as.character(unitid)) %>%
-  filter(!unitid %in% inst_names_combined$unitid) %>%
-  distinct(unitid, .keep_all = TRUE) %>%
-  select(unitid, institution_name = all_of(costs_inst_col))
-inst_names_combined <- bind_rows(inst_names_combined, costs_extra)
+url <- "https://raw.githubusercontent.com/joycegill/Advanced-Statistical-Modeling/main/data/cleaned/FINAL_DATA.csv"
+df <- read_csv(url)
 
 # ---- UI ----
 ui <- fluidPage(
@@ -158,23 +120,18 @@ server <- function(input, output, session) {
 
   # Graph 1: Boxplot of SAT scores by requirement (required vs not)
   output$sat_scores_plot <- renderPlotly({
-    adm_test_f2024_prep <- adm_test_f2024 %>%
+    adm_test_f2024_clean <- df %>%
       mutate(
-        unitid = as.character(unitid),
+        # not just sat but sat/act
         sat_required = ifelse(
-          ADM2024.Admission.test.scores == "Required to be considered for admission",
+          ADMCON7 == "Required to be considered for admission",
           "Required", "Not Required"
         ),
-        sat_total = ADM2024.SAT.Evidence.Based.Reading.and.Writing.50th.percentile.score + 
-                    ADM2024.SAT.Math.50th.percentile.score
-      )
-    
-    adm_test_f2024_clean <- adm_test_f2024_prep %>%
+        sat_total = SATVR50 + SATMT50
+      ) %>%
       filter(!is.na(sat_total)) %>%
-      left_join(inst_names_combined, by = "unitid") %>%
       mutate(
-        institution_name = ifelse(is.na(institution_name), "Unknown", institution_name),
-        hover_text = paste("School:", institution_name, "<br>SAT Score:", sat_total)
+        hover_text = paste("School:", INSTNM, "<br>SAT Score:", sat_total)
       )
     
     p <- plot_ly(adm_test_f2024_clean, x = ~sat_required, y = ~sat_total, 
@@ -191,15 +148,14 @@ server <- function(input, output, session) {
   
   # T-test and Cohen's d for Graph 1
   output$sat_scores_test <- renderPrint({
-    adm_test_f2024_prep <- adm_test_f2024 %>%
+    adm_test_f2024_prep <- df %>%
       mutate(
-        unitid = as.character(unitid),
+        UNITID = as.character(UNITID),
         sat_required = ifelse(
-          ADM2024.Admission.test.scores == "Required to be considered for admission",
+          ADMCON7 == "Required to be considered for admission",
           "Required", "Not Required"
         ),
-        sat_total = ADM2024.SAT.Evidence.Based.Reading.and.Writing.50th.percentile.score + 
-                    ADM2024.SAT.Math.50th.percentile.score
+        sat_total = SATVR50 + SATMT50
       )
     
     adm_test_f2024_clean <- adm_test_f2024_prep %>%
@@ -213,20 +169,17 @@ server <- function(input, output, session) {
   
   # Graph 2: Boxplot of admission rate by SAT requirement
   output$sat_admission_plot <- renderPlotly({
-    sat_admission_rate <- adm_test_f2024 %>%
+    sat_admission_rate <- df %>%
       mutate(
-        unitid = as.character(unitid),
         sat_required = ifelse(
-          ADM2024.Admission.test.scores == "Required to be considered for admission",
+          ADMCON7 == "Required to be considered for admission",
           "Required", "Not Required"
         ),
-        admit_rate = as.numeric(DRVADM2024.Percent.admitted...total)
+        admit_rate = as.numeric(DVADM01)
       ) %>%
       filter(between(admit_rate, 0, 100)) %>%
-      left_join(inst_names_combined, by = "unitid") %>%
       mutate(
-        institution_name = ifelse(is.na(institution_name), "Unknown", institution_name),
-        hover_text = paste("School:", institution_name, "<br>Admission Rate:", round(admit_rate, 1), "%")
+        hover_text = paste("School:", INSTNM, "<br>Admission Rate:", round(admit_rate, 1), "%")
       )
     p <- plot_ly(sat_admission_rate, x = ~sat_required, y = ~admit_rate,
                  type = "box", boxpoints = "all", jitter = 0.3,
@@ -242,14 +195,13 @@ server <- function(input, output, session) {
   
   # T-test and Cohen's d for Graph 2
   output$sat_admission_test <- renderPrint({
-    sat_admission_rate <- adm_test_f2024 %>%
+    sat_admission_rate <- df %>%
       mutate(
-        unitid = as.character(unitid),
         sat_required = ifelse(
-          ADM2024.Admission.test.scores == "Required to be considered for admission",
+          ADMCON7 == "Required to be considered for admission",
           "Required", "Not Required"
         ),
-        admit_rate = as.numeric(DRVADM2024.Percent.admitted...total)
+        admit_rate = as.numeric(DVADM01)
       ) %>%
       filter(between(admit_rate, 0, 100))
     
@@ -261,28 +213,19 @@ server <- function(input, output, session) {
   
   # Graph 3: Horizontal bar chart 
   output$sat_state_plot <- renderPlotly({
-    sat_state_requirements <- adm_test_f2024 %>%
+    sat_state_requirements <- df %>%
       mutate(
-        unitid = as.character(unitid),
-        sat_required = ADM2024.Admission.test.scores == "Required to be considered for admission"
+        sat_required = ADMCON7 == "Required to be considered for admission"
       ) %>%
-      select(unitid, sat_required) %>%
-      left_join(inst_names_combined, by = "unitid") %>%
-      left_join(
-        inst_chars_dir_2024_25 %>%
-          mutate(unitid = as.character(unitid)) %>%
-          distinct(unitid, .keep_all = TRUE) %>%
-          select(unitid, state = HD2024.State.abbreviation),
-        by = "unitid"
-      ) %>%
-      filter(!is.na(state))
+      select(UNITID, INSTNM, sat_required, STATE) %>%
+      filter(!is.na(STATE))
     
     state_rates <- sat_state_requirements %>%
-      group_by(state) %>%
+      group_by(STATE) %>%
       summarise(rate = mean(sat_required), n = n(), .groups = "drop") %>%
       filter(n >= 5) %>%
       slice_max(rate, n = 12, with_ties = FALSE) %>%
-      mutate(hover_text = paste("State:", state, "<br>Rate:", round(rate * 100, 1), "%<br>Schools:", n))
+      mutate(hover_text = paste("State:", STATE, "<br>Rate:", round(rate * 100, 1), "%<br>Schools:", n))
     if (nrow(state_rates) == 0) {
       return(plot_ly() %>% add_annotations(text = "No data available", xref = "paper", yref = "paper",
                                            x = 0.5, y = 0.5, showarrow = FALSE))
@@ -290,7 +233,7 @@ server <- function(input, output, session) {
     n_states <- nrow(state_rates)
     plot_height <- max(500, n_states * 22)
     
-    p <- plot_ly(state_rates, x = ~rate, y = ~reorder(state, rate), type = "bar",
+    p <- plot_ly(state_rates, x = ~rate, y = ~reorder(STATE, rate), type = "bar",
                  orientation = "h", text = ~hover_text, hoverinfo = "text",
                  marker = list(color = "steelblue"),
                  textposition = "none") %>%
@@ -308,29 +251,24 @@ server <- function(input, output, session) {
     p
   })
   
-  # Helper: SAT state-by-sector rates for one sector; returns df ready to plot (top 5 states).
-  sat_state_sector_data <- function(sector_name) {
-    adm_test_f2024 %>%
-      mutate(unitid = as.character(unitid), sat_required = ADM2024.Admission.test.scores == "Required to be considered for admission") %>%
-      select(unitid, sat_required) %>%
-      left_join(inst_names_combined, by = "unitid") %>%
-      left_join(
-        inst_chars_dir_2024_25 %>% mutate(unitid = as.character(unitid)) %>% distinct(unitid, .keep_all = TRUE) %>%
-          select(unitid, state = HD2024.State.abbreviation, sector = HD2024.Sector.of.institution),
-        by = "unitid"
-      ) %>%
-      filter(!is.na(state), sector == sector_name) %>%
-      group_by(state, sector) %>%
+  # Helper: SAT state-by-sector rates for one control; returns df ready to plot (top 5 states).
+  sat_state_sector_data <- function(control_name) {
+    df %>%
+      mutate(sat_required = ADMCON7 == "Required to be considered for admission") %>%
+      select(UNITID, sat_required, STATE, CONTROL, INSTNM) %>%
+      filter(!is.na(STATE), CONTROL == control_name) %>%
+      group_by(STATE, CONTROL) %>%
       summarise(rate = mean(sat_required), n = n(), .groups = "drop") %>%
       filter(n >= 5) %>%
-      mutate(hover_text = paste("State:", state, "<br>Rate:", round(rate * 100, 1), "%<br>Schools:", n)) %>%
+      mutate(hover_text = paste("State:", STATE, "<br>Rate:", round(rate * 100, 1), "%<br>Schools:", n)) %>%
       slice_max(rate, n = 5, with_ties = FALSE)
   }
 
   # Graph 4a: Private 4-year — top 5 states by % requiring SAT
   output$sat_state_sector_private_plot <- renderPlotly({
-    df_plot <- sat_state_sector_data("Private not-for-profit, 4-year or above")
-    plot_ly(df_plot, x = ~rate, y = ~reorder(state, rate), type = "bar",
+    # ! why is this only not-for-profit
+    df_plot <- sat_state_sector_data("Private not-for-profit")
+    plot_ly(df_plot, x = ~rate, y = ~reorder(STATE, rate), type = "bar",
             orientation = "h", text = ~hover_text, hoverinfo = "text",
             marker = list(color = "steelblue"), textposition = "none") %>%
       layout(title = list(text = "Private 4-year: SAT Requirement Rate by State"),
@@ -340,8 +278,8 @@ server <- function(input, output, session) {
 
   # Graph 4b: Public 4-year — top 5 states by % requiring SAT
   output$sat_state_sector_public_plot <- renderPlotly({
-    df_plot <- sat_state_sector_data("Public, 4-year or above")
-    plot_ly(df_plot, x = ~rate, y = ~reorder(state, rate), type = "bar",
+    df_plot <- sat_state_sector_data("Public")
+    plot_ly(df_plot, x = ~rate, y = ~reorder(STATE, rate), type = "bar",
             orientation = "h", text = ~hover_text, hoverinfo = "text",
             marker = list(color = "steelblue"), textposition = "none") %>%
       layout(title = list(text = "Public 4-year: SAT Requirement Rate by State"),
@@ -351,27 +289,20 @@ server <- function(input, output, session) {
   
   # Graph 5a: % requiring SAT by region
   output$sat_region_percent_plot <- renderPlotly({
-    sat_region <- adm_test_f2024 %>%
+    sat_region <- df %>%
       mutate(
-        unitid = as.character(unitid),
-        sat_required = ADM2024.Admission.test.scores == "Required to be considered for admission"
+        sat_required = ADMCON7 == "Required to be considered for admission"
       ) %>%
-      select(unitid, sat_required) %>%
-      inner_join(
-        inst_chars_dir_2024_25 %>%
-          mutate(unitid = as.character(unitid)) %>%
-          select(unitid, region = `HD2024.Bureau.of.Economic.Analysis..BEA..regions`),
-        by = "unitid"
-      ) %>%
-      filter(!is.na(region))
+      select(UNITID, sat_required, OBEREG, INSTNM) %>%
+      filter(!is.na(OBEREG))
     
     region_rates <- sat_region %>%
-      group_by(region) %>%
+      group_by(OBEREG) %>%
       summarise(rate = mean(sat_required), n = n(), .groups = "drop") %>%
       slice_max(rate, n = 5, with_ties = FALSE) %>%
-      mutate(hover_text = paste("Region:", region, "<br>Rate:", round(rate * 100, 1), "%<br>Schools:", n))
+      mutate(hover_text = paste("Region:", OBEREG, "<br>Rate:", round(rate * 100, 1), "%<br>Schools:", n))
     
-    p <- plot_ly(region_rates, x = ~rate, y = ~reorder(region, rate), type = "bar",
+    p <- plot_ly(region_rates, x = ~rate, y = ~reorder(OBEREG, rate), type = "bar",
                  orientation = "h", text = ~hover_text, hoverinfo = "text",
                  marker = list(color = "steelblue"), textposition = "none") %>%
       layout(title = list(text = "SAT Requirement Rates by Region"),
@@ -383,29 +314,22 @@ server <- function(input, output, session) {
   
   # Graph 5b: Count of schools requiring vs not requiring SAT by region 
   output$sat_region_counts_plot <- renderPlotly({
-    sat_region <- adm_test_f2024 %>%
+    sat_region <- df %>%
       mutate(
-        unitid = as.character(unitid),
-        sat_required = ADM2024.Admission.test.scores == "Required to be considered for admission"
+        sat_required = ADMCON7 == "Required to be considered for admission"
       ) %>%
-      select(unitid, sat_required) %>%
-      inner_join(
-        inst_chars_dir_2024_25 %>%
-          mutate(unitid = as.character(unitid)) %>%
-          select(unitid, region = `HD2024.Bureau.of.Economic.Analysis..BEA..regions`),
-        by = "unitid"
-      ) %>%
-      filter(!is.na(region))
+      select(UNITID, sat_required, OBEREG, INSTNM) %>%
+      filter(!is.na(OBEREG))
     
     region_counts <- sat_region %>%
       mutate(sat_required = ifelse(sat_required, "Required", "Not required")) %>%
-      group_by(region, sat_required) %>%
+      group_by(OBEREG, sat_required) %>%
       summarise(n = n(), .groups = "drop") %>%
-      mutate(hover_text = paste("Region:", region, "<br>Policy:", sat_required, "<br>Count:", n))
-    top_regions <- region_counts %>% group_by(region) %>% summarise(total = sum(n), .groups = "drop") %>% slice_max(total, n = 5, with_ties = FALSE) %>% pull(region)
-    region_counts <- region_counts %>% filter(region %in% top_regions)
+      mutate(hover_text = paste("Region:", OBEREG, "<br>Policy:", sat_required, "<br>Count:", n))
+    top_regions <- region_counts %>% group_by(OBEREG) %>% summarise(total = sum(n), .groups = "drop") %>% slice_max(total, n = 5, with_ties = FALSE) %>% pull(OBEREG)
+    region_counts <- region_counts %>% filter(OBEREG %in% top_regions)
     
-    p <- plot_ly(region_counts, x = ~n, y = ~reorder(region, n), color = ~sat_required,
+    p <- plot_ly(region_counts, x = ~n, y = ~reorder(OBEREG, n), color = ~sat_required,
                  type = "bar", orientation = "h", text = ~hover_text, hoverinfo = "text",
                  colors = c("Required" = "#F8766D", "Not required" = "#00BFC4"),
                  textposition = "none") %>%
@@ -420,28 +344,17 @@ server <- function(input, output, session) {
   # Graph 6: Scatter of first-time enrollment % vs 6-year graduation rate
   output$enrollment_growth_plot <- renderPlotly({
     tryCatch({
-      enroll_prep <- fe_f2024 %>%
+      enrollment_growth_graduation <- df %>%
         mutate(
-          unitid = as.character(unitid),
-          total_enroll = as.numeric(DRVEF2024.Total..enrollment),
-          first_time = as.numeric(DRVEF2024.First.time.degree.certificate.seeking.undergraduate.enrollment)
+          total_enroll = as.numeric(ENRTOT),
+          first_time = as.numeric(EFUG1ST),
+          grad_rate = as.numeric(GBA6RTT)
         ) %>%
-        filter(!is.na(total_enroll), !is.na(first_time), total_enroll > 0, first_time > 0) %>%
+        filter(!is.na(total_enroll), !is.na(first_time), total_enroll > 0, first_time > 0, !is.na(grad_rate), between(grad_rate, 0, 100)) %>%
         mutate(growth_pct = 100 * first_time / total_enroll) %>%
-        select(unitid, growth_pct)
-      
-      grad_prep <- grad_feq_var_cohort_2018_21 %>%
-        mutate(unitid = as.character(unitid)) %>%
-        mutate(grad_rate = as.numeric(DRVGR2024.Graduation.rate...Bachelor.degree.within.6.years..total)) %>%
-        filter(!is.na(grad_rate), between(grad_rate, 0, 100)) %>%
-        select(unitid, grad_rate)
-      
-      enrollment_growth_graduation <- enroll_prep %>%
-        inner_join(grad_prep, by = "unitid") %>%
-        left_join(inst_names_combined, by = "unitid") %>%
+        select(UNITID, growth_pct, grad_rate, INSTNM) %>%
         mutate(
-          institution_name = ifelse(is.na(institution_name), "Unknown", as.character(institution_name)),
-          hover_text = paste("School:", institution_name, "<br>Growth:", round(growth_pct, 1), "%<br>Grad Rate:", round(grad_rate, 1), "%")
+          hover_text = paste("School:", INSTNM, "<br>Growth:", round(growth_pct, 1), "%<br>Grad Rate:", round(grad_rate, 1), "%")
         ) %>%
         filter(!is.na(growth_pct), !is.na(grad_rate))
       
@@ -483,24 +396,15 @@ server <- function(input, output, session) {
   
   # Correlation test for Graph 6.
   output$enrollment_growth_corr <- renderPrint({
-    enroll_prep <- fe_f2024 %>%
+    enrollment_growth_graduation <- df %>%
       mutate(
-        unitid = as.character(unitid),
-        total_enroll = as.numeric(DRVEF2024.Total..enrollment),
-        first_time = as.numeric(DRVEF2024.First.time.degree.certificate.seeking.undergraduate.enrollment)
+        total_enroll = as.numeric(ENRTOT),
+        first_time = as.numeric(EFUG1ST),
+        grad_rate = as.numeric(GBA6RTT)
       ) %>%
-      filter(!is.na(total_enroll), !is.na(first_time), total_enroll > 0, first_time > 0) %>%
+      filter(!is.na(total_enroll), !is.na(first_time), total_enroll > 0, first_time > 0, !is.na(grad_rate), between(grad_rate, 0, 100)) %>%
       mutate(growth_pct = 100 * first_time / total_enroll) %>%
-      select(unitid, growth_pct)
-    
-    grad_prep <- grad_feq_var_cohort_2018_21 %>%
-      mutate(unitid = as.character(unitid)) %>%
-      mutate(grad_rate = as.numeric(DRVGR2024.Graduation.rate...Bachelor.degree.within.6.years..total)) %>%
-      filter(!is.na(grad_rate), between(grad_rate, 0, 100)) %>%
-      select(unitid, grad_rate)
-    
-    enrollment_growth_graduation <- enroll_prep %>%
-      inner_join(grad_prep, by = "unitid")
+      select(UNITID, growth_pct, grad_rate, INSTNM)
     
     cat("Correlation test:\n")
     print(cor.test(enrollment_growth_graduation$growth_pct, enrollment_growth_graduation$grad_rate))
@@ -508,32 +412,18 @@ server <- function(input, output, session) {
   
   # Helper: build growth vs grad data and filter to one sector; return data frame for that sector
   growth_grad_sector_data <- function(sector_filter) {
-    enroll_prep <- fe_f2024 %>%
+    enrollment_growth_graduation <- df %>%
       mutate(
-        unitid = as.character(unitid),
-        total_enroll = as.numeric(DRVEF2024.Total..enrollment),
-        first_time = as.numeric(DRVEF2024.First.time.degree.certificate.seeking.undergraduate.enrollment)
+        total_enroll = as.numeric(ENRTOT),
+        first_time = as.numeric(EFUG1ST),
+        grad_rate = as.numeric(GBA6RTT)
       ) %>%
-      filter(!is.na(total_enroll), !is.na(first_time), total_enroll > 0, first_time > 0) %>%
+      filter(!is.na(total_enroll), !is.na(first_time), total_enroll > 0, first_time > 0, !is.na(grad_rate), between(grad_rate, 0, 100)) %>%
       mutate(growth_pct = 100 * first_time / total_enroll) %>%
-      select(unitid, growth_pct)
-    grad_prep <- grad_feq_var_cohort_2018_21 %>%
-      mutate(unitid = as.character(unitid)) %>%
-      mutate(grad_rate = as.numeric(DRVGR2024.Graduation.rate...Bachelor.degree.within.6.years..total)) %>%
-      filter(!is.na(grad_rate), between(grad_rate, 0, 100)) %>%
-      select(unitid, grad_rate)
-    inst_sector <- inst_chars_dir_2024_25 %>%
-      mutate(unitid = as.character(unitid)) %>%
-      select(unitid, sector = HD2024.Sector.of.institution) %>%
-      filter(!duplicated(unitid))
-    enrollment_growth_graduation <- enroll_prep %>%
-      inner_join(grad_prep, by = "unitid") %>%
-      left_join(inst_names_combined, by = "unitid") %>%
-      mutate(institution_name = ifelse(is.na(institution_name), "Unknown", as.character(institution_name))) %>%
       filter(!is.na(growth_pct), !is.na(grad_rate)) %>%
-      inner_join(inst_sector, by = "unitid") %>%
-      filter(sector == sector_filter) %>%
-      mutate(hover_text = paste("School:", institution_name, "<br>Growth:", round(growth_pct, 1), "%<br>Grad Rate:", round(grad_rate, 1), "%")) %>%
+      select(UNITID, growth_pct, grad_rate, CONTROL, INSTNM) %>%
+      filter(CONTROL == sector_filter) %>%
+      mutate(hover_text = paste("School:", INSTNM, "<br>Growth:", round(growth_pct, 1), "%<br>Grad Rate:", round(grad_rate, 1), "%")) %>%
       as.data.frame()
     enrollment_growth_graduation
   }
@@ -562,39 +452,30 @@ server <- function(input, output, session) {
 
   # Graph 7a: Enrollment growth vs graduation — Private 4-year
   output$enrollment_growth_sector_private_plot <- renderPlotly({
-    tryCatch(make_growth_sector_plot("Private not-for-profit, 4-year or above", "Private 4-year: Enrollment Growth vs Graduation Rate"),
+    tryCatch(make_growth_sector_plot("Private not-for-profit", "Private 4-year: Enrollment Growth vs Graduation Rate"),
              error = function(e) plot_ly() %>% add_annotations(text = safe_error_text(e), xref = "paper", yref = "paper", x = 0.5, y = 0.5, showarrow = FALSE))
   })
 
   # Graph 7b: Enrollment growth vs graduation — Public 4-year
   output$enrollment_growth_sector_public_plot <- renderPlotly({
-    tryCatch(make_growth_sector_plot("Public, 4-year or above", "Public 4-year: Enrollment Growth vs Graduation Rate"),
+    tryCatch(make_growth_sector_plot("Public", "Public 4-year: Enrollment Growth vs Graduation Rate"),
              error = function(e) plot_ly() %>% add_annotations(text = safe_error_text(e), xref = "paper", yref = "paper", x = 0.5, y = 0.5, showarrow = FALSE))
   })
   
   # Graph 8: Same as Graph 6 but with loess trend (nonlinear) instead of linear
   output$enrollment_nonlinear_plot <- renderPlotly({
     tryCatch({
-      enroll_prep <- fe_f2024 %>%
+      enrollment_growth_graduation <- df %>%
         mutate(
-          unitid = as.character(unitid),
-          total_enroll = as.numeric(DRVEF2024.Total..enrollment),
-          first_time = as.numeric(DRVEF2024.First.time.degree.certificate.seeking.undergraduate.enrollment)
+          total_enroll = as.numeric(ENRTOT),
+          first_time = as.numeric(EFUG1ST),
+          grad_rate = as.numeric(GBA6RTT)
         ) %>%
-        filter(!is.na(total_enroll), !is.na(first_time), total_enroll > 0, first_time > 0) %>%
+        filter(!is.na(total_enroll), !is.na(first_time), total_enroll > 0, first_time > 0, !is.na(grad_rate), between(grad_rate, 0, 100)) %>%
         mutate(growth_pct = 100 * first_time / total_enroll) %>%
-        select(unitid, growth_pct)
-      grad_prep <- grad_feq_var_cohort_2018_21 %>%
-        mutate(unitid = as.character(unitid)) %>%
-        mutate(grad_rate = as.numeric(DRVGR2024.Graduation.rate...Bachelor.degree.within.6.years..total)) %>%
-        filter(!is.na(grad_rate), between(grad_rate, 0, 100)) %>%
-        select(unitid, grad_rate)
-      enrollment_growth_graduation <- enroll_prep %>%
-      inner_join(grad_prep, by = "unitid") %>%
-      left_join(inst_names_combined, by = "unitid") %>%
+        select(UNITID, growth_pct, grad_rate, INSTNM) %>%
       mutate(
-        institution_name = ifelse(is.na(institution_name), "Unknown", institution_name),
-        hover_text = paste("School:", institution_name, "<br>Growth:", round(growth_pct, 1), "%<br>Grad Rate:", round(grad_rate, 1), "%")
+        hover_text = paste("School:", INSTNM, "<br>Growth:", round(growth_pct, 1), "%<br>Grad Rate:", round(grad_rate, 1), "%")
       ) %>%
       filter(!is.na(growth_pct), !is.na(grad_rate))
     if (nrow(enrollment_growth_graduation) == 0) {
@@ -637,24 +518,15 @@ server <- function(input, output, session) {
   
   # Quadratic model summary for Graph 8
   output$enrollment_quad_model <- renderPrint({
-    enroll_prep <- fe_f2024 %>%
+    enrollment_growth_graduation <- df %>%
       mutate(
-        unitid = as.character(unitid),
-        total_enroll = as.numeric(DRVEF2024.Total..enrollment),
-        first_time = as.numeric(DRVEF2024.First.time.degree.certificate.seeking.undergraduate.enrollment)
+        total_enroll = as.numeric(ENRTOT),
+        first_time = as.numeric(EFUG1ST),
+        grad_rate = as.numeric(GBA6RTT)
       ) %>%
-      filter(!is.na(total_enroll), !is.na(first_time), total_enroll > 0, first_time > 0) %>%
+      filter(!is.na(total_enroll), !is.na(first_time), total_enroll > 0, first_time > 0, !is.na(grad_rate), between(grad_rate, 0, 100)) %>%
       mutate(growth_pct = 100 * first_time / total_enroll) %>%
-      select(unitid, growth_pct)
-    
-    grad_prep <- grad_feq_var_cohort_2018_21 %>%
-      mutate(unitid = as.character(unitid)) %>%
-      mutate(grad_rate = as.numeric(DRVGR2024.Graduation.rate...Bachelor.degree.within.6.years..total)) %>%
-      filter(!is.na(grad_rate), between(grad_rate, 0, 100)) %>%
-      select(unitid, grad_rate)
-    
-    enrollment_growth_graduation <- enroll_prep %>%
-      inner_join(grad_prep, by = "unitid")
+      select(UNITID, INSTNM, growth_pct, grad_rate)
     
     quad_model <- lm(grad_rate ~ growth_pct + I(growth_pct^2), data = enrollment_growth_graduation)
     cat("Quadratic Model:\n")
@@ -664,25 +536,15 @@ server <- function(input, output, session) {
   # Graph 9: Scatter of student–faculty ratio vs graduation rate
   output$faculty_ratio_plot <- renderPlotly({
     tryCatch({
-      faculty_data <- fe_f2024 %>%
+    faculty_ratio_graduation <- df %>%
         mutate(
-          unitid = as.character(unitid),
-          student_faculty_ratio = as.numeric(EF2024D.Student.to.faculty.ratio)
+          student_faculty_ratio = as.numeric(STUFACR),
+          grad_rate = as.numeric(GBA6RTT)
         ) %>%
-        filter(!is.na(student_faculty_ratio), between(student_faculty_ratio, 5, 50)) %>%
-        select(unitid, student_faculty_ratio)
-      grad_data <- grad_feq_var_cohort_2018_21 %>%
-      mutate(unitid = as.character(unitid)) %>%
-      mutate(grad_rate = as.numeric(DRVGR2024.Graduation.rate...Bachelor.degree.within.6.years..total)) %>%
-      filter(!is.na(grad_rate), between(grad_rate, 0, 100)) %>%
-      select(unitid, grad_rate)
-    
-    faculty_ratio_graduation <- faculty_data %>%
-      inner_join(grad_data, by = "unitid") %>%
-      left_join(inst_names_combined, by = "unitid") %>%
+        filter(!is.na(student_faculty_ratio), between(student_faculty_ratio, 5, 50), !is.na(grad_rate), between(grad_rate, 0, 100)) %>%
+        select(UNITID, INSTNM, student_faculty_ratio, grad_rate) %>%
       mutate(
-        institution_name = ifelse(is.na(institution_name), "Unknown", institution_name),
-        hover_text = paste("School:", institution_name, "<br>Ratio:", round(student_faculty_ratio, 1), "<br>Grad Rate:", round(grad_rate, 1), "%")
+        hover_text = paste("School:", INSTNM, "<br>Ratio:", round(student_faculty_ratio, 1), "<br>Grad Rate:", round(grad_rate, 1), "%")
       ) %>%
       filter(!is.na(student_faculty_ratio), !is.na(grad_rate))
     if (nrow(faculty_ratio_graduation) == 0) {
@@ -727,37 +589,22 @@ server <- function(input, output, session) {
   
   # Correlation test for Graph 9.
   output$faculty_ratio_corr <- renderPrint({
-    faculty_data <- fe_f2024 %>%
+    faculty_ratio_graduation <- df %>%
       mutate(
-        unitid = as.character(unitid),
-        student_faculty_ratio = as.numeric(EF2024D.Student.to.faculty.ratio)
+        student_faculty_ratio = as.numeric(STUFACR),
+        grad_rate = as.numeric(GBA6RTT)
       ) %>%
-      filter(!is.na(student_faculty_ratio), between(student_faculty_ratio, 5, 50)) %>%
-      select(unitid, student_faculty_ratio)
-    
-    grad_data <- grad_feq_var_cohort_2018_21 %>%
-      mutate(unitid = as.character(unitid)) %>%
-      mutate(grad_rate = as.numeric(DRVGR2024.Graduation.rate...Bachelor.degree.within.6.years..total)) %>%
-      filter(!is.na(grad_rate), between(grad_rate, 0, 100)) %>%
-      select(unitid, grad_rate)
-    
-    faculty_ratio_graduation <- faculty_data %>%
-      inner_join(grad_data, by = "unitid")
+      filter(!is.na(student_faculty_ratio), between(student_faculty_ratio, 5, 50), !is.na(grad_rate), between(grad_rate, 0, 100)) %>%
+      select(UNITID, INSTNM, grad_rate, student_faculty_ratio)
     
     cat("Correlation test:\n")
     print(cor.test(faculty_ratio_graduation$student_faculty_ratio, faculty_ratio_graduation$grad_rate))
   })
   
-  # Helper: class_size joined with costs and inst names; one row per school with STUFACR and tuition.
   class_size_costs_data <- function() {
-    tuition_col <- "COST1_2024.Out.of.state.average.tuition.for.full.time.undergraduates"
-    class_size %>%
-      mutate(UNITID = as.character(UNITID)) %>%
-      inner_join(costs_f2024 %>% mutate(unitid = as.character(unitid)), by = c("UNITID" = "unitid")) %>%
-      inner_join(inst_names_combined, by = c("UNITID" = "unitid")) %>%
-      select(UNITID, institution_name, STUFACR, CLASIZUND20, CLASIZOVE50, all_of(tuition_col)) %>%
-      filter(!is.na(.data[[tuition_col]]), !is.na(STUFACR)) %>%
-      mutate(institution_name = ifelse(is.na(institution_name), "Unknown", as.character(institution_name)))
+    df %>%
+      select(UNITID, INSTNM, STUFACR, CLASIZUND20, CLASIZOVE50, TUITION3) %>%
+      filter(!is.na(TUITION3), !is.na(STUFACR))
   }
 
   # Graph 10a: Scatter of student–faculty ratio vs out-of-state tuition; bubble size = prob classes <20.
@@ -767,9 +614,9 @@ server <- function(input, output, session) {
       if (nrow(analysis_df) == 0) {
         return(plot_ly() %>% add_annotations(text = "No data available", xref = "paper", yref = "paper", x = 0.5, y = 0.5, showarrow = FALSE))
       }
-      tuition_col_name <- names(analysis_df)[grepl("COST1_2024", names(analysis_df))][1]
+      tuition_col_name <- "TUITION3"
       tuition_vec <- analysis_df[[tuition_col_name]]
-      analysis_df$hover_text <- paste("School:", analysis_df$institution_name, "<br>Ratio:", round(analysis_df$STUFACR, 1), "<br>Tuition: $", round(tuition_vec, 0), "<br>Small Class Prob:", round(analysis_df$CLASIZUND20, 2))
+      analysis_df$hover_text <- paste("School:", analysis_df$INSTNM, "<br>Ratio:", round(analysis_df$STUFACR, 1), "<br>Tuition: $", round(tuition_vec, 0), "<br>Small Class Prob:", round(analysis_df$CLASIZUND20, 2))
       marker_sizes <- analysis_df$CLASIZUND20 * 20
       marker_sizes[is.na(marker_sizes)] <- 5
       marker_sizes[marker_sizes < 1] <- 1
@@ -803,9 +650,9 @@ server <- function(input, output, session) {
       if (nrow(analysis_df) == 0) {
         return(plot_ly() %>% add_annotations(text = "No data available", xref = "paper", yref = "paper", x = 0.5, y = 0.5, showarrow = FALSE))
       }
-      tuition_col_name <- names(analysis_df)[grepl("COST1_2024", names(analysis_df))][1]
+      tuition_col_name <- "TUITION3"
       tuition_vec <- analysis_df[[tuition_col_name]]
-      analysis_df$hover_text <- paste("School:", analysis_df$institution_name, "<br>Ratio:", round(analysis_df$STUFACR, 1), "<br>Tuition: $", round(tuition_vec, 0), "<br>Large Class Prob:", round(analysis_df$CLASIZOVE50, 2))
+      analysis_df$hover_text <- paste("School:", analysis_df$INSTNM, "<br>Ratio:", round(analysis_df$STUFACR, 1), "<br>Tuition: $", round(tuition_vec, 0), "<br>Large Class Prob:", round(analysis_df$CLASIZOVE50, 2))
       marker_sizes <- analysis_df$CLASIZOVE50 * 20
       marker_sizes[is.na(marker_sizes)] <- 5
       marker_sizes[marker_sizes < 1] <- 1
@@ -835,20 +682,18 @@ server <- function(input, output, session) {
   # Graph 11a: Scatter of in-state tuition vs room & board; trend line
   output$tuition_roomboard_instate_plot <- renderPlotly({
     tryCatch({
-      df_costs <- costs_f2024 %>%
+      df_costs <- df %>%
       select(
-        unitid,
-        InState = COST1_2024.In.state.average.tuition.for.full.time.undergraduates,
-        OutState = COST1_2024.Out.of.state.average.tuition.for.full.time.undergraduates,
-        RoomBoard = COST1_2024.Combined.food.and.housing.charge
+        UNITID,
+        INSTNM,
+        InState = TUITION2,
+        OutState = TUITION3,
+        RoomBoard = RMBRDAMT
       ) %>%
       filter(!is.na(InState) & !is.na(OutState) & !is.na(RoomBoard)) %>%
-      mutate(unitid = as.character(unitid)) %>%
-      left_join(inst_names_combined, by = "unitid") %>%
       mutate(
-        institution_name = ifelse(is.na(institution_name), "Unknown", institution_name),
-        hover_text_inst = paste("School:", institution_name, "<br>In-State Tuition: $", round(InState, 0), "<br>Room & Board: $", round(RoomBoard, 0)),
-        hover_text_out = paste("School:", institution_name, "<br>Out-of-State Tuition: $", round(OutState, 0), "<br>Room & Board: $", round(RoomBoard, 0))
+        hover_text_inst = paste("School:", INSTNM, "<br>In-State Tuition: $", round(InState, 0), "<br>Room & Board: $", round(RoomBoard, 0)),
+        hover_text_out = paste("School:", INSTNM, "<br>Out-of-State Tuition: $", round(OutState, 0), "<br>Room & Board: $", round(RoomBoard, 0))
       )
     
     if (nrow(df_costs) == 0) {
@@ -888,20 +733,18 @@ server <- function(input, output, session) {
   # Graph 11b: Scatter of out-of-state tuition vs room & board; trend line
   output$tuition_roomboard_outstate_plot <- renderPlotly({
     tryCatch({
-      df_costs <- costs_f2024 %>%
+      df_costs <- df %>%
         select(
-          unitid,
-        InState = COST1_2024.In.state.average.tuition.for.full.time.undergraduates,
-        OutState = COST1_2024.Out.of.state.average.tuition.for.full.time.undergraduates,
-        RoomBoard = COST1_2024.Combined.food.and.housing.charge
+        UNITID,
+        INSTNM,
+        InState = TUITION2,
+        OutState = TUITION3,
+        RoomBoard = RMBRDAMT
       ) %>%
       filter(!is.na(InState) & !is.na(OutState) & !is.na(RoomBoard)) %>%
-      mutate(unitid = as.character(unitid)) %>%
-      left_join(inst_names_combined, by = "unitid") %>%
       mutate(
-        institution_name = ifelse(is.na(institution_name), "Unknown", institution_name),
-        hover_text_inst = paste("School:", institution_name, "<br>In-State Tuition: $", round(InState, 0), "<br>Room & Board: $", round(RoomBoard, 0)),
-        hover_text_out = paste("School:", institution_name, "<br>Out-of-State Tuition: $", round(OutState, 0), "<br>Room & Board: $", round(RoomBoard, 0))
+        hover_text_inst = paste("School:", INSTNM, "<br>In-State Tuition: $", round(InState, 0), "<br>Room & Board: $", round(RoomBoard, 0)),
+        hover_text_out = paste("School:", INSTNM, "<br>Out-of-State Tuition: $", round(OutState, 0), "<br>Room & Board: $", round(RoomBoard, 0))
       )
     
     if (nrow(df_costs) == 0) {
@@ -940,12 +783,13 @@ server <- function(input, output, session) {
   
   # Regression summary: room & board ~ in-state + out-of-state tuition.
   output$tuition_roomboard_model <- renderPrint({
-    df_costs <- costs_f2024 %>%
+    df_costs <- df %>%
       select(
-        unitid,
-        InState = COST1_2024.In.state.average.tuition.for.full.time.undergraduates,
-        OutState = COST1_2024.Out.of.state.average.tuition.for.full.time.undergraduates,
-        RoomBoard = COST1_2024.Combined.food.and.housing.charge
+        UNITID,
+        INSTNM,
+        InState = TUITION2,
+        OutState = TUITION3,
+        RoomBoard = RMBRDAMT
       ) %>%
       filter(!is.na(InState) & !is.na(OutState) & !is.na(RoomBoard))
     
