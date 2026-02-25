@@ -103,7 +103,7 @@ COSTS_F2024 <- COSTS_F2024 %>%
 # Fall Enrollment, Retention Rates, and Derived Variables: Fall 2024
 FE_F2024 <- read_csv("data/custom_data/FE_F2024.csv", show_col_types = FALSE)
 FE_F2024 <- FE_F2024 %>%
-  select(unitid, `EF2024D.Student-to-faculty ratio`)
+  select(unitid, `EF2024D.Student-to-faculty ratio`, `DRVEF2024.Total  enrollment`, `DRVEF2024.First-time degree/certificate-seeking undergraduate enrollment`, `DRVEF2024.Transfer-in degree/certificate-seeking undergraduate enrollment`, `DRVEF2024.Continuing degree/certificate-seeking undergraduate enrollment`, `DRVEF2024.Percent of first-time undergraduates - in-state`, `DRVEF2024.Percent of first-time undergraduates - out-of-state`, `DRVEF2024.Percent of first-time undergraduates - foreign countries`, `DRVEF2024.Percent of first-time undergraduates - residence unknown`)
 
 # Gender, attendance status, and level of student: Fall 2024
 FE_GENDER_F2024 <- read_csv("data/custom_data/FE_GENDER_F2024.csv", show_col_types = FALSE)
@@ -230,6 +230,14 @@ FINAL_JOINED_DATA <- FINAL_JOINED_DATA %>%
     CHG2AT3 = `COST1_2024.Published in-state tuition 2024-25`,
     CHG3AT3 = `COST1_2024.Published out-of-state tuition 2024-25`,
     STUFACR = `EF2024D.Student-to-faculty ratio`,
+    ENRTOT = `DRVEF2024.Total  enrollment`,
+    EFUG1ST = `DRVEF2024.First-time degree/certificate-seeking undergraduate enrollment`,
+    EFUGTRN = `DRVEF2024.Transfer-in degree/certificate-seeking undergraduate enrollment`,
+    EFUGCNT = `DRVEF2024.Continuing degree/certificate-seeking undergraduate enrollment`,
+    RMINSTTP = `DRVEF2024.Percent of first-time undergraduates - in-state`,
+    RMOUSTTP = `DRVEF2024.Percent of first-time undergraduates - out-of-state`,
+    RMFRGNCP = `DRVEF2024.Percent of first-time undergraduates - foreign countries`,
+    RMUNKNWP = `DRVEF2024.Percent of first-time undergraduates - residence unknown`,
     EFTOTAL = `EF2024.Grand total`,
     EFFT = `EF2024.Full time total`,
     EFFTMEN = `EF2024.Total men`,
