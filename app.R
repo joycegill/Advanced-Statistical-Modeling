@@ -61,8 +61,7 @@ ui <- fluidPage(
         tabPanel("SAT Requirements by Region",
           h3("SAT Requirements by Region"),
           p("Research Question: Are SAT requirements geographically clustered by region?"),
-          plotlyOutput("sat_region_counts_plot"),
-          plotlyOutput("sat_region_percent_plot")
+          plotlyOutput("sat_region_counts_plot")
         ),
         
         # Tab 6: Enrollment Growth vs Graduation Rates
@@ -218,13 +217,12 @@ server <- function(input, output, session) {
         sat_required = ADMCON7 == "Required to be considered for admission"
       ) %>%
       select(UNITID, INSTNM, sat_required, STATE) %>%
-      filter(!is.na(STATE))
+      filter(!is.na(STATE), !is.na(sat_required))
     
     state_rates <- sat_state_requirements %>%
       group_by(STATE) %>%
       summarise(rate = mean(sat_required), n = n(), .groups = "drop") %>%
-      filter(n >= 5) %>%
-      slice_max(rate, n = 12, with_ties = FALSE) %>%
+      slice_max(rate, n = 10, with_ties = FALSE) %>%
       mutate(hover_text = paste("State:", STATE, "<br>Rate:", round(rate * 100, 1), "%<br>Schools:", n))
     if (nrow(state_rates) == 0) {
       return(plot_ly() %>% add_annotations(text = "No data available", xref = "paper", yref = "paper",
@@ -256,17 +254,15 @@ server <- function(input, output, session) {
     df %>%
       mutate(sat_required = ADMCON7 == "Required to be considered for admission") %>%
       select(UNITID, sat_required, STATE, CONTROL, INSTNM) %>%
-      filter(!is.na(STATE), CONTROL == control_name) %>%
-      group_by(STATE, CONTROL) %>%
+      filter(!is.na(STATE), !is.na(sat_required), CONTROL == control_name) %>%
+      group_by(STATE) %>%
       summarise(rate = mean(sat_required), n = n(), .groups = "drop") %>%
-      filter(n >= 5) %>%
       mutate(hover_text = paste("State:", STATE, "<br>Rate:", round(rate * 100, 1), "%<br>Schools:", n)) %>%
       slice_max(rate, n = 5, with_ties = FALSE)
   }
 
   # Graph 4a: Private 4-year — top 5 states by % requiring SAT
   output$sat_state_sector_private_plot <- renderPlotly({
-    # ! why is this only not-for-profit
     df_plot <- sat_state_sector_data("Private not-for-profit")
     plot_ly(df_plot, x = ~rate, y = ~reorder(STATE, rate), type = "bar",
             orientation = "h", text = ~hover_text, hoverinfo = "text",
@@ -287,60 +283,28 @@ server <- function(input, output, session) {
              yaxis = list(title = "State"))
   })
   
-  # Graph 5a: % requiring SAT by region
-  output$sat_region_percent_plot <- renderPlotly({
-    sat_region <- df %>%
-      mutate(
-        sat_required = ADMCON7 == "Required to be considered for admission"
-      ) %>%
-      select(UNITID, sat_required, OBEREG, INSTNM) %>%
-      filter(!is.na(OBEREG))
-    
-    region_rates <- sat_region %>%
-      group_by(OBEREG) %>%
-      summarise(rate = mean(sat_required), n = n(), .groups = "drop") %>%
-      slice_max(rate, n = 5, with_ties = FALSE) %>%
-      mutate(hover_text = paste("Region:", OBEREG, "<br>Rate:", round(rate * 100, 1), "%<br>Schools:", n))
-    
-    p <- plot_ly(region_rates, x = ~rate, y = ~reorder(OBEREG, rate), type = "bar",
-                 orientation = "h", text = ~hover_text, hoverinfo = "text",
-                 marker = list(color = "steelblue"), textposition = "none") %>%
-      layout(title = list(text = "SAT Requirement Rates by Region"),
-             xaxis = list(title = "Percent Requiring SAT", tickformat = ".0%"),
-             yaxis = list(title = "Region"))
-    
-    p
-  })
-  
-  # Graph 5b: Count of schools requiring vs not requiring SAT by region 
+  # Graph 5: Count of schools requiring vs not requiring SAT by region (top 5 regions by total schools)
   output$sat_region_counts_plot <- renderPlotly({
     sat_region <- df %>%
-      mutate(
-        sat_required = ADMCON7 == "Required to be considered for admission"
-      ) %>%
-      select(UNITID, sat_required, OBEREG, INSTNM) %>%
-      filter(!is.na(OBEREG))
-    
+      mutate(sat_required = ADMCON7 == "Required to be considered for admission") %>%
+      filter(!is.na(OBEREG), OBEREG != "U.S. Service schools", !is.na(sat_required))
     region_counts <- sat_region %>%
-      mutate(sat_required = ifelse(sat_required, "Required", "Not required")) %>%
-      group_by(OBEREG, sat_required) %>%
-      summarise(n = n(), .groups = "drop") %>%
-      mutate(hover_text = paste("Region:", OBEREG, "<br>Policy:", sat_required, "<br>Count:", n))
-    top_regions <- region_counts %>% group_by(OBEREG) %>% summarise(total = sum(n), .groups = "drop") %>% slice_max(total, n = 5, with_ties = FALSE) %>% pull(OBEREG)
-    region_counts <- region_counts %>% filter(OBEREG %in% top_regions)
-    
-    p <- plot_ly(region_counts, x = ~n, y = ~reorder(OBEREG, n), color = ~sat_required,
-                 type = "bar", orientation = "h", text = ~hover_text, hoverinfo = "text",
-                 colors = c("Required" = "#F8766D", "Not required" = "#00BFC4"),
-                 textposition = "none") %>%
+      mutate(policy = if_else(sat_required, "Required", "Not required")) %>%
+      count(OBEREG, policy, name = "n")
+    if (nrow(region_counts) == 0) {
+      return(plot_ly() %>% add_annotations(text = "No data available", xref = "paper", yref = "paper", x = 0.5, y = 0.5, showarrow = FALSE))
+    }
+    region_totals <- region_counts %>% group_by(OBEREG) %>% summarise(total = sum(n), .groups = "drop")
+    top5_order <- region_totals %>% slice_max(total, n = 5, with_ties = FALSE) %>% arrange(total) %>% pull(OBEREG)
+    plot_df <- region_counts %>% filter(OBEREG %in% top5_order) %>% left_join(region_totals, by = "OBEREG")
+    plot_df <- plot_df %>% mutate(region_label = factor(OBEREG, levels = top5_order))
+    plot_ly(as.data.frame(plot_df), x = ~n, y = ~region_label, color = ~policy, type = "bar", orientation = "h",
+            text = ~paste0("Region: ", OBEREG, "<br>Policy: ", policy, "<br>Count: ", n), hoverinfo = "text",
+            colors = c("Required" = "#F8766D", "Not required" = "#00BFC4"), textposition = "none") %>%
       layout(title = list(text = "Number of Schools Requiring vs Not Requiring SAT by Region"),
-             xaxis = list(title = "Number of Schools"),
-             yaxis = list(title = "Region"),
-             barmode = "group")
-    
-    p
+             xaxis = list(title = "Number of Schools"), yaxis = list(title = "Region"), barmode = "group")
   })
-  
+
   # Graph 6: Scatter of first-time enrollment % vs 6-year graduation rate
   output$enrollment_growth_plot <- renderPlotly({
     tryCatch({
@@ -604,7 +568,11 @@ server <- function(input, output, session) {
   class_size_costs_data <- function() {
     df %>%
       select(UNITID, INSTNM, STUFACR, CLASIZUND20, CLASIZOVE50, TUITION3) %>%
-      filter(!is.na(TUITION3), !is.na(STUFACR))
+      filter(
+        !is.na(TUITION3),
+        !is.na(STUFACR),
+        dplyr::between(STUFACR, 5, 40)
+      )
   }
 
   # Graph 10a: Scatter of student–faculty ratio vs out-of-state tuition; bubble size = prob classes <20.

@@ -4,3 +4,9 @@ data/raw/*
 *.html
 *.docx
 *.tex
+
+# Cursor cache and local files (do not commit)
+sources/
+.RData
+.Rhistory
+.DS_Store
