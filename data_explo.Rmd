@@ -1,6 +1,6 @@
 ---
 title: "Data Exploration"
-author: "Khanh Do"
+author: "Khanh Do, Joyce Gill"
 date: "`r Sys.Date()`"
 output: pdf_document
 ---
@@ -101,3 +101,205 @@ summary(lm(TUITION3 ~ ACTCM50 + DVADM04 + STUFACR + APPLFEEU + ENRTOT + RMINSTTP
 - In-State: More sensitive to CLASIZOVE50 (Big class size) than Out-of-state
 
 - Out-of-State: More sensitive to ACTCM50 (ACT Composite 50th percentile score) and APPLFEEU (Undergraduate program application fee) than In-state
+
+---
+
+# Scatter Plots: Tuition vs Key Predictors
+
+Below we plot out-of-state tuition (TUITION3) against each of the best predictors from the subset regression. 
+
+```{r}
+# Long-format for faceting: one row per (school, predictor_name, x_value)
+key_vars <- c(
+  "ACTCM50" = "ACT composite 50th %ile",
+  "STUFACR" = "Student-faculty ratio",
+  "GBA6RTT" = "6-year graduation rate",
+  "ENRTOT" = "Total enrollment",
+  "CLASIZOVE50" = "P(classes >50)",
+  "PROPBOR" = "Proportion borrowers"
+)
+```
+
+```{r}
+# Out-of-state tuition vs each key predictor (with trend line)
+plots_list <- list()
+for (i in seq_along(key_vars)) {
+  x_var <- names(key_vars)[i]
+  x_lab <- unname(key_vars)[i]
+  p <- ggplot(df_out, aes(x = .data[[x_var]], y = TUITION3)) +
+    geom_point(alpha = 0.5, size = 2) +
+    geom_smooth(method = "lm", se = TRUE, color = "red", linewidth = 0.8) +
+    scale_y_continuous(limits = c(0, NA)) +
+    labs(title = paste0("TUITION3 vs ", x_lab), x = x_lab, y = "Out-of-state tuition") +
+    theme_minimal()
+  plots_list[[i]] <- p
+}
+# 2 columns, 3 rows
+wrap_plots(plots_list, ncol = 2)
+```
+
+```{r}
+# In-state tuition vs same key predictors
+plots_list_in <- list()
+for (i in seq_along(key_vars)) {
+  x_var <- names(key_vars)[i]
+  x_lab <- unname(key_vars)[i]
+  p <- ggplot(df_in, aes(x = .data[[x_var]], y = TUITION2)) +
+    geom_point(alpha = 0.5, size = 2) +
+    geom_smooth(method = "lm", se = TRUE, color = "blue", linewidth = 0.8) +
+    scale_y_continuous(limits = c(0, NA)) +
+    labs(title = paste0("TUITION2 vs ", x_lab), x = x_lab, y = "In-state tuition") +
+    theme_minimal()
+  plots_list_in[[i]] <- p
+}
+wrap_plots(plots_list_in, ncol = 2)
+```
+
+# Holistic Tuition: Overpriced vs Good Value
+
+## In-state tuition (TUITION2)
+
+```{r}
+# Build analysis data: same sample as prep_data so results match earlier models.
+# Keep UNITID and INSTNM so we can label "top overpriced" and "good value" schools in tables.
+dat_in <- df %>%
+  filter(!is.na(TUITION2), TUITION2 > 0) %>%
+  select(UNITID, INSTNM, TUITION2, all_of(VARS_TO_KEEP)) %>%
+  mutate(across(any_of(c("SLO6", "SLOA")), ~ ifelse(. == "Yes", 1, 0))) %>%
+  select(UNITID, INSTNM, TUITION2, ACTCM50, STUFACR, ENRTOT, RMINSTTP, RMOUSTTP, SLO6, CLASIZOVE50, PROPBOR, AGRNT_T, GBA6RTT) %>%
+  na.omit()
+
+# Fit best 10-predictor model; residual = actual - predicted (positive = charges more than expected).
+lm_in <- lm(TUITION2 ~ ACTCM50 + STUFACR + ENRTOT + RMINSTTP + RMOUSTTP + SLO6 + CLASIZOVE50 + PROPBOR + AGRNT_T + GBA6RTT,
+            data = select(dat_in, -UNITID, -INSTNM))
+dat_in <- dat_in %>%
+  mutate(pred = predict(lm_in), resid = TUITION2 - pred) %>%
+  mutate(value_tier = case_when(
+    resid >= quantile(resid, 0.9) ~ "Overpriced",   # top 10% residual = overpriced
+    resid <= quantile(resid, 0.1) ~ "Good value",   # bottom 10% = good value
+    TRUE ~ "Fair value"
+  ))
+```
+
+```{r}
+# Points above the 45 degree line: actual > predicted (overpriced). Below: good value.
+ggplot(dat_in, aes(x = pred, y = TUITION2)) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray50") +
+  geom_point(aes(color = value_tier), alpha = 0.7, size = 2) +
+  scale_color_manual(values = c("Overpriced" = "red", "Good value" = "green", "Fair value" = "gray")) +
+  scale_x_continuous(limits = c(0, NA)) +
+  scale_y_continuous(limits = c(0, NA)) +
+  labs(title = "TUITION2: Actual vs predicted (in-state)", x = "Predicted tuition", y = "Actual tuition", color = "Value tier") +
+  theme_minimal()
+```
+
+```{r}
+# Residuals centered near 0; right tail = overpriced, left tail = good value.
+ggplot(dat_in, aes(x = resid)) +
+  geom_histogram(bins = 25, fill = "blue", alpha = 0.8) +
+  geom_vline(xintercept = 0, linetype = "dashed", linewidth = 0.8) +
+  labs(title = "TUITION2: Residuals (actual - predicted)", x = "Residual ($)", y = "Count") +
+  theme_minimal()
+```
+
+```{r}
+# Rank by residual: highest = most overpriced, lowest = best value.
+top_over_in  <- dat_in %>% arrange(desc(resid)) %>% slice_head(n = 10) %>% select(INSTNM, TUITION2, pred, resid)
+top_value_in <- dat_in %>% arrange(resid)       %>% slice_head(n = 10) %>% select(INSTNM, TUITION2, pred, resid)
+knitr::kable(top_over_in, caption = "Top 10 overpriced (TUITION2)", digits = 0)
+knitr::kable(top_value_in, caption = "Top 10 good value (TUITION2)", digits = 0)
+```
+
+```{r}
+# Check whether "overpriced" schools have higher graduation rates (outcome by value tier).
+ggplot(dat_in, aes(x = value_tier, y = GBA6RTT, fill = value_tier)) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_manual(values = c("Overpriced" = "red", "Good value" = "green", "Fair value" = "gray")) +
+  scale_x_discrete(limits = c("Good value", "Fair value", "Overpriced")) +
+  labs(title = "TUITION2: 6-year graduation rate by value tier", x = "Value tier", y = "Graduation rate (%)") +
+  theme_minimal() + theme(legend.position = "none")
+```
+
+```{r}
+# Test: does mean graduation rate differ across value tiers? Significant F suggests tiers are not equivalent.
+anova_in <- aov(GBA6RTT ~ value_tier, data = dat_in)
+summary(anova_in)
+```
+
+## Out-of-state tuition (TUITION3)
+
+```{r}
+# Same logic as TUITION2: same sample definition, keep INSTNM for tables, use best 10-predictor model for TUITION3.
+dat_out_holistic <- df %>%
+  filter(!is.na(TUITION3), TUITION3 > 0) %>%
+  select(UNITID, INSTNM, TUITION3, all_of(VARS_TO_KEEP)) %>%
+  mutate(across(any_of(c("SLO6", "SLOA")), ~ ifelse(. == "Yes", 1, 0))) %>%
+  select(UNITID, INSTNM, TUITION3, ACTCM50, DVADM04, STUFACR, APPLFEEU, ENRTOT, RMINSTTP, RMOUSTTP, SLO6, AGRNT_T, GBA6RTT) %>%
+  na.omit()
+
+lm_out <- lm(TUITION3 ~ ACTCM50 + DVADM04 + STUFACR + APPLFEEU + ENRTOT + RMINSTTP + RMOUSTTP + SLO6 + AGRNT_T + GBA6RTT,
+             data = select(dat_out_holistic, -UNITID, -INSTNM))
+dat_out_holistic <- dat_out_holistic %>%
+  mutate(pred = predict(lm_out), resid = TUITION3 - pred) %>%
+  mutate(value_tier = case_when(
+    resid >= quantile(resid, 0.9) ~ "Overpriced",
+    resid <= quantile(resid, 0.1) ~ "Good value",
+    TRUE ~ "Fair value"
+  ))
+```
+
+```{r}
+# Same as TUITION2: 45° line separates overpriced (above) from good value (below).
+ggplot(dat_out_holistic, aes(x = pred, y = TUITION3)) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray50") +
+  geom_point(aes(color = value_tier), alpha = 0.7, size = 2) +
+  scale_color_manual(values = c("Overpriced" = "red", "Good value" = "green", "Fair value" = "gray")) +
+  scale_x_continuous(limits = c(0, NA)) +
+  scale_y_continuous(limits = c(0, NA)) +
+  labs(title = "TUITION3: Actual vs predicted (out-of-state)", x = "Predicted tuition", y = "Actual tuition", color = "Value tier") +
+  theme_minimal()
+```
+
+```{r}
+# Residual distribution; interpretation same as TUITION2.
+ggplot(dat_out_holistic, aes(x = resid)) +
+  geom_histogram(bins = 25, fill = "blue", alpha = 0.8) +
+  geom_vline(xintercept = 0, linetype = "dashed", linewidth = 0.8) +
+  labs(title = "TUITION3: Residuals (actual - predicted)", x = "Residual ($)", y = "Count") +
+  theme_minimal()
+```
+
+```{r}
+# Rank by residual; show top 10 overpriced and top 10 best value.
+top_over_out  <- dat_out_holistic %>% arrange(desc(resid)) %>% slice_head(n = 10) %>% select(INSTNM, TUITION3, pred, resid)
+top_value_out <- dat_out_holistic %>% arrange(resid)       %>% slice_head(n = 10) %>% select(INSTNM, TUITION3, pred, resid)
+knitr::kable(top_over_out, caption = "Top 10 overpriced (TUITION3)", digits = 0)
+knitr::kable(top_value_out, caption = "Top 10 good value (TUITION3)", digits = 0)
+```
+
+```{r}
+# Outcome (graduation rate) by value tier; same idea as TUITION2.
+ggplot(dat_out_holistic, aes(x = value_tier, y = GBA6RTT, fill = value_tier)) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_manual(values = c("Overpriced" = "red", "Good value" = "green", "Fair value" = "gray")) +
+  scale_x_discrete(limits = c("Good value", "Fair value", "Overpriced")) +
+  labs(title = "TUITION3: 6-year graduation rate by value tier", x = "Value tier", y = "Graduation rate (%)") +
+  theme_minimal() + theme(legend.position = "none")
+```
+
+```{r}
+# Test whether mean graduation rate differs by value tier for out-of-state tuition.
+anova_out <- aov(GBA6RTT ~ value_tier, data = dat_out_holistic)
+summary(anova_out)
+```
+
+## Summary
+Basically what I did is:
+
+1. Predict in-state and out-of-state tuition based on 10 predictors from the best-subset model. 
+
+2. Residual = actual - predicted. So positive = overpriced schools, and negative = good value schools because they charge less than expected. 
+
+3. I created tiers by saying the top 10% are overpriced and the bottom 10% are underpriced and kept the rest as "fair value".
+
+4. Addded tables that show the names of the top 10 most overpriced and most underpriced schools. 

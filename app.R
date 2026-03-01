@@ -249,7 +249,7 @@ server <- function(input, output, session) {
     p
   })
   
-  # Helper: SAT state-by-sector rates for one control; returns df ready to plot (top 5 states).
+  # Helper: SAT state-by-sector rates for one control (top 5 states)
   sat_state_sector_data <- function(control_name) {
     df %>%
       mutate(sat_required = ADMCON7 == "Required to be considered for admission") %>%
@@ -261,7 +261,7 @@ server <- function(input, output, session) {
       slice_max(rate, n = 5, with_ties = FALSE)
   }
 
-  # Graph 4a: Private 4-year — top 5 states by % requiring SAT
+  # Graph 4a: Private 4-year, top 5 states by % requiring SAT
   output$sat_state_sector_private_plot <- renderPlotly({
     df_plot <- sat_state_sector_data("Private not-for-profit")
     plot_ly(df_plot, x = ~rate, y = ~reorder(STATE, rate), type = "bar",
@@ -272,7 +272,7 @@ server <- function(input, output, session) {
              yaxis = list(title = "State"))
   })
 
-  # Graph 4b: Public 4-year — top 5 states by % requiring SAT
+  # Graph 4b: Public 4-year, top 5 states by % requiring SAT
   output$sat_state_sector_public_plot <- renderPlotly({
     df_plot <- sat_state_sector_data("Public")
     plot_ly(df_plot, x = ~rate, y = ~reorder(STATE, rate), type = "bar",
@@ -358,7 +358,7 @@ server <- function(input, output, session) {
     })
   })
   
-  # Correlation test for Graph 6.
+  # Correlation test for Graph 6
   output$enrollment_growth_corr <- renderPrint({
     enrollment_growth_graduation <- df %>%
       mutate(
@@ -392,7 +392,7 @@ server <- function(input, output, session) {
     enrollment_growth_graduation
   }
 
-  # Build enrollment growth vs graduation scatter + linear trend for one sector.
+  # Build enrollment growth vs graduation scatter + linear trend for one sector
   make_growth_sector_plot <- function(sector_filter, title_text) {
     df <- growth_grad_sector_data(sector_filter)
     if (nrow(df) == 0) return(plot_ly() %>% add_annotations(text = "No data available", xref = "paper", yref = "paper", x = 0.5, y = 0.5, showarrow = FALSE))
@@ -414,13 +414,13 @@ server <- function(input, output, session) {
                  yaxis = list(title = "6-Year Graduation Rate (%)"))
   }
 
-  # Graph 7a: Enrollment growth vs graduation — Private 4-year
+  # Graph 7a: Enrollment growth vs graduation, Private 4-year
   output$enrollment_growth_sector_private_plot <- renderPlotly({
     tryCatch(make_growth_sector_plot("Private not-for-profit", "Private 4-year: Enrollment Growth vs Graduation Rate"),
              error = function(e) plot_ly() %>% add_annotations(text = safe_error_text(e), xref = "paper", yref = "paper", x = 0.5, y = 0.5, showarrow = FALSE))
   })
 
-  # Graph 7b: Enrollment growth vs graduation — Public 4-year
+  # Graph 7b: Enrollment growth vs graduation, Public 4-year
   output$enrollment_growth_sector_public_plot <- renderPlotly({
     tryCatch(make_growth_sector_plot("Public", "Public 4-year: Enrollment Growth vs Graduation Rate"),
              error = function(e) plot_ly() %>% add_annotations(text = safe_error_text(e), xref = "paper", yref = "paper", x = 0.5, y = 0.5, showarrow = FALSE))
@@ -551,7 +551,7 @@ server <- function(input, output, session) {
     })
   })
   
-  # Correlation test for Graph 9.
+  # Correlation test for Graph 9
   output$faculty_ratio_corr <- renderPrint({
     faculty_ratio_graduation <- df %>%
       mutate(
@@ -575,7 +575,7 @@ server <- function(input, output, session) {
       )
   }
 
-  # Graph 10a: Scatter of student–faculty ratio vs out-of-state tuition; bubble size = prob classes <20.
+  # Graph 10a: Scatter of student–faculty ratio vs out-of-state tuition; bubble size = prob classes <20
   output$class_size_small_plot <- renderPlotly({
     tryCatch({
       analysis_df <- class_size_costs_data()
