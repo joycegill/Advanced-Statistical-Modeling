@@ -24,11 +24,12 @@ Please refer to the [codebook (click here)](https://docs.google.com/spreadsheets
 ### Helper
 ```{r}
 VARS_TO_KEEP <- c(
-  "CONTROL", "LOCALE", "ACTCM50", "SATVR50", "SATMT50", 
+  "CONTROL", "STATE", "LOCALE", "OBEREG", "ACTCM50", "SATVR50", "SATMT50", 
   "DVADM01", "DVADM04", "STUFACR", "APPLFEEU", "ENRTOT", 
   "RMFRGNCP", "RMINSTTP", "RMOUSTTP", "SLO6", "SLOA", 
-  "CLASIZUND20", "CLASIZOVE50", "PROPBOR", "AVEDEBT", 
-  "AGRNT_T", "GBA6RTT", "GBA4RTT", "TRRTTOT", "EFNRALT"
+  "CLASIZUND20", "CLASIZ2049", "CLASIZOVE50", "PROPBOR", "AVEDEBT", 
+  "AGRNT_T", "GBA6RTT", "GBA4RTT", "TRRTTOT", "EFNRALT",
+  "EFFTMEN", "EFFTWOM", "EFWHITT", "ADMCON7", "PGGRRTT"
 )
 
 prep_data <- function(data, target) {
@@ -36,6 +37,11 @@ prep_data <- function(data, target) {
     filter(!is.na(.data[[target]]), .data[[target]] > 0) %>%
     select(all_of(target), all_of(VARS_TO_KEEP)) %>%
     mutate(across(any_of(c("SLO6", "SLOA")), ~ ifelse(. == "Yes", 1, 0))) %>%
+    mutate(NSLO6 = ifelse(SLO6 == 0, 1, 0)) %>%
+    mutate(NSLOA = ifelse(SLO6 == 0, 1, 0)) %>%
+    mutate(IS_PUBLIC = ifelse(CONTROL == "Public", 1, 0)) %>%
+    mutate(TEST_REQ = ifelse(ADMCON7 == "Required to be considered for admission", 1, 0)) %>%
+    mutate(NO_TEST_REQ = ifelse(TEST_REQ == 0, 1, 0)) %>%
     select(where(is.numeric)) %>%
     na.omit()
 }
@@ -78,29 +84,11 @@ head(best_in, 5)
 head(best_out, 5)
 ```
 ### Interpretation of Results
-The 6, 7, 8, 9, and 10 variables-models all have high Adjusted $R^2$. The top model is:
+High Adjusted $R^2$. The top model (high R^2 not too many variables) is:
 ```{r}
-summary(lm(TUITION2 ~ ACTCM50 + STUFACR + ENRTOT + RMINSTTP + RMOUSTTP + SLO6 + CLASIZOVE50 + PROPBOR + AGRNT_T + GBA6RTT, data = df_in))
-summary(lm(TUITION3 ~ ACTCM50 + DVADM04 + STUFACR + APPLFEEU + ENRTOT + RMINSTTP + RMOUSTTP + SLO6 + AGRNT_T + GBA6RTT, data = df_out))
+summary(lm(TUITION2 ~ SATVR50 + APPLFEEU + ENRTOT + RMFRGNCP + AGRNT_T + GBA6RTT + EFFTMEN + IS_PUBLIC, data = df_in))
+summary(lm(TUITION3 ~ SATVR50 + APPLFEEU + ENRTOT + RMINSTTP + RMOUSTTP + AGRNT_T + EFFTMEN + IS_PUBLIC, data = df_out))
 ```
-
-**Consistent Drivers (Vertical Columns)**:
-
-- RMINSTTP (Percent of first-time undergraduates - in-state)
-
-- ENRTOT (Total enrollment)
-
-- AGRNT_T (Total amount of federal, state, local or institutional grant aid awarded to full-time first-time undergraduates)
-
-- STUFACR (Student-faculty ratio)
-
-- GBA6RTT (Graduation rate - Bachelor degree within 6 years, total)
-
-**Key Differences**:
-
-- In-State: More sensitive to CLASIZOVE50 (Big class size) than Out-of-state
-
-- Out-of-State: More sensitive to ACTCM50 (ACT Composite 50th percentile score) and APPLFEEU (Undergraduate program application fee) than In-state
 
 ---
 
@@ -303,3 +291,55 @@ Basically what I did is:
 3. I created tiers by saying the top 10% are overpriced and the bottom 10% are underpriced and kept the rest as "fair value".
 
 4. Addded tables that show the names of the top 10 most overpriced and most underpriced schools. 
+
+
+### Top 40 variables to predict Tuition and Debt
+```{r}
+og_df <- read_csv(url, show_col_types = FALSE)
+cleaned_df <- og_df %>%
+  select(
+    UNITID,
+    INSTNM,
+    CONTROL,
+    ADMCON7,
+    ACTCM50,
+    DVADM01,
+    DVADM04,
+    SATVR50,
+    SATMT50,
+    PROPBOR,
+    AVEDEBT,
+    CLASIZUND20,
+    CLASIZ2049,
+    CLASIZOVE50,
+    APPLFEEU,
+    TUITPL1,
+    TUITPL3,
+    RMBRDAMT,
+    TUITION2,
+    TUITION3,
+    COAISGS2,
+    CHG2AT3,
+    CHG3AT3,
+    STUFACR,
+    ENRTOT,
+    EFUG1ST,
+    EFUGTRN,
+    RMINSTTP,
+    RMOUSTTP,
+    RMFRGNCP,
+    EFFTMEN,
+    EFFTWOM,
+    EFWHITT,
+    EFNRALT,
+    UAGRNTP,
+    AGRNT_T,
+    UFLOANN,
+    UDGPGRNTN,
+    GBA6RTT,
+    GBA4RTT,
+    TRRTTOT
+  )
+
+write_csv(cleaned_df, "./data/cleaned/TOP_VARS_PREDICT_TUITION_N_DEBT.csv")
+```
