@@ -218,7 +218,7 @@ FINAL_JOINED_DATA <- FINAL_JOINED_DATA %>%
     ADMCON1 = `ADM2024.Secondary school GPA`,                  ADMCON2 = `ADM2024.Secondary school rank`,                 ADMCON7 = `ADM2024.Admission test scores`,                 DVADM01 = `DRVADM2024.Percent admitted - total`,           DVADM04 = `DRVADM2024.Admissions yield - total`,
     ADMSSN = `ADM2024.Admissions total`,
     ENRLT = `ADM2024.Enrolled total`,
-    ACTCM25 = `ADM2024.ACT English 25th percentile score`,
+    ACTCM25 = `ADM2024.ACT Composite 25th percentile score`,
     ACTCM50 = `ADM2024.ACT Composite 50th percentile score`,
     ACTCM75 = `ADM2024.ACT Composite 75th percentile score`,
     ACTEN25 = `ADM2024.ACT English 25th percentile score`,
