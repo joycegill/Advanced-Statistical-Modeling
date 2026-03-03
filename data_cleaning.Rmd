@@ -182,7 +182,7 @@ FINAL_JOINED_DATA <- FINAL_JOINED_DATA %>%
 ## Change Names and types
 
 ```{r}
-FINAL_JOINED_DATA <- FINAL_JOINED_DATA %>%
+DATA <- FINAL_JOINED_DATA %>%
   mutate(
     unitid = as.character(unitid)
   ) %>%
@@ -293,7 +293,7 @@ FINAL_JOINED_DATA <- FINAL_JOINED_DATA %>%
 
 ## Write to folder
 ```{r}
-write_csv(FINAL_JOINED_DATA, "data/cleaned/FINAL_DATA.csv")
+write_csv(DATA, "data/cleaned/FINAL_DATA.csv")
 ```
 
 # Obsolete Data Cleaning
