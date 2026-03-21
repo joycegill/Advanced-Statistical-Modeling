@@ -10,3 +10,4 @@ sources/
 .RData
 .Rhistory
 .DS_Store
+rsconnect/
