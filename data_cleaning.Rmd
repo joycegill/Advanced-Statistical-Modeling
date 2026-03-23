@@ -298,8 +298,19 @@ DATA <- FINAL_JOINED_DATA %>%
 ```
 
 ## Write to folder
+
 ```{r}
 write_csv(DATA, "data/cleaned/FINAL_DATA.csv")
+```
+
+## Get only unitids
+
+```{r}
+unitids <- data.frame(DATA$UNITID)
+unitids <- unitids %>%
+  mutate(UNITID = DATA.UNITID) %>%
+  select(-DATA.UNITID)
+write_csv(unitids, "data/cleaned/unitids.csv")
 ```
 
 # Obsolete Data Cleaning
