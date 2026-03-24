@@ -85,8 +85,8 @@ var_names <- c(
 )
 
 cip_var_names_dictionary <- tibble(
-  NAME = names(cip_labels),
-  LABEL = unname(cip_labels)
+  NAME = names(var_names),
+  LABEL = unname(var_names)
 )
 
 write_csv(
