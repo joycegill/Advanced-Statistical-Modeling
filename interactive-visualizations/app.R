@@ -3,13 +3,11 @@ library(plotly)
 library(dplyr)
 library(readr)
 
-# Load data (temporarily from github's final_data.csv)
 url <- "https://raw.githubusercontent.com/joycegill/Advanced-Statistical-Modeling/main/data/cleaned/FINAL_DATA.csv"
 raw_df <- read_csv(url, show_col_types = FALSE)
 
 to_num <- function(x) suppressWarnings(as.numeric(x))
 
-# Temp small number of variables
 app_df <- raw_df %>%
   transmute(
     INSTNM = as.character(INSTNM),
@@ -35,21 +33,35 @@ pretty_names <- c(
   ACTCM50 = "ACT 50th Percentile",
   SATVR50 = "SAT Verbal 50th Percentile",
   SATMT50 = "SAT Math 50th Percentile",
-  DVADM01 = "Admission Rate (%)",
+  DVADM01 = "Admission Rate",
   STUFACR = "Student-to-Faculty Ratio",
-  RMINSTTP = "In-State Room/Board (%)",
-  RMOUSTTP = "Out-of-State Room/Board (%)",
+  RMINSTTP = "In-State Room/Board",
+  RMOUSTTP = "Out-of-State Room/Board",
   ENRTOT = "Total Enrollment",
   AGRNT_T = "Grant Aid (Total)",
-  SLO6 = "Academic Advising (Yes=1)",
+  SLO6 = "Academic Advising",
   APPLFEEU = "Application Fee"
 )
 
-# Collapse controls into two plot groups for coloring/legend.
+label_var <- function(v) {
+  if (!length(v)) return(character(0))
+  ifelse(v %in% names(pretty_names), pretty_names[v], v)
+}
+
+sig_stars <- function(p) {
+  vapply(p, function(pv) {
+    if (length(pv) != 1L || is.na(pv)) return("")
+    if (pv < 0.001) return("***")
+    if (pv < 0.01) return("**")
+    if (pv < 0.05) return("*")
+    if (pv < 0.1) return(".")
+    ""
+  }, character(1))
+}
+
 sector_from_control <- function(ctrl) ifelse(ctrl == "Public", "Public", "Private")
 
 student_choices <- c(
-  "None" = "None",
   "ACT 50th Percentile" = "ACTCM50",
   "SAT Verbal 50th Percentile" = "SATVR50",
   "SAT Math 50th Percentile" = "SATMT50",
@@ -57,13 +69,11 @@ student_choices <- c(
 )
 
 faculty_choices <- c(
-  "None" = "None",
   "Student-to-Faculty Ratio" = "STUFACR",
   "Application Fee (proxy)" = "APPLFEEU"
 )
 
 resource_choices <- c(
-  "None" = "None",
   "Academic Advising (Yes=1)" = "SLO6",
   "Grant Aid (Total)" = "AGRNT_T",
   "Total Enrollment" = "ENRTOT",
@@ -71,7 +81,9 @@ resource_choices <- c(
   "Out-of-State Room/Board (%)" = "RMOUSTTP"
 )
 
-# UI
+MIN_N_MODEL <- 25L
+MIN_N_MODEL_SECTOR <- 15L
+
 ui <- fluidPage(
   titlePanel(
     title = div(style = "text-align:center;", "Interactive Visualizations (Tuition)"),
@@ -90,11 +102,24 @@ ui <- fluidPage(
     column(
       width = 3,
       wellPanel(
-        selectInput("y_var", "Tuition type (Y)", choices = c("In-State Tuition" = "TUITION2", "Out-of-State Tuition" = "TUITION3")),
-        selectInput("x1_var", "Student abilities (X1)", choices = student_choices, selected = "None"),
-        selectInput("x2_var", "Faculty qualifications (X2)", choices = faculty_choices, selected = "None"),
-        selectInput("x3_var", "College resources (X3)", choices = resource_choices, selected = "None"),
-        numericInput("alpha", "Significance level (alpha)", value = 0.05, min = 0.001, max = 0.2, step = 0.001)
+        tags$p(
+          style = "font-weight: bold; margin-bottom: 8px;",
+          "Select predictors (X). You may select more than one option in each category."
+        ),
+        tags$div(
+          style = "color: #737373;",
+          selectInput("x1_vars", "Student abilities (X1)", choices = student_choices, multiple = TRUE),
+          selectInput("x2_vars", "Faculty qualifications (X2)", choices = faculty_choices, multiple = TRUE),
+          selectInput("x3_vars", "College resources (X3)", choices = resource_choices, multiple = TRUE)
+        ),
+        selectInput("y_var", "Select tuition type (Y)", choices = c("In-State Tuition" = "TUITION2", "Out-of-State Tuition" = "TUITION3")),
+        checkboxGroupInput(
+          "sector_inc",
+          "Select sector",
+          choices = c("Public" = "Public", "Private" = "Private"),
+          selected = c("Public", "Private"),
+          inline = TRUE
+        )
       )
     ),
     column(
@@ -104,51 +129,66 @@ ui <- fluidPage(
     ),
     column(
       width = 3,
-      wellPanel(h4("Model Statistics"), htmlOutput("model_stats"))
+      wellPanel(h4("Model Statistics"), uiOutput("model_stats"))
     )
   )
 )
 
-# Draw Public/Private markers with consistent styling.
+# Plot points by sector (Public vs Private)
 add_sector_markers <- function(p, df, colors, size, show_legend, outline = NULL) {
-  ok <- !is.na(df$x_plot) & !is.na(df$y_plot)
-  df <- df[ok, , drop = FALSE]
+  df <- df[!is.na(df$x_plot) & !is.na(df$y_plot), , drop = FALSE]
   for (sect in c("Public", "Private")) {
     d <- df[df$sector == sect, , drop = FALSE]
     if (nrow(d) == 0) next
     mk <- list(color = colors[[sect]], size = size, opacity = if (size >= 12) 1 else 0.8)
     if (!is.null(outline)) mk$line <- outline
     p <- plotly::add_markers(
-      p,
-      data = d,
-      x = ~x_plot,
-      y = ~y_plot,
-      text = ~ht,
-      hoverinfo = "text",
-      name = sect,
-      legendgroup = sect,
-      marker = mk,
-      showlegend = show_legend
+      p, data = d, x = ~x_plot, y = ~y_plot, text = ~ht, hoverinfo = "text",
+      name = sect, legendgroup = sect, marker = mk, showlegend = show_legend
     )
   }
   p
 }
 
-# Server
+# Key, x axis depending on selections, fixed y axis
+tuition_plot_layout <- function(p, lims, y_title) {
+  p %>% layout(
+    xaxis = list(title = "", range = lims$x_range, fixedrange = FALSE, autorange = FALSE),
+    yaxis = list(title = y_title, range = c(0, 100000), dtick = 20000, fixedrange = TRUE),
+    margin = list(l = 70, r = 30, t = 20, b = 60),
+    legend = list(orientation = "h", y = -0.12, x = 0.5, xanchor = "center"),
+    showlegend = TRUE
+  )
+}
+
+# Fit model
+fit_lm_safe <- function(y_var, x_vars, dat, min_n) {
+  if (length(x_vars) == 0 || nrow(dat) < min_n) return(NULL)
+  stats::lm(as.formula(paste(y_var, "~", paste(x_vars, collapse = " + "))), data = dat)
+}
+
+# Multi-select inputs can be NULL; treat as no selection
+null_chr <- function(x) if (is.null(x)) character(0) else x
+
 server <- function(input, output, session) {
-  # All selected predictors excluding none
   selected_predictors <- reactive({
-    unique(Filter(function(x) x != "None", c(input$x1_var, input$x2_var, input$x3_var)))
+    unique(c(null_chr(input$x1_vars), null_chr(input$x2_vars), null_chr(input$x3_vars)))
   })
 
-  # First selected predictor is used for x axis
+  # Plotted on x-axis
   first_predictor <- reactive({
     xs <- selected_predictors()
     if (length(xs) == 0) NULL else xs[[1]]
   })
 
-  # Selected Y and selected predictors.
-  model_data <- reactive({
+  # Public/private check box
+  sectors_included <- reactive({
+    si <- input$sector_inc
+    if (is.null(si) || !length(si)) character(0) else si
+  })
+
+  # Rows with valid Y and all selected predictors 
+  model_data_base <- reactive({
     y_var <- input$y_var
     x_vars <- selected_predictors()
     cols <- unique(c("INSTNM", "CONTROL", y_var, x_vars))
@@ -157,25 +197,54 @@ server <- function(input, output, session) {
     dat
   })
 
-  # Multivariate model: Y ~ selected predictors.
-  model_fit <- reactive({
+  # model_data_base filtered to chosen sectors
+  model_data <- reactive({
+    dat <- model_data_base()
+    sect <- sectors_included()
+    if (!length(sect)) return(dat[0, , drop = FALSE])
+    dat %>%
+      mutate(sector = sector_from_control(CONTROL)) %>%
+      filter(sector %in% sect)
+  })
+
+  # One lm for all rows, or separate lms per sector when both are selected
+  model_fits <- reactive({
     dat <- model_data()
     y_var <- input$y_var
     x_vars <- selected_predictors()
-    if (length(x_vars) == 0 || nrow(dat) < 25) return(NULL)
-    stats::lm(as.formula(paste(y_var, "~", paste(x_vars, collapse = " + "))), data = dat)
+    sect <- sectors_included()
+    if (!length(x_vars) || !length(sect)) return(NULL)
+
+    if (length(sect) == 1) {
+      return(list(mode = "single", fit = fit_lm_safe(y_var, x_vars, dat, MIN_N_MODEL)))
+    }
+    d_pub <- dat[dat$sector == "Public", , drop = FALSE]
+    d_priv <- dat[dat$sector == "Private", , drop = FALSE]
+    list(
+      mode = "dual",
+      public = fit_lm_safe(y_var, x_vars, d_pub, MIN_N_MODEL_SECTOR),
+      private = fit_lm_safe(y_var, x_vars, d_priv, MIN_N_MODEL_SECTOR)
+    )
   })
 
-  # School-level x/y values + sector + search highlighting.
+  # Enough data to draw points + at least one fitted line
+  has_valid_plot_model <- function(mf) {
+    !is.null(mf) && (
+      (identical(mf$mode, "single") && !is.null(mf$fit)) ||
+      (identical(mf$mode, "dual") && (!is.null(mf$public) || !is.null(mf$private)))
+    )
+  }
+
+  # Per-school x/y for scatter, search highlight, and sector colors
   plot_data <- reactive({
     dat <- model_data()
-    fit <- model_fit()
     x_vars <- selected_predictors()
     y_var <- input$y_var
     x1 <- first_predictor()
     q <- trimws(tolower(input$school_search))
+    mf <- model_fits()
 
-    if (length(x_vars) == 0 || is.null(fit) || is.null(x1)) {
+    if (!length(x_vars) || !has_valid_plot_model(mf) || is.null(x1)) {
       return(dat %>% mutate(
         x_plot = NA_real_,
         y_plot = NA_real_,
@@ -186,61 +255,41 @@ server <- function(input, output, session) {
 
     dat$x_plot <- dat[[x1]]
     dat$y_plot <- dat[[y_var]]
-    dat$sector <- sector_from_control(dat$CONTROL)
     dat$is_match <- nchar(q) > 0 & grepl(q, tolower(dat$INSTNM), fixed = TRUE)
     dat
   })
 
-  # Keep y-axis stable at 0-100k.
-  # Recompute x-axis from whichever predictor is currently on the x-axis.
+  # X-axis range from observed x1 values with padding
   axis_limits <- reactive({
-    # first_predictor() is the first non-None choice among X1/X2/X3.
     x1 <- first_predictor()
-    # model_data() is the complete-case data used for the model.
     dat <- model_data()
-
-    # Fallback range when there is no usable x variable yet.
-    if (is.null(x1) || !(x1 %in% names(dat)) || nrow(dat) == 0) {
-      x_rng <- c(0, 1)
-    } else {
-      # Use finite values only so NA does not break axis calculations.
-      x_vals <- dat[[x1]]
-      x_vals <- x_vals[is.finite(x_vals)]
-      if (length(x_vals) == 0) {
-        x_rng <- c(0, 1)
-      } else {
-        # Data-driven x range for best display.
-        x_min <- min(x_vals)
-        x_max <- max(x_vals)
-        span <- x_max - x_min
-        # Add a small pad so points/line at edges are not clipped.
-        pad <- if (is.finite(span) && span > 0) 0.03 * span else 1
-        x_rng <- c(x_min - pad, x_max + pad)
-      }
-    }
-
-    list(x_range = x_rng)
+    default <- list(x_range = c(0, 1))
+    if (is.null(x1) || !(x1 %in% names(dat)) || !nrow(dat)) return(default)
+    x_vals <- dat[[x1]]
+    x_vals <- x_vals[is.finite(x_vals)]
+    if (!length(x_vals)) return(default)
+    span <- diff(range(x_vals))
+    pad <- if (is.finite(span) && span > 0) 0.03 * span else 1
+    list(x_range = c(min(x_vals) - pad, max(x_vals) + pad))
   })
 
-  # X axis label listing currently selected predictors.
+  # Text under plot listing selected predictor names
   output$selected_x_note <- renderUI({
     x_vars <- selected_predictors()
-    if (length(x_vars) == 0) return(NULL)
-    labs <- vapply(x_vars, function(v) pretty_names[[v]], character(1))
+    if (!length(x_vars)) return(NULL)
     div(
       style = "margin-top:8px; color:#555;",
-      HTML(paste0("<em>Selected predictors: ", paste(labs, collapse = ", "), "</em>"))
+      HTML(paste0("<em>Selected predictors: ", paste(label_var(x_vars), collapse = ", "), "</em>"))
     )
   })
 
-  # Main multivariate plot
+  # Scatter by sector and regression lines
   output$tuition_plot <- renderPlotly({
     dat <- plot_data()
-    if (nrow(dat) == 0) {
+    if (!nrow(dat)) {
       return(plot_ly() %>% layout(title = "No data available for selected options"))
     }
 
-    # Axis limits come from the selected x and fixed y 
     lims <- axis_limits()
     y_var <- input$y_var
     y_title <- pretty_names[[y_var]]
@@ -253,98 +302,141 @@ server <- function(input, output, session) {
     br <- which(!dat$is_match)
     base_dat <- dat[br, , drop = FALSE]
     if (nrow(base_dat) > 0) base_dat$ht <- hover[br]
-
     mr <- which(dat$is_match)
     match_dat <- dat[mr, , drop = FALSE]
     if (nrow(match_dat) > 0) match_dat$ht <- hover[mr]
 
     p <- plot_ly()
-    # Base points and search-highlight points share sector colors.
     if (nrow(base_dat) > 0) p <- add_sector_markers(p, base_dat, colors, 7, TRUE, NULL)
     if (nrow(match_dat) > 0) {
       p <- add_sector_markers(p, match_dat, colors, 12, FALSE, list(color = "black", width = 2))
     }
 
-    fit <- model_fit()
+    mf <- model_fits()
     x_vars <- selected_predictors()
     x1 <- first_predictor()
-    if (!is.null(fit) && length(x_vars) >= 1 && !is.null(x1)) {
-      # For a 2D line from a multivariate model, vary x1 and hold others at medians.
-      md <- model_data()
-      meds <- vapply(md[x_vars], stats::median, na.rm = TRUE, FUN.VALUE = numeric(1))
-      # Build x grid across the current x-axis display range.
-      x_seq <- seq(lims$x_range[1], lims$x_range[2], length.out = 100)
+    md <- model_data()
+
+    if (length(x_vars) < 1 || is.null(x1) || !nrow(md) || is.null(mf)) {
+      return(tuition_plot_layout(p, lims, y_title))
+    }
+
+    x_seq <- seq(lims$x_range[1], lims$x_range[2], length.out = 100)
+
+    # Vary x1 along the axis
+    add_line_for_fit <- function(p, fit, med_df, line_color) {
+      if (is.null(fit)) return(p)
+      meds <- vapply(med_df[x_vars], stats::median, na.rm = TRUE, FUN.VALUE = numeric(1))
       newdata <- as.data.frame(lapply(meds, rep, length(x_seq)))
       names(newdata) <- x_vars
       newdata[[x1]] <- x_seq
-      line_df <- data.frame(x_plot = x_seq, y_hat = as.numeric(predict(fit, newdata = newdata)))
-      p <- p %>% add_lines(
-        data = line_df,
+      plotly::add_lines(
+        p,
+        data = data.frame(x_plot = x_seq, y_hat = as.numeric(predict(fit, newdata = newdata))),
         x = ~x_plot,
         y = ~y_hat,
-        line = list(color = "#1f77b4", width = 2),
+        line = list(color = line_color, width = 2),
         hoverinfo = "skip",
         showlegend = FALSE
       )
     }
 
-    p %>% layout(
-      xaxis = list(title = "", range = lims$x_range, fixedrange = FALSE, autorange = FALSE),
-      yaxis = list(title = y_title, range = c(0, 100000), dtick = 20000, fixedrange = TRUE),
-      margin = list(l = 70, r = 30, t = 20, b = 60),
-      legend = list(orientation = "h", y = -0.12, x = 0.5, xanchor = "center"),
-      showlegend = TRUE
-    )
+    if (identical(mf$mode, "single") && !is.null(mf$fit)) {
+      p <- add_line_for_fit(p, mf$fit, md, "#1f77b4")
+    } else if (identical(mf$mode, "dual")) {
+      md_pub <- md[md$sector == "Public", , drop = FALSE]
+      md_priv <- md[md$sector == "Private", , drop = FALSE]
+      if (!is.null(mf$public)) p <- add_line_for_fit(p, mf$public, md_pub, colors["Public"])
+      if (!is.null(mf$private)) p <- add_line_for_fit(p, mf$private, md_priv, colors["Private"])
+    }
+
+    tuition_plot_layout(p, lims, y_title)
   })
 
-  # Right panel: summary table of model statistics
-  output$model_stats <- renderUI({
-    fit <- model_fit()
-    x_vars <- selected_predictors()
-    a <- input$alpha
-
-    if (length(x_vars) == 0) return(HTML("Select at least one X predictor to fit a model."))
-    if (is.null(fit)) return(HTML("Not enough complete rows to fit a model."))
-
+  # HTML block: equation, p-values with stars, F-test, R².
+  format_model_html <- function(fit, y_name) {
+    if (is.null(fit)) {
+      return("<p><em>Not enough rows in this sector to fit the model.</em></p>")
+    }
     s <- summary(fit)
     coefs <- s$coefficients
     pred <- setdiff(rownames(coefs), "(Intercept)")
+    lbl <- label_var(pred)
 
     eq <- paste0(
-      pretty_names[[input$y_var]], " = ", round(coefs["(Intercept)", "Estimate"], 3),
-      paste0(" + (", round(coefs[pred, "Estimate"], 3), " * ", pred, ")", collapse = "")
+      y_name, " = ", round(coefs["(Intercept)", "Estimate"], 3),
+      paste0(" + (", round(coefs[pred, "Estimate"], 3), " × ", lbl, ")", collapse = "")
     )
 
-    p_lines <- vapply(pred, function(v) {
-      pv <- coefs[v, "Pr(>|t|)"]
-      paste0(v, ": p = ", formatC(pv, format = "e", digits = 2),
-             " (", if (pv < a) "Significant" else "Not significant", ")")
+    p_lines <- vapply(seq_along(pred), function(i) {
+      pv <- coefs[pred[i], "Pr(>|t|)"]
+      st <- sig_stars(pv)
+      paste0(lbl[i], ": p = ", formatC(pv, format = "e", digits = 2), if (nzchar(st)) paste0(" ", st) else "")
     }, character(1))
 
     fs <- s$fstatistic
     n_obs <- stats::nobs(fit)
     if (!is.null(fs) && all(c("value", "numdf", "dendf") %in% names(fs))) {
-      # Overall model significance test (H0: all slopes are 0).
       f_p <- stats::pf(as.numeric(fs["value"]), as.numeric(fs["numdf"]), as.numeric(fs["dendf"]), lower.tail = FALSE)
+      f_st <- sig_stars(f_p)
       f_line <- sprintf(
         "F = %.2f on %.0f and %.0f df (n = %s)",
         as.numeric(fs["value"]), as.numeric(fs["numdf"]), as.numeric(fs["dendf"]),
         format(n_obs, big.mark = ",")
       )
+      f_p_str <- paste0(
+        if (is.na(f_p)) "NA" else formatC(f_p, format = "e", digits = 2),
+        if (!is.na(f_p) && nzchar(f_st)) paste0(" ", f_st) else ""
+      )
     } else {
-      f_p <- NA_real_
+      f_p_str <- "NA"
       f_line <- "F-statistic not available"
     }
 
-    HTML(paste(
-      paste0("<b>Equation</b><br>", eq),
-      paste0("<br><br><b>Predictor p-values</b><br>", paste(p_lines, collapse = "<br>")),
-      paste0("<br><br><b>Overall model (omnibus F-test)</b><br>", f_line),
-      paste0("<br>p-value: ", if (is.na(f_p)) "NA" else formatC(f_p, format = "e", digits = 2)),
-      paste0("<br><br><b>R-squared</b><br>", round(s$r.squared, 4)),
-      paste0("<br><b>Adjusted R-squared</b><br>", round(s$adj.r.squared, 4)),
-      sep = ""
-    ))
+    paste0(
+      "<b>Equation</b><br>", eq,
+      "<br><br><b>Predictor p-values</b><br>", paste(p_lines, collapse = "<br>"),
+      "<br><br><b>Overall model</b><br>", f_line,
+      "<br>p-value: ", f_p_str,
+      "<br><br><b>R-squared</b><br>", round(s$r.squared, 4),
+      "<br><b>Adjusted R-squared</b><br>", round(s$adj.r.squared, 4)
+    )
+  }
+
+  # Significance legend 
+  stats_note <- function() {
+    tags$p(
+      style = "font-size:0.9em;color:#555;margin-bottom:0;",
+      "Signif. codes: 0 \u2018***\u2019 0.001 \u2018**\u2019 0.01 \u2018*\u2019 0.05 \u2018.\u2019 0.1 \u2018 \u2019 1"
+    )
+  }
+
+  # Single model, or Public / Private tabs when both sectors are fitted.
+  output$model_stats <- renderUI({
+    x_vars <- selected_predictors()
+    y_name <- pretty_names[[input$y_var]]
+    mf <- model_fits()
+    sect <- sectors_included()
+
+    if (!length(sect)) return(HTML("Select at least one sector (Public and/or Private)."))
+    if (!length(x_vars)) return(HTML("Select at least one predictor in X1, X2, or X3."))
+    if (is.null(mf)) return(HTML("Not enough complete rows to fit a model."))
+
+    if (identical(mf$mode, "single")) {
+      return(tagList(HTML(format_model_html(mf$fit, y_name)), tags$br(), stats_note()))
+    }
+
+    tab_body <- function(html) tags$div(style = "margin-top: 12px;", HTML(html))
+    tagList(
+      tabsetPanel(
+        id = "model_stats_tabs",
+        type = "tabs",
+        tabPanel("Public", tab_body(format_model_html(mf$public, y_name))),
+        tabPanel("Private", tab_body(format_model_html(mf$private, y_name)))
+      ),
+      tags$br(),
+      stats_note()
+    )
   })
 }
 
