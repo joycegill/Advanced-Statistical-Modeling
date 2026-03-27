@@ -1,13 +1,13 @@
 NAME,LABEL
 CTOTALT,Grand total
 CTOTALM,Grand total men
-CTOTALW,Grand total women
-CAIANT,American Indian or Alaska Native total 
+CAIANT,American Indian or Alaska Native total
 CASIAT,Asian total 
-CBKAAT,Black or African American total 
-CHISPT,Hispanic or Latino total 
+CBKAAT,Black or African American total
+CHISPT,Hispanic or Latino total
 CNHPIT,Native Hawaiian or Other Pacific Islander total
-CWHITT,White total 
-C2MORT,Two or more races total
+CWHITT,White total
 CUNKNT,Race/ethnicity unknown total
 CNRALT,U.S. Nonresident total
+BLACKHISRACES,"Black/African American, Hispanic/Latino total"
+OTHERRACES,"American Indian/Alaska Native, Native Hawaiian/Pacific Islander and unknown total"

@@ -1,6 +1,6 @@
 # Script for cleaning programs/majors data from IPEDS
 
-library(dplyr)
+library(tidyverse)
 library(readr)
 library(stringr)
 
@@ -72,16 +72,16 @@ write_csv(
 var_names <- c(
   "CTOTALT" = "Grand total",
   "CTOTALM" = "Grand total men",
-  "CTOTALW" = "Grand total women",
-  "CAIANT" = "American Indian or Alaska Native total ",
+  "CAIANT" = "American Indian or Alaska Native total",
   "CASIAT" = "Asian total ",
-  "CBKAAT" = "Black or African American total ",
-  "CHISPT" = "Hispanic or Latino total ",
+  "CBKAAT" = "Black or African American total",
+  "CHISPT" = "Hispanic or Latino total",
   "CNHPIT" = "Native Hawaiian or Other Pacific Islander total",
-  "CWHITT" = "White total ",
-  "C2MORT" = "Two or more races total",
+  "CWHITT" = "White total",
   "CUNKNT" = "Race/ethnicity unknown total",
-  "CNRALT" = "U.S. Nonresident total"
+  "CNRALT" = "U.S. Nonresident total",
+  "BLACKHISRACES" = "Black/African American, Hispanic/Latino total",
+  "OTHERRACES" = "American Indian/Alaska Native, Native Hawaiian/Pacific Islander and unknown total"
 )
 
 cip_var_names_dictionary <- tibble(
@@ -116,12 +116,19 @@ CIP_summary <- C2024A_subset %>%
       where(is.numeric) & !any_of("UNITID"),
       ~ sum(.x, na.rm = TRUE)
     ),
+    
+    # group American Indian,Native Pacifics, and Unknown
+    OTHERRACES = CAIANT + CNHPIT + CUNKNT,
+    # group Black & Hispanics
+    BLACKHISRACES = CBKAAT + CHISPT,
+    
     .groups = "drop"
   ) %>%
   # remove racial-gender data
   select(-CAIANM, -CAIANW, -CASIAM, -CASIAW, -CBKAAM, -CBKAAW,
          -CHISPM, -CHISPW, -CNHPIM, -CNHPIW, -CWHITM, -CWHITW, -C2MORM, -C2MORW,
-         -CUNKNM, -CUNKNW, -CNRALM, -CNRALW) %>%
+         -CUNKNM, -CUNKNW, -CNRALM, -CNRALW, -C2MORT, -CTOTALW, -CAIANT,-CNHPIT,
+         -CUNKNT, -CBKAAT, -CHISPT) %>%
   # turn data into wide format
   pivot_wider(
     id_cols = UNITID,
@@ -129,16 +136,11 @@ CIP_summary <- C2024A_subset %>%
     values_from = c(
       CTOTALT,
       CTOTALM,
-      CTOTALW,
-      CAIANT,
       CASIAT,
-      CBKAAT,
-      CHISPT,
-      CNHPIT,
       CWHITT,
-      C2MORT,
-      CUNKNT,
-      CNRALT
+      CNRALT,
+      BLACKHISRACES,
+      OTHERRACES
     ),
     names_glue = "{CIPGROUP}_{.value}",
     values_fill = NA  # fill missing rows with NA instead of 0
