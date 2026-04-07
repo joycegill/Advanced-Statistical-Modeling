@@ -13,6 +13,7 @@ library(readr)
 ```
 
 ## Read tables and filter interested variables
+
 ```{r}
 # Directory information, institution classifications, and response status information: 2024-25
 INST_CHARS_DIR_2024_25 <- read_csv("https://raw.githubusercontent.com/joycegill/Advanced-Statistical-Modeling/main/data/custom_data/INST_CHARS_DIR_2024_25.csv", show_col_types = FALSE)
@@ -343,102 +344,16 @@ DATA_2 <- merge(DATA_1, COUNTY_DATA_CLEAN, by = "COUNTYCD", all.x = TRUE)
 ```
 
 
+## Columns ordered alphabetically
+
+```{r}
+DATA_3 <- DATA_2 %>%
+  select(UNITID, sort(setdiff(names(DATA_2), "UNITID")))
+```
+
+
 ## Write to folder
 
 ```{r}
-write_csv(DATA_2, "data/cleaned/FINAL_DATA.csv")
-```
-
-
-
-
-# Obsolete Data Cleaning
-Instruction:
-
-1. Go to [IPEDS Data Center](https://nces.ed.gov/ipeds/use-the-data), and click on **Complete Data Files**
-
-2. Download Data File HD2024, EF2024D, etc.
-
-3. Open the zipped file, extract and put the raw csv into this repo's data/raw/ folder
-
-```{r}
-# Directory
-hd2024 <- read.csv("data/raw/hd2024.csv")
-
-# Fall Enrollment
-ef2024d <- read.csv("data/raw/ef2024d.csv")
-ef2024b <- read.csv("data/raw/ef2024b.csv")
-
-# Cost
-cost1_2024 <- read.csv("data/raw/cost1_2024.csv")
-cost2_2024 <- read.csv("data/raw/cost2_2024.csv")
-```
-
-## Process tables with multiple id
-```{r}
-ef2024b_inst <- ef2024b %>%
-  group_by(UNITID) %>%
-  summarize(
-    total_enrollment = sum(EFAGE09, na.rm = TRUE),
-    total_men = sum(EFAGE07, na.rm = TRUE),
-    total_women = sum(EFAGE08, na.rm = TRUE)
-  )
-```
-
-## Get removed UNITIDs
-```{r}
-remove_unitids <- bind_rows(
-  # 2-year schools
-  hd2024 %>%
-    filter(SECTOR %in% c(4, 5, 6, 7, 8, 9, 99)) %>%
-    select(UNITID),
-  
-  # < 500 population
-  ef2024b_inst %>%
-    filter(total_enrollment < 500 | is.na(total_enrollment)) %>%
-    select(UNITID)
-) %>%
-  distinct()
-```
-
-## Helper function to remove rows
-```{r}
-filter_and_write_ipeds_2024 <- function(df, remove_tbl, out_path) {
-  df_clean <- df %>%
-    dplyr::anti_join(remove_tbl, by = "UNITID")
-
-  write.csv(df_clean, out_path, row.names = FALSE)
-
-  invisible(df_clean)
-}
-```
-
-## Remove rows and write tables
-```{r}
-# All IPEDS 2023-2024 tables are filtered to exclude:
-# (1) two-year institutions
-# (2) institutions with <= 500 total enrollment
-# using UNITID as the join key
-
-# add new table to this list
-tables_2024 <- list(
-  hd2024       = hd2024,
-  ef2024d      = ef2024d,
-  ef2024b      = ef2024b,
-  cost1_2024   = cost1_2024,
-  cost2_2024   = cost2_2024
-)
-
-# clean and write pipeline
-cleaned_tables <- lapply(names(tables_2024), function(name) {
-  filter_and_write_ipeds_2024(
-    tables_2024[[name]],
-    remove_unitids,
-    paste0("data/cleaned/", name, "_clean.csv")
-  )
-})
-
-write_csv(remove_unitids, "data/remove_unitids.csv")
-
-names(cleaned_tables) <- paste0(names(tables_2024), "_clean")
+write_csv(DATA_3, "data/cleaned/FINAL_DATA.csv")
 ```

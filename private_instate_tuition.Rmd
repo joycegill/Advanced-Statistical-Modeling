@@ -1,0 +1,31 @@
+---
+title: "Best Subsets for Predicting Private Undergraduate Insititution In-State Tuition"
+author: "Khanh Do"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readr)
+library(tidyverse)
+library(corrplot)
+require(leaps)
+library(patchwork)
+require(mosaic)
+require(corrplot)
+require(leaps)
+require(car)
+```
+
+```{r message = FALSE, warning = FALSE, echo=FALSE}
+url <- "https://raw.githubusercontent.com/joycegill/Advanced-Statistical-Modeling/main/data/cleaned/FINAL_DATA.csv"
+df <- read_csv(url, show_col_types = FALSE)
+```
+
+#
+
+```{r}
+favstats(TUITION2 ~ CONTROL, data = df)
+```
+
