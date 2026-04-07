@@ -19,7 +19,6 @@ INST_CHARS_DIR_2024_25 <- read_csv("https://raw.githubusercontent.com/joycegill/
 INST_CHARS_DIR_2024_25 <- INST_CHARS_DIR_2024_25 %>%
   select(unitid, 
          `institution name...2`, 
-         `HD2024.Fips County code`,
          `HD2024.City location of institution`, 
          `HD2024.Longitude location of institution`,                                                                       
          `HD2024.Latitude location of institution`, 
@@ -194,7 +193,6 @@ DATA <- FINAL_JOINED_DATA %>%
     UNITID = unitid,
     INSTNM = `institution name...2`,
     CITY = `HD2024.City location of institution`,
-    COUNTYCD = `HD2024.Fips County code`,
     STATE = `HD2024.State abbreviation`,
     COUNTYNM = `HD2024.County name`,
     ZIP = `HD2024.ZIP code`,
@@ -299,21 +297,60 @@ DATA <- FINAL_JOINED_DATA %>%
   )
 ```
 
-## Write to folder
-
-```{r}
-write_csv(DATA, "data/cleaned/FINAL_DATA.csv")
-```
-
-## Get only unitids
+## Get only unitids of 1640 schools
 
 ```{r}
 unitids <- data.frame(DATA$UNITID)
 unitids <- unitids %>%
-  mutate(UNITID = DATA.UNITID) %>%
+  mutate(UNITID = as.character(DATA.UNITID)) %>%
   select(-DATA.UNITID)
 write_csv(unitids, "data/cleaned/unitids.csv")
 ```
+
+## Get FIPS Code
+
+Instruction:
+
+1. Go to [IPEDS Data Center](https://nces.ed.gov/ipeds/use-the-data), and click on **Complete Data Files**.
+
+2. Download Data File HD2024.
+
+3. Open the zipped file, extract and put the raw csv into this repo's data/raw/ folder.
+
+```{r}
+# hd2024 have the original county fips code we want
+hd2024 <- read.csv("data/raw/hd2024.csv")
+
+# put the fips code into our table
+DATA_1 <- merge(DATA, hd2024[, c("UNITID", "COUNTYCD")], by = "UNITID", all.x = TRUE)
+
+DATA_1 <- DATA_1 %>%
+  mutate(COUNTYCD = as.character(COUNTYCD))
+```
+
+
+## Get County Data
+
+```{r}
+COUNTY_DATA <- read_csv("https://raw.githubusercontent.com/joycegill/Advanced-Statistical-Modeling/main/data/cleaned/county_data_clean.csv", show_col_types = FALSE)
+
+COUNTY_DATA_CLEAN <- COUNTY_DATA %>%
+  mutate(COUNTYCD = as.character(as.numeric(fips))) %>%
+  select(-ctyname, -stname, -fips, -returns, -individuals)
+  
+# merge into DATA
+DATA_2 <- merge(DATA_1, COUNTY_DATA_CLEAN, by = "COUNTYCD", all.x = TRUE)
+```
+
+
+## Write to folder
+
+```{r}
+write_csv(DATA_2, "data/cleaned/FINAL_DATA.csv")
+```
+
+
+
 
 # Obsolete Data Cleaning
 Instruction:
