@@ -19,6 +19,7 @@ INST_CHARS_DIR_2024_25 <- read_csv("https://raw.githubusercontent.com/joycegill/
 INST_CHARS_DIR_2024_25 <- INST_CHARS_DIR_2024_25 %>%
   select(unitid, 
          `institution name...2`, 
+         `HD2024.Fips County code`,
          `HD2024.City location of institution`, 
          `HD2024.Longitude location of institution`,                                                                       
          `HD2024.Latitude location of institution`, 
@@ -193,6 +194,7 @@ DATA <- FINAL_JOINED_DATA %>%
     UNITID = unitid,
     INSTNM = `institution name...2`,
     CITY = `HD2024.City location of institution`,
+    COUNTYCD = `HD2024.Fips County code`,
     STATE = `HD2024.State abbreviation`,
     COUNTYNM = `HD2024.County name`,
     ZIP = `HD2024.ZIP code`,
