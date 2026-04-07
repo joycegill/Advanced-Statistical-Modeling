@@ -3,6 +3,7 @@ library(plotly)
 library(dplyr)
 library(readr)
 
+# Load cleaned data from GitHub
 url <- "https://raw.githubusercontent.com/joycegill/Advanced-Statistical-Modeling/main/data/cleaned/FINAL_DATA.csv"
 raw_df <- read_csv(url, show_col_types = FALSE)
 
@@ -59,6 +60,7 @@ sig_stars <- function(p) {
   }, character(1))
 }
 
+# Map CONTROL values to two display groups
 sector_from_control <- function(ctrl) ifelse(ctrl == "Public", "Public", "Private")
 
 student_choices <- c(
@@ -134,7 +136,7 @@ ui <- fluidPage(
   )
 )
 
-# Plot points by sector (Public vs Private)
+# Add marker traces split by sector (Public / Private)
 add_sector_markers <- function(p, df, colors, size, show_legend, outline = NULL) {
   df <- df[!is.na(df$x_plot) & !is.na(df$y_plot), , drop = FALSE]
   for (sect in c("Public", "Private")) {
@@ -150,18 +152,31 @@ add_sector_markers <- function(p, df, colors, size, show_legend, outline = NULL)
   p
 }
 
-# Key, x axis depending on selections, fixed y axis
-tuition_plot_layout <- function(p, lims, y_title) {
+# Shared chart layout + plotly controls
+tuition_plot_layout <- function(p, lims, y_title, x_title) {
   p %>% layout(
-    xaxis = list(title = "", range = lims$x_range, fixedrange = FALSE, autorange = FALSE),
-    yaxis = list(title = y_title, range = c(0, 100000), dtick = 20000, fixedrange = TRUE),
-    margin = list(l = 70, r = 30, t = 20, b = 60),
-    legend = list(orientation = "h", y = -0.12, x = 0.5, xanchor = "center"),
+    xaxis = list(
+      title = x_title,
+      range = lims$x_range,
+      fixedrange = FALSE,
+      autorange = FALSE,
+      rangeslider = list(visible = TRUE, thickness = 0.08)
+    ),
+    yaxis = list(
+      title = y_title,
+      range = c(0, 100000),
+      dtick = 20000,
+      fixedrange = FALSE
+    ),
+    margin = list(l = 70, r = 30, t = 20, b = 100),
+    dragmode = "zoom",
+    legend = list(orientation = "h", y = -0.30, x = 0.5, xanchor = "center"),
     showlegend = TRUE
-  )
+  ) %>%
+    plotly::config(scrollZoom = TRUE, displayModeBar = TRUE)
 }
 
-# Fit model
+# Safely fit lm only when there is enough data
 fit_lm_safe <- function(y_var, x_vars, dat, min_n) {
   if (length(x_vars) == 0 || nrow(dat) < min_n) return(NULL)
   stats::lm(as.formula(paste(y_var, "~", paste(x_vars, collapse = " + "))), data = dat)
@@ -171,14 +186,9 @@ fit_lm_safe <- function(y_var, x_vars, dat, min_n) {
 null_chr <- function(x) if (is.null(x)) character(0) else x
 
 server <- function(input, output, session) {
+  # Combined predictor list from X1 / X2 / X3
   selected_predictors <- reactive({
     unique(c(null_chr(input$x1_vars), null_chr(input$x2_vars), null_chr(input$x3_vars)))
-  })
-
-  # Plotted on x-axis
-  first_predictor <- reactive({
-    xs <- selected_predictors()
-    if (length(xs) == 0) NULL else xs[[1]]
   })
 
   # Public/private check box
@@ -187,7 +197,7 @@ server <- function(input, output, session) {
     if (is.null(si) || !length(si)) character(0) else si
   })
 
-  # Rows with valid Y and all selected predictors 
+  # Keep complete cases for Y and selected X columns
   model_data_base <- reactive({
     y_var <- input$y_var
     x_vars <- selected_predictors()
@@ -197,7 +207,7 @@ server <- function(input, output, session) {
     dat
   })
 
-  # model_data_base filtered to chosen sectors
+  # Restrict rows to selected sector(s)
   model_data <- reactive({
     dat <- model_data_base()
     sect <- sectors_included()
@@ -207,7 +217,7 @@ server <- function(input, output, session) {
       filter(sector %in% sect)
   })
 
-  # One lm for all rows, or separate lms per sector when both are selected
+  # Fit one model (single sector) or two models (Public + Private)
   model_fits <- reactive({
     dat <- model_data()
     y_var <- input$y_var
@@ -227,7 +237,13 @@ server <- function(input, output, session) {
     )
   })
 
-  # Enough data to draw points + at least one fitted line
+  # Current x-axis variable (first selected predictor)
+  first_predictor <- reactive({
+    xs <- selected_predictors()
+    if (length(xs) == 0) NULL else xs[[1]]
+  })
+
+  # Check whether at least one model was fit successfully
   has_valid_plot_model <- function(mf) {
     !is.null(mf) && (
       (identical(mf$mode, "single") && !is.null(mf$fit)) ||
@@ -235,7 +251,7 @@ server <- function(input, output, session) {
     )
   }
 
-  # Per-school x/y for scatter, search highlight, and sector colors
+  # Build plotting data (x, y, sector, search highlight)
   plot_data <- reactive({
     dat <- model_data()
     x_vars <- selected_predictors()
@@ -259,7 +275,7 @@ server <- function(input, output, session) {
     dat
   })
 
-  # X-axis range from observed x1 values with padding
+  # Compute x-axis bounds with small padding
   axis_limits <- reactive({
     x1 <- first_predictor()
     dat <- model_data()
@@ -273,17 +289,20 @@ server <- function(input, output, session) {
     list(x_range = c(min(x_vals) - pad, max(x_vals) + pad))
   })
 
-  # Text under plot listing selected predictor names
+  # Small note under chart showing active predictors
   output$selected_x_note <- renderUI({
     x_vars <- selected_predictors()
     if (!length(x_vars)) return(NULL)
     div(
       style = "margin-top:8px; color:#555;",
-      HTML(paste0("<em>Selected predictors: ", paste(label_var(x_vars), collapse = ", "), "</em>"))
+      HTML(paste0(
+        "<em>Selected predictors: ", paste(label_var(x_vars), collapse = ", "),
+        ". Use the range slider and zoom tools to explore.</em>"
+      ))
     )
   })
 
-  # Scatter by sector and regression lines
+  # Main scatter plot + fitted line(s)
   output$tuition_plot <- renderPlotly({
     dat <- plot_data()
     if (!nrow(dat)) {
@@ -318,12 +337,13 @@ server <- function(input, output, session) {
     md <- model_data()
 
     if (length(x_vars) < 1 || is.null(x1) || !nrow(md) || is.null(mf)) {
-      return(tuition_plot_layout(p, lims, y_title))
+      x_title <- if (!is.null(x1)) label_var(x1) else ""
+      return(tuition_plot_layout(p, lims, y_title, x_title))
     }
 
     x_seq <- seq(lims$x_range[1], lims$x_range[2], length.out = 100)
 
-    # Vary x1 along the axis
+    # Draw fitted line while holding non-x predictors at medians
     add_line_for_fit <- function(p, fit, med_df, line_color) {
       if (is.null(fit)) return(p)
       meds <- vapply(med_df[x_vars], stats::median, na.rm = TRUE, FUN.VALUE = numeric(1))
@@ -333,11 +353,11 @@ server <- function(input, output, session) {
       plotly::add_lines(
         p,
         data = data.frame(x_plot = x_seq, y_hat = as.numeric(predict(fit, newdata = newdata))),
-        x = ~x_plot,
-        y = ~y_hat,
+        x = ~x_plot, y = ~y_hat,
         line = list(color = line_color, width = 2),
         hoverinfo = "skip",
-        showlegend = FALSE
+        showlegend = FALSE,
+        inherit = FALSE
       )
     }
 
@@ -350,10 +370,10 @@ server <- function(input, output, session) {
       if (!is.null(mf$private)) p <- add_line_for_fit(p, mf$private, md_priv, colors["Private"])
     }
 
-    tuition_plot_layout(p, lims, y_title)
+    tuition_plot_layout(p, lims, y_title, label_var(x1))
   })
 
-  # HTML block: equation, p-values with stars, F-test, R².
+  # Build model summary text for the right panel
   format_model_html <- function(fit, y_name) {
     if (is.null(fit)) {
       return("<p><em>Not enough rows in this sector to fit the model.</em></p>")
@@ -403,7 +423,7 @@ server <- function(input, output, session) {
     )
   }
 
-  # Significance legend 
+  # Significance code legend
   stats_note <- function() {
     tags$p(
       style = "font-size:0.9em;color:#555;margin-bottom:0;",
@@ -411,7 +431,7 @@ server <- function(input, output, session) {
     )
   }
 
-  # Single model, or Public / Private tabs when both sectors are fitted.
+  # Render one summary or separate Public / Private tabs
   output$model_stats <- renderUI({
     x_vars <- selected_predictors()
     y_name <- pretty_names[[input$y_var]]
