@@ -652,5 +652,9 @@ par(mfrow = c(2,2))
 plot(final_model)
 ```
 
+The model suggests that private tuition is a function of "Prestige and Policy" rather than "Place." The high significance of variables like RSCH_HIGH (Research status), SLO6_YES (Study Abroad), and the complex interplay of grant totals (log_AGRNT_T) vs. recipient counts (log_AGRNT_N) points to a high-cost/high-aid model.
+
+Essentially, private schools set tuition based on the amenities and institutional prestige they provide (like research and study abroad) and their ability to "price discriminate" through financial aid, rather than the local cost of living in their specific county.
+
 **Next step**: identifying outliers, validating models, run this for out-of-state tuition, public schools, etc.
 
