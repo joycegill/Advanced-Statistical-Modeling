@@ -46,14 +46,14 @@ cat("Number of columns = ", ncol(df), "\n")
 
 ## 1st Cleaning
 
-The next code does the following.
+Next cleaning will does the following.
 
 - filter the schools down to only Private for-profit and Private not-for-profit
 - create dummy variables to distinguish between for-profit and not-for-profit
 - turn any categorical variables into dummy variables (if there are n levels, there will be n-1 extra variables)
 - remove the original categorical variables because we will use the created dummies for analysis from now on.
 
-```{r}
+```{r echo=FALSE}
 private1 <- df %>%
   filter(CONTROL %in% c("Private for-profit", "Private not-for-profit")) %>%
   # categorical variables (if there are n levels, there will be n-1 columns)
@@ -139,13 +139,15 @@ cat("Number of columns after 1st cleaning =", ncol(private1), "\n")
 
 Check NAs, we don't want to use variables that have a lot of missing rows (over 5%). Variables like Men, Women we will only keep Men. We will also remove other tuition data like out-of-state tuition, published tuition, and other uninterested variables.
 
-```{r echo=FALSE}
+```{r echo=FALSE, eval=FALSE}
 data.frame(
   column = names(private1),
   missing = colSums(is.na(private1)),
   perc_missing = round(colSums(is.na(private1)) / nrow(private1) * 100, 1)
 )
+```
 
+```{r echo=FALSE}
 # remove cols
 private2 <- private1 %>%
   # remove variables with lots of NAs
@@ -179,7 +181,9 @@ private2 <- private1 %>%
     -retirement_income,
     -avg_individuals_per_return
   )
+```
 
+```{r echo=FALSE}
 cat("Number of columns after 2nd cleaning = ", ncol(private2), "\n")
 ```
 
@@ -214,17 +218,14 @@ hist(private3$TUITION2,
      col = "steelblue")
 ```
 
-Next, we check the AIC of each model with original TUITION2, log-transformed TUITION2, and sqrt-transformed TUTION2. AIC is the Akaike information criterion, a mathematical method for evaluating how well a model fits the data it was generated from.
+The histogram looks fairly normal and bell-shaped. Just as a sanity check, we will check if doing log-transformation and square-root-transformation have good impact on the distribution of the data or not.
 
-```{r}
+```{r echo=FALSE}
 m1 <- lm(TUITION2 ~ . - UNITID, data = private3)
 m2 <- lm(log(TUITION2) ~ . - UNITID, data = private3)
 m3 <- lm(sqrt(TUITION2) ~ . - UNITID, data = private3)
-
-AIC(m1, m2, m3)
 ```
 
-AIC of the model with log-transformed TUITION2 is much lower, so we should use log-transformation. Next, we check Residuals vs Fitted plot for variance behavior.
 
 ```{r echo=FALSE}
 par(mfrow = c(1,3))
@@ -245,72 +246,43 @@ plot(m3$fitted.values, m1$residuals,
 abline(h = 0, col = "red", lty = 2)
 ```
 
-The residual plot with the **original TUITION2** looks fairly random but:
+The residual plot with the **original TUITION2** looks fairly random with mild heteroskedasticity (variance increases with fitted values). The other two plots are not much different. We want to keep our model simple, thus, we will continue to use the original TUITION2 as our response variable.
 
-- Slightly wider spread at higher fitted values
+## Numeric variables vs TUITION2
 
-- More extreme negative residuals
-
-- Mild heteroskedasticity (variance increases with fitted values)
-
-The one with **log-transformation**, although has tighter clouds, actually has better variance:
-
-- Spread looks more balanced across fitted values
-
-- Extremes are more symmetric
-
-- Variance looks more stable
-
-The one with **square root transformation ** is similar to the original:
-
-- Some widening of spread at higher fitted values
-
-- Slight asymmetry in residuals
-
-So even though the model with the original TUITION2 gives the highest $R^2$, we should choose **log-transformation**. Thus, we add log(TUITION2) to our dataframe and remove TUITION2 column.
-
-```{r}
-private4 <- private3 %>%
-  mutate(log_TUITION2 = log(TUITION2)) %>%
-  select(-TUITION2)
-```
-
-
-## Numeric variables vs log_TUITION2
-
-We will now check numerical variables in pair plots with log_TUITION2 to see if we need to perform transformations.
+We will now check numerical variables in pair plots with TUITION2 to see if we need to perform transformations.
 
 ```{r echo=FALSE}
 # Institution Profile & Resources
-pairs(private4 %>% dplyr::select(log_TUITION2, income_per_capita, gdp_per_capita, popestimate, STUFACR),
+pairs(private3 %>% dplyr::select(TUITION2, income_per_capita, gdp_per_capita, popestimate, STUFACR),
       main = "Matrix Plot: Institution Profile & Resources vs In-State Tuition",
       pch  = 16, cex = 0.3,
       col  = adjustcolor("violet", alpha.f = 0.4))
 
 # Enrollment and student composition
-pairs(private4 %>% dplyr::select(log_TUITION2, EFAIANT, EFASIAT, EFBKAAT, EFFT, EFFTMEN),
+pairs(private3 %>% dplyr::select(TUITION2, EFAIANT, EFASIAT, EFBKAAT, EFFT, EFFTMEN),
       main = "Matrix Plot: Enrollment Variables 1 vs In-State Tuition",
       pch  = 16, cex = 0.3,
       col  = adjustcolor("steelblue", alpha.f = 0.4))
 
-pairs(private4 %>% dplyr::select(log_TUITION2, EFHISPT, EFNHPIT, EFNRALT, EFUG1ST, RMINSTTP),
+pairs(private3 %>% dplyr::select(TUITION2, EFHISPT, EFNHPIT, EFNRALT, EFUG1ST, RMINSTTP),
       main = "Matrix Plot: Enrollment Variables 2 vs In-State Tuition",
       pch  = 16, cex = 0.3,
       col  = adjustcolor("steelblue", alpha.f = 0.4))
 
-pairs(private4 %>% dplyr::select(log_TUITION2, EFUGCNT, EFUGTRN, EFWHITT, ENRTOT, RMFRGNCP),
+pairs(private3 %>% dplyr::select(TUITION2, EFUGCNT, EFUGTRN, EFWHITT, ENRTOT, RMFRGNCP),
       main = "Matrix Plot: Enrollment Variables 3 vs In-State Tuition",
       pch  = 16, cex = 0.3,
       col  = adjustcolor("steelblue", alpha.f = 0.4))
 
 # Admission and selectivity
-pairs(private4 %>% dplyr::select(log_TUITION2, GBA4RTT, GBA6RTT, GRRTM, PGGRRTT),
+pairs(private3 %>% dplyr::select(TUITION2, GBA4RTT, GBA6RTT, GRRTM, PGGRRTT),
       main = "Matrix Plot: Admissions & Outcomes vs In-State Tuition",
       pch  = 16, cex = 0.3,
       col  = adjustcolor("darkgreen", alpha.f = 0.4))
 
 # Financial aid and cost variables
-pairs(private4 %>% dplyr::select(log_TUITION2, AGRNT_N, AGRNT_T, UAGRNTP, UDGPGRNTN, UFLOANN),
+pairs(private3 %>% dplyr::select(TUITION2, AGRNT_N, AGRNT_T, UAGRNTP, UDGPGRNTN, UFLOANN),
       main = "Matrix Plot: Financial Aid Variables vs In-State Tuition",
       pch  = 16, cex = 0.3,
       col  = adjustcolor("firebrick", alpha.f = 0.4))
@@ -324,8 +296,8 @@ Most of our numerical variables have extreme right skewness. Thus we will:
 
 - No transformation on variables like graduation rates (GBA4RTT, GBA6RTT, GRRTM, PGGRRTT) and certain percentages (UAGRNTP, RMINSTTP) since they appear relatively normally distributed or well-spread
 
-```{r}
-private5 <- private4 %>% mutate(
+```{r echo=FALSE}
+private4 <- private3 %>% mutate(
   # Log transformations for heavily right-skewed counts and financial totals
   ## Enrollment & Demographic Counts
   log_EFAIANT    = log(EFAIANT + 1),
@@ -362,51 +334,44 @@ select(-EFAIANT, -EFASIAT, -EFBKAAT, -EFFT, -EFFTMEN, -EFHISPT, -EFNHPIT,
        -gdp_per_capita, -popestimate, -STUFACR)
 ```
 
-The transformed numerical variables pair plots look much better than that of the original numerical variables.
+The transformed numerical variables pair plots look much better than that of the original numerical variables in the following pages. The plots will not be included in the knitted version but the code is available in the Rmd.
 
-```{r echo = FALSE}
+```{r echo = FALSE, eval=FALSE}
 # Institution Profile & Resources
-pairs(private5 %>% dplyr::select(log_TUITION2, log_income_per_capita, log_gdp_per_capita, log_popestimate, sqrt_STUFACR),
+pairs(private4 %>% dplyr::select(TUITION2, log_income_per_capita, log_gdp_per_capita, log_popestimate, sqrt_STUFACR),
       main = "Matrix Plot: Institution Profile & Resources vs In-State Tuition",
       pch  = 16, cex = 0.3,
       col  = adjustcolor("violet", alpha.f = 0.4))
 
 # Enrollment and student composition
-pairs(private5 %>% dplyr::select(log_TUITION2, log_EFAIANT, log_EFASIAT, log_EFBKAAT, log_EFFT, log_EFFTMEN),
+pairs(private4 %>% dplyr::select(TUITION2, log_EFAIANT, log_EFASIAT, log_EFBKAAT, log_EFFT, log_EFFTMEN),
       main = "Matrix Plot: Enrollment Variables 1 vs In-State Tuition",
       pch  = 16, cex = 0.3,
       col  = adjustcolor("steelblue", alpha.f = 0.4))
 
-pairs(private5 %>% dplyr::select(log_TUITION2, log_EFHISPT, log_EFNHPIT, log_EFNRALT, log_EFUG1ST),
+pairs(private4 %>% dplyr::select(TUITION2, log_EFHISPT, log_EFNHPIT, log_EFNRALT, log_EFUG1ST),
       main = "Matrix Plot: Enrollment Variables 2 vs In-State Tuition",
       pch  = 16, cex = 0.3,
       col  = adjustcolor("steelblue", alpha.f = 0.4))
 
-pairs(private5 %>% dplyr::select(log_TUITION2, log_EFUGCNT, log_EFUGTRN, log_EFWHITT, log_ENRTOT, log_RMFRGNCP),
+pairs(private4 %>% dplyr::select(TUITION2, log_EFUGCNT, log_EFUGTRN, log_EFWHITT, log_ENRTOT, log_RMFRGNCP),
       main = "Matrix Plot: Enrollment Variables 3 vs In-State Tuition",
       pch  = 16, cex = 0.3,
       col  = adjustcolor("steelblue", alpha.f = 0.4))
 
-# Admission and selectivity
-pairs(private5 %>% dplyr::select(log_TUITION2, GBA4RTT, GBA6RTT, GRRTM, PGGRRTT),
-      main = "Matrix Plot: Admissions & Outcomes vs In-State Tuition",
-      pch  = 16, cex = 0.3,
-      col  = adjustcolor("darkgreen", alpha.f = 0.4))
+# Admission and selectivity - no transformation used
+# pairs(private4 %>% dplyr::select(TUITION2, GBA4RTT, GBA6RTT, GRRTM, PGGRRTT),
+#       main = "Matrix Plot: Admissions & Outcomes vs In-State Tuition",
+#       pch  = 16, cex = 0.3,
+#       col  = adjustcolor("darkgreen", alpha.f = 0.4))
 
 # Financial aid and cost variables
-pairs(private5 %>% dplyr::select(log_TUITION2, log_AGRNT_N, log_AGRNT_T, UAGRNTP, log_UDGPGRNTN, log_UFLOANN),
+pairs(private4 %>% dplyr::select(TUITION2, log_AGRNT_N, log_AGRNT_T, log_UDGPGRNTN, log_UFLOANN),
       main = "Matrix Plot: Financial Aid Variables vs In-State Tuition",
       pch  = 16, cex = 0.3,
       col  = adjustcolor("firebrick", alpha.f = 0.4))
 ```
 
-```{r echo = FALSE}
-m <- lm(log_TUITION2 ~ . - UNITID, data = private5)
-cat("AIC prior to transforming numerical values =", AIC(m2), "\n")
-cat("AIC of after transformations =", AIC(m), "\n")
-```
-
-The decrease in AIC also confirmed that the transformations were appropriate.
 
 # 3. Best Subset Selection
 
@@ -510,17 +475,17 @@ group6 <- c(
   "STEM"
 )
 
-official_col_count <- ncol(private5) - 2 # 1 for unitid, 1 for log_TUITION2
+official_col_count <- ncol(private4) - 2 # 1 for unitid, 1 for TUITION2
 grouping_count <- sum(length(group1), length(group2),length(group3),length(group4),length(group5),length(group6))
 
-cat("Manual groupings count matches nubmer of columns in private5:", official_col_count - grouping_count == 0, "\n")
+cat("Manual groupings count matches nubmer of columns in private4:", official_col_count - grouping_count == 0, "\n")
 ```
 
 Next, we run best subset on each group and find the best variables from each group:
 
 ```{r echo=FALSE}
 # function to run best subset
-run_best_subset <- function(data, vars, response = "log_TUITION2") {
+run_best_subset <- function(data, vars, response = "TUITION2") {
 
   formula <- as.formula(
     paste(response, "~", paste(vars, collapse = " + "))
@@ -547,21 +512,21 @@ get_best_vars <- function(model) {
 
 ```{r echo=FALSE}
 # run best subset on each grouping
-bs1 <- run_best_subset(private5, group1)
-plot(bs1)
-bs2 <- run_best_subset(private5, group2)
-plot(bs2)
-bs3 <- run_best_subset(private5, group3)
-plot(bs3)
-bs4 <- run_best_subset(private5, group4)
-plot(bs4)
-bs5 <- run_best_subset(private5, group5)
-plot(bs5)
-bs6 <- run_best_subset(private5, group6)
-plot(bs6)
+bs1 <- run_best_subset(private4, group1)
+# plot(bs1)
+bs2 <- run_best_subset(private4, group2)
+# plot(bs2)
+bs3 <- run_best_subset(private4, group3)
+# plot(bs3)
+bs4 <- run_best_subset(private4, group4)
+# plot(bs4)
+bs5 <- run_best_subset(private4, group5)
+# plot(bs5)
+bs6 <- run_best_subset(private4, group6)
+# plot(bs6)
 ```
 
-Thus, the most important variables are in the pool (lower bic, better model):
+We also run into a potential problem that is a variable could be not important in its grouping best subset but could have value when paired with others. Right now, our analysis does *not* take care of this issue and does *not* consider interactions. The most important variables are in the pool (lower bic, better model):
 
 ```{r echo=FALSE}
 # get best variables from each model
@@ -585,12 +550,12 @@ Now, we run another best subset with the variables we deem important from the ab
 ```{r echo=FALSE}
 final_formula <- as.formula(
   paste(
-    "log_TUITION2 ~",
+    "TUITION2 ~",
     paste(final_vars, collapse = " + ")
   )
 )
 
-best_subsets <- regsubsets(final_formula, data = private5, nvmax = 36)
+best_subsets <- regsubsets(final_formula, data = private4, nvmax = 36)
 summary_obj <- summary(best_subsets)
 mat <- summary_obj$which          # logical matrix: rows = model size, cols = variables
 adjr2 <- summary_obj$adjr2        # adj R² for each model size
@@ -618,29 +583,31 @@ ggplot(df_long, aes(x = Variable, y = factor(adjr2), fill = Included)) +
 
 # Linear Model
 
-We now create a linear model with the selected variables from the best subset. We will include all n-1 levels of a cetgorical variable we transformed into dummies.
+We now create a linear model with the selected variables from the best subset. We will include all n-1 levels of a categorical variable we transformed into dummies.
 
 ```{r echo=FALSE}
-final_model <- lm(log_TUITION2 ~ 
+final_model <- lm(TUITION2 ~ 
                     log_ENRTOT +
+                    log_EFUG1ST +
                     log_EFUGCNT +
                     log_EFASIAT +
                     log_EFHISPT +
                     log_EFWHITT +
                     log_EFNHPIT +
-                    GBA6RTT +
+                    GBA6RTT + 
                     GRRTM +
+                    sqrt_STUFACR +
                     RSCH_HIGH + RSCH_INSTS +
                     log_AGRNT_N +
                     log_AGRNT_T +
                     log_UDGPGRNTN +
                     log_UFLOANN +
-                    HBCU_YES +
+                    HBCU_YES + RELAFFIL_NO +
                     ASSOC1_YES +
                     SLO6_YES +
                     MIXED + HEALTH + PROFESSIONS + ARTS + STEM +
-                    SZ_MEDIUM + SZ_LARGE
-                    - UNITID, data = private5)
+                    FORPROFIT
+                    - UNITID, data = private4)
 
 summary(final_model)
 ```
@@ -656,5 +623,5 @@ The model suggests that private tuition is a function of "Prestige and Policy" r
 
 Essentially, private schools set tuition based on the amenities and institutional prestige they provide (like research and study abroad) and their ability to "price discriminate" through financial aid, rather than the local cost of living in their specific county.
 
-**Next step**: identifying outliers, validating models, run this for out-of-state tuition, public schools, etc.
+**Next step**: justifying outliers, validating models, run this for out-of-state tuition, public schools, etc.
 
