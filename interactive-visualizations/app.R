@@ -9,39 +9,160 @@ raw_df <- read_csv(url, show_col_types = FALSE)
 
 to_num <- function(x) suppressWarnings(as.numeric(x))
 
+# log(x) for x > 0 only (else NA)
+safe_log_pos <- function(x) {
+  xn <- to_num(x)
+  out <- rep(NA_real_, length(xn))
+  ok <- !is.na(xn) & xn > 0
+  out[ok] <- log(xn[ok])
+  out
+}
+
 app_df <- raw_df %>%
   transmute(
     INSTNM = as.character(INSTNM),
     CONTROL = as.character(CONTROL),
     TUITION2 = to_num(TUITION2),
     TUITION3 = to_num(TUITION3),
+    # Enrollment & composition (log transforms)
+    log_ENRTOT = safe_log_pos(ENRTOT),
+    log_EFUG1ST = safe_log_pos(EFUG1ST),
+    log_EFUGCNT = safe_log_pos(EFUGCNT),
+    log_EFASIAT = safe_log_pos(EFASIAT),
+    log_EFHISPT = safe_log_pos(EFHISPT),
+    log_EFWHITT = safe_log_pos(EFWHITT),
+    log_EFNHPIT = safe_log_pos(EFNHPIT),
+    # Selectivity / outcomes
+    GBA6RTT = to_num(GBA6RTT),
+    GRRTM = to_num(GRRTM),
     ACTCM50 = to_num(ACTCM50),
     SATVR50 = to_num(SATVR50),
     SATMT50 = to_num(SATMT50),
     DVADM01 = to_num(DVADM01),
-    STUFACR = to_num(STUFACR),
+    # Campus / resources
+    sqrt_STUFACR = {
+      s <- to_num(STUFACR)
+      out <- rep(NA_real_, length(s))
+      ok <- !is.na(s) & s >= 0
+      out[ok] <- sqrt(s[ok])
+      out
+    },
     RMINSTTP = to_num(RMINSTTP),
     RMOUSTTP = to_num(RMOUSTTP),
-    ENRTOT = to_num(ENRTOT),
-    AGRNT_T = to_num(AGRNT_T),
-    SLO6 = ifelse(SLO6 == "Yes", 1, 0),
-    APPLFEEU = to_num(APPLFEEU)
+    SLO6_YES = as.integer(!is.na(SLO6) & as.character(SLO6) == "Yes"),
+    # Costs / aid (log transforms)
+    log_AGRNT_N = safe_log_pos(AGRNT_N),
+    log_AGRNT_T = safe_log_pos(AGRNT_T),
+    log_UDGPGRNTN = safe_log_pos(UDGPGRNTN),
+    log_UFLOANN = safe_log_pos(UFLOANN),
+    APPLFEEU = to_num(APPLFEEU),
+    # Institution profile (dummies)
+    HBCU_YES = as.integer(!is.na(HBCU) & as.character(HBCU) == "Yes"),
+    RELAFFIL_NO = as.integer(!is.na(RELAFFIL) & as.character(RELAFFIL) == "Not applicable"),
+    ASSOC1_YES = as.integer(!is.na(ASSOC1) & as.character(ASSOC1) == "Yes"),
+    RSCH_HIGH = as.integer(!is.na(CARNEGIERSCH) & as.character(CARNEGIERSCH) %in% c(
+      "Research 1: Very High Spending and Doctorate Production",
+      "Research 2: High Spending and Doctorate Production"
+    )),
+    RSCH_INSTS = as.integer(!is.na(CARNEGIERSCH) & as.character(CARNEGIERSCH) == "Research Colleges and Universities"),
+    MIXED = as.integer(!is.na(CARNEGIEAPM) & as.character(CARNEGIEAPM) == "Mixed"),
+    HEALTH = as.integer(!is.na(CARNEGIEAPM) & as.character(CARNEGIEAPM) %in% c(
+      "Special Focus: Nursing",
+      "Special Focus: Other Health Professions",
+      "Special Focus: Medical Schools and Centers"
+    )),
+    PROFESSIONS = as.integer(!is.na(CARNEGIEAPM) & as.character(CARNEGIEAPM) == "Professions-focused"),
+    ARTS = as.integer(!is.na(CARNEGIEAPM) & as.character(CARNEGIEAPM) %in% c(
+      "Special Focus: Arts and Sciences",
+      "Special Focus: Arts, Music, and Design"
+    )),
+    STEM = as.integer(!is.na(CARNEGIEAPM) & as.character(CARNEGIEAPM) == "Special Focus: Technology, Engineering, and Sciences"),
+    FORPROFIT = as.integer(CONTROL == "Private for-profit")
   )
 
 pretty_names <- c(
   TUITION2 = "In-State Tuition",
   TUITION3 = "Out-of-State Tuition",
-  ACTCM50 = "ACT 50th Percentile",
-  SATVR50 = "SAT Verbal 50th Percentile",
-  SATMT50 = "SAT Math 50th Percentile",
-  DVADM01 = "Admission Rate",
-  STUFACR = "Student-to-Faculty Ratio",
-  RMINSTTP = "In-State Room/Board",
-  RMOUSTTP = "Out-of-State Room/Board",
-  ENRTOT = "Total Enrollment",
-  AGRNT_T = "Grant Aid (Total)",
-  SLO6 = "Academic Advising",
-  APPLFEEU = "Application Fee"
+  log_ENRTOT = "log(Total enrollment)",
+  log_EFUG1ST = "log(First-time UG enrollment)",
+  log_EFUGCNT = "log(UG degree-seeking count)",
+  log_EFASIAT = "log(Asian enrollment)",
+  log_EFHISPT = "log(Hispanic enrollment)",
+  log_EFWHITT = "log(White enrollment)",
+  log_EFNHPIT = "log(Native Hawaiian / Pacific Islander enrollment)",
+  GBA6RTT = "6 year graduation rate",
+  GRRTM = "Graduation rate (men)",
+  ACTCM50 = "ACT 50th percentile",
+  SATVR50 = "SAT Verbal 50th percentile",
+  SATMT50 = "SAT Math 50th percentile",
+  DVADM01 = "Admission rate",
+  sqrt_STUFACR = "sqrt(Student-faculty ratio)",
+  RMINSTTP = "In-state room/board (%)",
+  RMOUSTTP = "Out-of-state room/board (%)",
+  SLO6_YES = "Academic advising (SLO6, 1 = Yes)",
+  log_AGRNT_N = "log(Grant recipients count)",
+  log_AGRNT_T = "log(Grant aid total)",
+  log_UDGPGRNTN = "log(UG Pell recipients)",
+  log_UFLOANN = "log(Federal loan recipients)",
+  APPLFEEU = "Application fee",
+  HBCU_YES = "HBCU (1 = Yes)",
+  RELAFFIL_NO = "No religious affiliation (1 = N/A)",
+  ASSOC1_YES = "NCAA member (1 = Yes)",
+  RSCH_HIGH = "Carnegie R1/R2 research (1 = Yes)",
+  RSCH_INSTS = "Carnegie research institutions (1 = Yes)",
+  MIXED = "Carnegie program mix: Mixed (1 = Yes)",
+  HEALTH = "Carnegie health focus (1 = Yes)",
+  PROFESSIONS = "Carnegie professions-focused (1 = Yes)",
+  ARTS = "Carnegie arts focus (1 = Yes)",
+  STEM = "Carnegie STEM focus (1 = Yes)",
+  FORPROFIT = "For-profit institution (1 = Yes)"
+)
+
+enrollment_choices <- c(
+  "log(Total Enrollment)" = "log_ENRTOT",
+  "log(First-time UG Enrollment)" = "log_EFUG1ST",
+  "log(UG Degree-Seeking Count)" = "log_EFUGCNT",
+  "log(Asian Enrollment)" = "log_EFASIAT",
+  "log(Hispanic Enrollment)" = "log_EFHISPT",
+  "log(White Enrollment)" = "log_EFWHITT",
+  "log(NHPI Enrollment)" = "log_EFNHPIT"
+)
+
+selectivity_choices <- c(
+  "6 Year Graduation Rate" = "GBA6RTT",
+  "Graduation Rate (Men) (GRRTM)" = "GRRTM",
+  "ACT 50th Percentile" = "ACTCM50",
+  "SAT Verbal 50th" = "SATVR50",
+  "SAT Math 50th" = "SATMT50",
+  "Admission Rate" = "DVADM01"
+)
+
+campus_choices <- c(
+  "sqrt(Student-Faculty Ratio)" = "sqrt_STUFACR",
+  "In-State Room/Board (%)" = "RMINSTTP",
+  "Out-of-State Room/Board (%)" = "RMOUSTTP",
+  "Academic Advising (Yes=1)" = "SLO6_YES"
+)
+
+costs_choices <- c(
+  "log(Grant Recipients)" = "log_AGRNT_N",
+  "log(Grant Aid Total)" = "log_AGRNT_T",
+  "log(UG Pell Grant Recipients)" = "log_UFLOANN",
+  "Application Fee" = "APPLFEEU"
+)
+
+profile_choices <- c(
+  "HBCU (1=Yes)" = "HBCU_YES",
+  "No Religious Affiliation (1=N/A)" = "RELAFFIL_NO",
+  "NCAA Member (1=Yes)" = "ASSOC1_YES",
+  "Carnegie R1/R2" = "RSCH_HIGH",
+  "Carnegie Research Colleges" = "RSCH_INSTS",
+  "Mixed Programs" = "MIXED",
+  "Health Programs" = "HEALTH",
+  "Professional Programs" = "PROFESSIONS",
+  "Arts Programs" = "ARTS",
+  "STEM Programs" = "STEM",
+  "For-Profit" = "FORPROFIT"
 )
 
 label_var <- function(v) {
@@ -62,26 +183,6 @@ sig_stars <- function(p) {
 
 # Map CONTROL values to two display groups
 sector_from_control <- function(ctrl) ifelse(ctrl == "Public", "Public", "Private")
-
-student_choices <- c(
-  "ACT 50th Percentile" = "ACTCM50",
-  "SAT Verbal 50th Percentile" = "SATVR50",
-  "SAT Math 50th Percentile" = "SATMT50",
-  "Admission Rate (%)" = "DVADM01"
-)
-
-faculty_choices <- c(
-  "Student-to-Faculty Ratio" = "STUFACR",
-  "Application Fee (proxy)" = "APPLFEEU"
-)
-
-resource_choices <- c(
-  "Academic Advising (Yes=1)" = "SLO6",
-  "Grant Aid (Total)" = "AGRNT_T",
-  "Total Enrollment" = "ENRTOT",
-  "In-State Room/Board (%)" = "RMINSTTP",
-  "Out-of-State Room/Board (%)" = "RMOUSTTP"
-)
 
 MIN_N_MODEL <- 25L
 MIN_N_MODEL_SECTOR <- 15L
@@ -106,13 +207,15 @@ ui <- fluidPage(
       wellPanel(
         tags$p(
           style = "font-weight: bold; margin-bottom: 8px;",
-          "Select predictors (X). You may select more than one option in each category."
+          "Select predictors (X). You may choose more than one per category; log/sqrt transforms are applied in the data where indicated."
         ),
         tags$div(
           style = "color: #737373;",
-          selectInput("x1_vars", "Student abilities (X1)", choices = student_choices, multiple = TRUE),
-          selectInput("x2_vars", "Faculty qualifications (X2)", choices = faculty_choices, multiple = TRUE),
-          selectInput("x3_vars", "College resources (X3)", choices = resource_choices, multiple = TRUE)
+          selectInput("enrollment_vars", "Enrollment & student composition", choices = enrollment_choices, multiple = TRUE),
+          selectInput("selectivity_vars", "Selectivity & student outcomes", choices = selectivity_choices, multiple = TRUE),
+          selectInput("campus_vars", "Campus life & resources", choices = campus_choices, multiple = TRUE),
+          selectInput("costs_vars", "Costs, aid & debt", choices = costs_choices, multiple = TRUE),
+          selectInput("profile_vars", "Institution profile", choices = profile_choices, multiple = TRUE)
         ),
         selectInput("x_axis_var", "Select predictor for X axis", choices = character(0)),
         selectInput("y_var", "Select tuition type (Y)", choices = c("In-State Tuition" = "TUITION2", "Out-of-State Tuition" = "TUITION3")),
@@ -204,9 +307,15 @@ null_chr <- function(x) if (is.null(x)) character(0) else x
 `%||%` <- function(a, b) if (!is.null(a) && length(a) && nzchar(a[1])) a else b
 
 server <- function(input, output, session) {
-  # Combined predictor list from X1 / X2 / X3
+  # Combined predictor list from all category multi-selects
   selected_predictors <- reactive({
-    unique(c(null_chr(input$x1_vars), null_chr(input$x2_vars), null_chr(input$x3_vars)))
+    unique(c(
+      null_chr(input$enrollment_vars),
+      null_chr(input$selectivity_vars),
+      null_chr(input$campus_vars),
+      null_chr(input$costs_vars),
+      null_chr(input$profile_vars)
+    ))
   })
 
   # X-axis dropdown: only current predictors
@@ -331,8 +440,9 @@ server <- function(input, output, session) {
     div(
       style = "margin-top:8px; color:#555;",
       HTML(paste0(
-        "<em>Model predictors: ", paste(label_var(x_vars), collapse = ", "),
-        ". X-axis: ", x_lab, " (Predictor for X axis). Open the Residuals tab for Q-Q and histogram.</em>"
+        "<em>Model predictors: ", paste(label_var(x_vars), collapse = ", "), "</em><br>",
+        "<em>X-axis: ", x_lab, " (Predictor for X axis).</em><br>",
+        "<em>Open the Residuals tab for Q-Q and histogram.</em>"
       ))
     )
   })
@@ -537,7 +647,7 @@ server <- function(input, output, session) {
     sect <- sectors_included()
 
     if (!length(sect)) return(HTML("Select at least one sector (Public and/or Private)."))
-    if (!length(x_vars)) return(HTML("Select at least one predictor in X1, X2, or X3."))
+    if (!length(x_vars)) return(HTML("Select at least one predictor from the category lists."))
     if (is.null(mf)) return(HTML("Not enough complete rows to fit a model."))
 
     if (identical(mf$mode, "single")) {
