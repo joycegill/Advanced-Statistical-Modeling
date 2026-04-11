@@ -114,6 +114,7 @@ ui <- fluidPage(
           selectInput("x2_vars", "Faculty qualifications (X2)", choices = faculty_choices, multiple = TRUE),
           selectInput("x3_vars", "College resources (X3)", choices = resource_choices, multiple = TRUE)
         ),
+        selectInput("x_axis_var", "Select predictor for X axis", choices = character(0)),
         selectInput("y_var", "Select tuition type (Y)", choices = c("In-State Tuition" = "TUITION2", "Out-of-State Tuition" = "TUITION3")),
         checkboxGroupInput(
           "sector_inc",
@@ -126,7 +127,22 @@ ui <- fluidPage(
     ),
     column(
       width = 6,
-      plotlyOutput("tuition_plot", height = "600px"),
+      tabsetPanel(
+        id = "main_plot_tabs",
+        type = "tabs",
+        tabPanel(
+          "General",
+          plotlyOutput("tuition_plot", height = "600px")
+        ),
+        tabPanel(
+          "Residuals",
+          tags$p(
+            style = "color:#555; margin-bottom:8px;",
+            "Diagnostics for the same regression(s) as the General tab (raw residuals)."
+          ),
+          plotOutput("residual_plots", height = "520px")
+        )
+      ),
       uiOutput("selected_x_note")
     ),
     column(
@@ -159,8 +175,7 @@ tuition_plot_layout <- function(p, lims, y_title, x_title) {
       title = x_title,
       range = lims$x_range,
       fixedrange = FALSE,
-      autorange = FALSE,
-      rangeslider = list(visible = TRUE, thickness = 0.08)
+      autorange = FALSE
     ),
     yaxis = list(
       title = y_title,
@@ -168,9 +183,9 @@ tuition_plot_layout <- function(p, lims, y_title, x_title) {
       dtick = 20000,
       fixedrange = FALSE
     ),
-    margin = list(l = 70, r = 30, t = 20, b = 100),
+    margin = list(l = 70, r = 30, t = 20, b = 60),
     dragmode = "zoom",
-    legend = list(orientation = "h", y = -0.30, x = 0.5, xanchor = "center"),
+    legend = list(orientation = "h", y = -0.12, x = 0.5, xanchor = "center"),
     showlegend = TRUE
   ) %>%
     plotly::config(scrollZoom = TRUE, displayModeBar = TRUE)
@@ -185,10 +200,26 @@ fit_lm_safe <- function(y_var, x_vars, dat, min_n) {
 # Multi-select inputs can be NULL; treat as no selection
 null_chr <- function(x) if (is.null(x)) character(0) else x
 
+# Keep x-axis dropdown selection when choices update; else fall back to b
+`%||%` <- function(a, b) if (!is.null(a) && length(a) && nzchar(a[1])) a else b
+
 server <- function(input, output, session) {
   # Combined predictor list from X1 / X2 / X3
   selected_predictors <- reactive({
     unique(c(null_chr(input$x1_vars), null_chr(input$x2_vars), null_chr(input$x3_vars)))
+  })
+
+  # X-axis dropdown: only current predictors
+  observe({
+    xs <- selected_predictors()
+    if (length(xs) == 0) {
+      updateSelectInput(session, "x_axis_var", choices = character(0))
+    } else {
+      named <- setNames(xs, label_var(xs))
+      sel <- input$x_axis_var %||% xs[[1]]
+      if (!sel %in% xs) sel <- xs[[1]]
+      updateSelectInput(session, "x_axis_var", choices = named, selected = sel)
+    }
   })
 
   # Public/private check box
@@ -237,10 +268,12 @@ server <- function(input, output, session) {
     )
   })
 
-  # Current x-axis variable (first selected predictor)
+  # X-axis variable from dropdown (must be one of selected_predictors)
   first_predictor <- reactive({
     xs <- selected_predictors()
-    if (length(xs) == 0) NULL else xs[[1]]
+    if (length(xs) == 0) return(NULL)
+    xa <- input$x_axis_var
+    if (!is.null(xa) && length(xa) && nzchar(xa[1]) && xa[1] %in% xs) xa[1] else xs[[1]]
   })
 
   # Check whether at least one model was fit successfully
@@ -289,15 +322,17 @@ server <- function(input, output, session) {
     list(x_range = c(min(x_vals) - pad, max(x_vals) + pad))
   })
 
-  # Small note under chart showing active predictors
+  # Note under chart: model predictors and x-axis choice
   output$selected_x_note <- renderUI({
     x_vars <- selected_predictors()
     if (!length(x_vars)) return(NULL)
+    x1 <- first_predictor()
+    x_lab <- if (!is.null(x1)) label_var(x1) else ""
     div(
       style = "margin-top:8px; color:#555;",
       HTML(paste0(
-        "<em>Selected predictors: ", paste(label_var(x_vars), collapse = ", "),
-        ". Use the range slider and zoom tools to explore.</em>"
+        "<em>Model predictors: ", paste(label_var(x_vars), collapse = ", "),
+        ". X-axis: ", x_lab, " (Predictor for X axis). Open the Residuals tab for Q-Q and histogram.</em>"
       ))
     )
   })
@@ -362,7 +397,13 @@ server <- function(input, output, session) {
     }
 
     if (identical(mf$mode, "single") && !is.null(mf$fit)) {
-      p <- add_line_for_fit(p, mf$fit, md, "#1f77b4")
+      sect_one <- sectors_included()
+      line_col <- if (length(sect_one) == 1L && sect_one[1] %in% names(colors)) {
+        colors[[sect_one[1]]]
+      } else {
+        "#1f77b4"
+      }
+      p <- add_line_for_fit(p, mf$fit, md, line_col)
     } else if (identical(mf$mode, "dual")) {
       md_pub <- md[md$sector == "Public", , drop = FALSE]
       md_priv <- md[md$sector == "Private", , drop = FALSE]
@@ -371,6 +412,63 @@ server <- function(input, output, session) {
     }
 
     tuition_plot_layout(p, lims, y_title, label_var(x1))
+  })
+
+  # Q-Q + histogram of residuals (single model or Public / Private rows)
+  output$residual_plots <- renderPlot({
+    mf <- model_fits()
+    x_vars <- selected_predictors()
+    sect <- sectors_included()
+
+    empty_msg <- function(msg) {
+      graphics::plot.new()
+      graphics::text(0.5, 0.5, msg)
+    }
+
+    if (!length(sect) || !length(x_vars)) {
+      empty_msg("Select at least one sector and predictor.")
+      return(invisible(NULL))
+    }
+    if (is.null(mf) || !has_valid_plot_model(mf)) {
+      empty_msg("Residuals unavailable (model did not fit).")
+      return(invisible(NULL))
+    }
+
+    draw_qq_hist <- function(res, qq_main, hist_main, fill_col) {
+      stats::qqnorm(res, main = qq_main, ylab = "Sample quantiles")
+      stats::qqline(res)
+      graphics::hist(
+        res,
+        main = hist_main,
+        xlab = "Residuals",
+        col = grDevices::adjustcolor(fill_col, alpha.f = 0.45),
+        border = "white",
+        breaks = "Sturges"
+      )
+    }
+
+    if (identical(mf$mode, "single") && !is.null(mf$fit)) {
+      graphics::par(mfrow = c(1, 2), mgp = c(2, 0.7, 0), mar = c(4, 4, 3, 1))
+      res <- stats::residuals(mf$fit)
+      ynm <- pretty_names[[input$y_var]]
+      draw_qq_hist(res, paste0("Normal Q-Q (", ynm, ")"), "Histogram of residuals", "#666666")
+    } else if (identical(mf$mode, "dual")) {
+      graphics::par(mfrow = c(2, 2), mgp = c(2, 0.7, 0), mar = c(3.5, 3.5, 2.5, 1))
+      if (!is.null(mf$public)) {
+        rp <- stats::residuals(mf$public)
+        draw_qq_hist(rp, "Public: Normal Q-Q", "Public: histogram", "#1f77b4")
+      } else {
+        empty_msg("Public: no fit")
+        empty_msg("")
+      }
+      if (!is.null(mf$private)) {
+        rv <- stats::residuals(mf$private)
+        draw_qq_hist(rv, "Private: Normal Q-Q", "Private: histogram", "#ff7f0e")
+      } else {
+        empty_msg("Private: no fit")
+        empty_msg("")
+      }
+    }
   })
 
   # Build model summary text for the right panel
