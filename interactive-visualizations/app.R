@@ -18,6 +18,25 @@ safe_log_pos <- function(x) {
   out
 }
 
+# Percent admitted (DVADM01): IPEDS often stores 0 when there is no first-time admit count
+dvadm01_clean <- function(dvadm, admssn) {
+  dvp <- to_num(dvadm)
+  adm <- to_num(admssn)
+  no_pool <- is.na(adm) | adm <= 0
+  dvp[no_pool] <- NA_real_
+  dvp
+}
+
+# 6-year bachelor's grad rate (GBA6RTT): IPEDS sometimes stores 0 when no rate is applicable
+# or not reported (not a literal 0% completion). Also not defined without a first-time UG cohort.
+gba6rtt_clean <- function(gba6, efug1st) {
+  g <- to_num(gba6)
+  ft <- to_num(efug1st)
+  bad <- is.na(ft) | ft <= 0 | (!is.na(g) & g <= 0)
+  g[bad] <- NA_real_
+  g
+}
+
 app_df <- raw_df %>%
   transmute(
     INSTNM = as.character(INSTNM),
@@ -33,12 +52,13 @@ app_df <- raw_df %>%
     log_EFWHITT = safe_log_pos(EFWHITT),
     log_EFNHPIT = safe_log_pos(EFNHPIT),
     # Selectivity / outcomes
-    GBA6RTT = to_num(GBA6RTT),
+    # Graduation/admission/room-board percents: IPEDS stores as 0-100 (not 0-1).
+    GBA6RTT = if ("EFUG1ST" %in% names(raw_df)) gba6rtt_clean(GBA6RTT, EFUG1ST) else to_num(GBA6RTT),
     GRRTM = to_num(GRRTM),
     ACTCM50 = to_num(ACTCM50),
     SATVR50 = to_num(SATVR50),
     SATMT50 = to_num(SATMT50),
-    DVADM01 = to_num(DVADM01),
+    DVADM01 = if ("ADMSSN" %in% names(raw_df)) dvadm01_clean(DVADM01, ADMSSN) else to_num(DVADM01),
     # Campus / resources
     sqrt_STUFACR = {
       s <- to_num(STUFACR)
@@ -90,8 +110,8 @@ pretty_names <- c(
   log_EFHISPT = "log(Hispanic enrollment)",
   log_EFWHITT = "log(White enrollment)",
   log_EFNHPIT = "log(Native Hawaiian / Pacific Islander enrollment)",
-  GBA6RTT = "6 year graduation rate",
-  GRRTM = "Graduation rate (men)",
+  GBA6RTT = "6-year grad rate",
+  GRRTM = "Men's grad rate (IPEDS %, 0-100)",
   ACTCM50 = "ACT 50th percentile",
   SATVR50 = "SAT Verbal 50th percentile",
   SATMT50 = "SAT Math 50th percentile",
@@ -147,7 +167,8 @@ campus_choices <- c(
 costs_choices <- c(
   "log(Grant Recipients)" = "log_AGRNT_N",
   "log(Grant Aid Total)" = "log_AGRNT_T",
-  "log(UG Pell Grant Recipients)" = "log_UFLOANN",
+  "log(UG Pell Recipients)" = "log_UDGPGRNTN",
+  "log(Federal Loan Recipients)" = "log_UFLOANN",
   "Application Fee" = "APPLFEEU"
 )
 
@@ -183,6 +204,25 @@ sig_stars <- function(p) {
 
 # Map CONTROL values to two display groups
 sector_from_control <- function(ctrl) ifelse(ctrl == "Public", "Public", "Private")
+
+# Predictors whose values are already on a 0-100 percentage scale (IPEDS)
+vars_ipeds_percent_scale <- c("GBA6RTT", "GRRTM", "DVADM01", "RMINSTTP", "RMOUSTTP")
+
+hover_x_lines <- function(x1, xv) {
+  if (is.null(x1) || !length(xv)) return(character(0))
+  lab <- label_var(x1)
+  if (x1 %in% vars_ipeds_percent_scale) {
+    paste0(
+      lab, ": ",
+      ifelse(is.na(xv), "\u2014", paste0(format(xv, trim = TRUE, scientific = FALSE), "%"))
+    )
+  } else {
+    paste0(
+      lab, ": ",
+      ifelse(is.na(xv), "\u2014", format(xv, big.mark = ",", trim = TRUE, scientific = FALSE))
+    )
+  }
+}
 
 MIN_N_MODEL <- 25L
 MIN_N_MODEL_SECTOR <- 15L
@@ -239,10 +279,6 @@ ui <- fluidPage(
         ),
         tabPanel(
           "Residuals",
-          tags$p(
-            style = "color:#555; margin-bottom:8px;",
-            "Diagnostics for the same regression(s) as the General tab (raw residuals)."
-          ),
           plotOutput("residual_plots", height = "520px")
         )
       ),
@@ -282,9 +318,9 @@ tuition_plot_layout <- function(p, lims, y_title, x_title) {
     ),
     yaxis = list(
       title = y_title,
-      range = c(0, 100000),
-      dtick = 20000,
-      fixedrange = FALSE
+      range = lims$y_range,
+      fixedrange = FALSE,
+      autorange = FALSE
     ),
     margin = list(l = 70, r = 30, t = 20, b = 60),
     dragmode = "zoom",
@@ -400,9 +436,8 @@ server <- function(input, output, session) {
     y_var <- input$y_var
     x1 <- first_predictor()
     q <- trimws(tolower(input$school_search))
-    mf <- model_fits()
 
-    if (!length(x_vars) || !has_valid_plot_model(mf) || is.null(x1)) {
+    if (!length(x_vars) || is.null(x1)) {
       return(dat %>% mutate(
         x_plot = NA_real_,
         y_plot = NA_real_,
@@ -421,14 +456,19 @@ server <- function(input, output, session) {
   axis_limits <- reactive({
     x1 <- first_predictor()
     dat <- model_data()
-    default <- list(x_range = c(0, 1))
-    if (is.null(x1) || !(x1 %in% names(dat)) || !nrow(dat)) return(default)
+    y_var <- input$y_var
+    default <- list(x_range = c(0, 1), y_range = c(0, 1))
+    if (is.null(x1) || !(x1 %in% names(dat)) || !nrow(dat) || !(y_var %in% names(dat))) return(default)
     x_vals <- dat[[x1]]
     x_vals <- x_vals[is.finite(x_vals)]
-    if (!length(x_vals)) return(default)
-    span <- diff(range(x_vals))
-    pad <- if (is.finite(span) && span > 0) 0.03 * span else 1
-    list(x_range = c(min(x_vals) - pad, max(x_vals) + pad))
+    y_vals <- dat[[y_var]]
+    y_vals <- y_vals[is.finite(y_vals)]
+    if (!length(x_vals) || !length(y_vals)) return(default)
+    x_span <- diff(range(x_vals))
+    x_pad <- if (is.finite(x_span) && x_span > 0) 0.03 * x_span else 1
+    y_span <- diff(range(y_vals))
+    y_pad <- if (is.finite(y_span) && y_span > 0) 0.05 * y_span else 1000
+    list(x_range = c(min(x_vals) - x_pad, max(x_vals) + x_pad), y_range = c(max(0, min(y_vals) - y_pad), max(y_vals) + y_pad))
   })
 
   # Note under chart: model predictors and x-axis choice
@@ -457,8 +497,13 @@ server <- function(input, output, session) {
     lims <- axis_limits()
     y_var <- input$y_var
     y_title <- pretty_names[[y_var]]
+    x1 <- first_predictor()
+    xv <- if (!is.null(x1) && x1 %in% names(dat)) dat[[x1]] else rep(NA_real_, nrow(dat))
+    hx <- hover_x_lines(x1, xv)
     hover <- paste0(
-      "<b>", dat$INSTNM, "</b><br>", y_title, ": ",
+      "<b>", dat$INSTNM, "</b><br>",
+      if (length(hx)) paste0(hx, "<br>") else "",
+      y_title, ": ",
       format(dat[[y_var]], big.mark = ",", trim = TRUE, scientific = FALSE)
     )
     colors <- c(Public = "#1f77b4", Private = "#ff7f0e")
@@ -470,7 +515,7 @@ server <- function(input, output, session) {
     match_dat <- dat[mr, , drop = FALSE]
     if (nrow(match_dat) > 0) match_dat$ht <- hover[mr]
 
-    p <- plot_ly()
+    p <- plot_ly(type = "scatter", mode = "markers")
     if (nrow(base_dat) > 0) p <- add_sector_markers(p, base_dat, colors, 7, TRUE, NULL)
     if (nrow(match_dat) > 0) {
       p <- add_sector_markers(p, match_dat, colors, 12, FALSE, list(color = "black", width = 2))
@@ -478,7 +523,6 @@ server <- function(input, output, session) {
 
     mf <- model_fits()
     x_vars <- selected_predictors()
-    x1 <- first_predictor()
     md <- model_data()
 
     if (length(x_vars) < 1 || is.null(x1) || !nrow(md) || is.null(mf)) {
@@ -641,10 +685,12 @@ server <- function(input, output, session) {
 
   # Render one summary or separate Public / Private tabs
   output$model_stats <- renderUI({
+    y_var <- input$y_var
     x_vars <- selected_predictors()
-    y_name <- pretty_names[[input$y_var]]
+    y_name <- pretty_names[[y_var]]
     mf <- model_fits()
     sect <- sectors_included()
+    dat <- model_data()
 
     if (!length(sect)) return(HTML("Select at least one sector (Public and/or Private)."))
     if (!length(x_vars)) return(HTML("Select at least one predictor from the category lists."))
