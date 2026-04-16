@@ -19,7 +19,7 @@ Code Book [Private Link](https://docs.google.com/spreadsheets/d/15nn2SjonRKGXaUn
 
 Shared Document [Private Link](https://docs.google.com/document/d/1MQ_aKizFGp35PtHlDsg5jPPBlRRzj7LNrtDTnOQaHXo/edit?tab=t.b5h7exbr8cju#heading=h.5b4lqfvc832d)
 
-App [Publis Link](https://joycegill.shinyapps.io/interactive-visualizations/)
+App [Public Link](https://joycegill.shinyapps.io/interactive-visualizations/)
 
 ## Repository Structure
 ```yaml
