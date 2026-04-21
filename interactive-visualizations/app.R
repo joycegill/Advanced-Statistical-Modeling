@@ -44,22 +44,36 @@ app_df <- raw_df %>%
     TUITION2 = to_num(TUITION2),
     TUITION3 = to_num(TUITION3),
     # Enrollment & composition (log transforms)
+    ENRTOT = to_num(ENRTOT),
+    EFUG1ST = to_num(EFUG1ST),
+    EFUGCNT = to_num(EFUGCNT),
+    EFASIAT = to_num(EFASIAT),
+    EFBKAAT = to_num(EFBKAAT),
+    EFHISPT = to_num(EFHISPT),
+    EFNRALT = to_num(EFNRALT),
+    EFWHITT = to_num(EFWHITT),
+    EFNHPIT = to_num(EFNHPIT),
     log_ENRTOT = safe_log_pos(ENRTOT),
     log_EFUG1ST = safe_log_pos(EFUG1ST),
     log_EFUGCNT = safe_log_pos(EFUGCNT),
     log_EFASIAT = safe_log_pos(EFASIAT),
+    log_EFBKAAT = safe_log_pos(EFBKAAT),
     log_EFHISPT = safe_log_pos(EFHISPT),
+    log_EFNRALT = safe_log_pos(EFNRALT),
     log_EFWHITT = safe_log_pos(EFWHITT),
     log_EFNHPIT = safe_log_pos(EFNHPIT),
     # Selectivity / outcomes
     # Graduation/admission/room-board percents: IPEDS stores as 0-100 (not 0-1).
     GBA6RTT = if ("EFUG1ST" %in% names(raw_df)) gba6rtt_clean(GBA6RTT, EFUG1ST) else to_num(GBA6RTT),
+    GBA4RTT = to_num(GBA4RTT),
     GRRTM = to_num(GRRTM),
+    GRRTW = to_num(GRRTW),
     ACTCM50 = to_num(ACTCM50),
     SATVR50 = to_num(SATVR50),
     SATMT50 = to_num(SATMT50),
     DVADM01 = if ("ADMSSN" %in% names(raw_df)) dvadm01_clean(DVADM01, ADMSSN) else to_num(DVADM01),
     # Campus / resources
+    STUFACR = to_num(STUFACR),
     sqrt_STUFACR = {
       s <- to_num(STUFACR)
       out <- rep(NA_real_, length(s))
@@ -71,6 +85,10 @@ app_df <- raw_df %>%
     RMOUSTTP = to_num(RMOUSTTP),
     SLO6_YES = as.integer(!is.na(SLO6) & as.character(SLO6) == "Yes"),
     # Costs / aid (log transforms)
+    AGRNT_N = to_num(AGRNT_N),
+    AGRNT_T = to_num(AGRNT_T),
+    UDGPGRNTN = to_num(UDGPGRNTN),
+    UFLOANN = to_num(UFLOANN),
     log_AGRNT_N = safe_log_pos(AGRNT_N),
     log_AGRNT_T = safe_log_pos(AGRNT_T),
     log_UDGPGRNTN = safe_log_pos(UDGPGRNTN),
@@ -103,23 +121,41 @@ app_df <- raw_df %>%
 pretty_names <- c(
   TUITION2 = "In-State Tuition",
   TUITION3 = "Out-of-State Tuition",
+  ENRTOT = "Total enrollment",
+  EFUG1ST = "First-time UG enrollment",
+  EFUGCNT = "UG degree-seeking count",
+  EFASIAT = "Asian enrollment",
+  EFBKAAT = "Black or African American enrollment",
+  EFHISPT = "Hispanic enrollment",
+  EFNRALT = "U.S. nonresident enrollment",
+  EFWHITT = "White enrollment",
+  EFNHPIT = "Native Hawaiian / Pacific Islander enrollment",
   log_ENRTOT = "log(Total enrollment)",
   log_EFUG1ST = "log(First-time UG enrollment)",
   log_EFUGCNT = "log(UG degree-seeking count)",
   log_EFASIAT = "log(Asian enrollment)",
+  log_EFBKAAT = "log(Black or African American enrollment)",
   log_EFHISPT = "log(Hispanic enrollment)",
+  log_EFNRALT = "log(U.S. nonresident enrollment)",
   log_EFWHITT = "log(White enrollment)",
   log_EFNHPIT = "log(Native Hawaiian / Pacific Islander enrollment)",
   GBA6RTT = "6-year grad rate",
+  GBA4RTT = "4-year bachelor's grad rate",
   GRRTM = "Men's grad rate (IPEDS %, 0-100)",
+  GRRTW = "Graduation Rate (Women)",
   ACTCM50 = "ACT 50th percentile",
   SATVR50 = "SAT Verbal 50th percentile",
   SATMT50 = "SAT Math 50th percentile",
   DVADM01 = "Admission rate",
+  STUFACR = "Student-faculty ratio",
   sqrt_STUFACR = "sqrt(Student-faculty ratio)",
-  RMINSTTP = "In-state room/board (%)",
+  RMINSTTP = "First-time In-State UG (%)",
   RMOUSTTP = "Out-of-state room/board (%)",
-  SLO6_YES = "Academic advising (SLO6, 1 = Yes)",
+  SLO6_YES = "Study Abroad (Yes = 1)",
+  AGRNT_N = "Grant recipients count",
+  AGRNT_T = "Grant aid total",
+  UDGPGRNTN = "UG Pell recipients",
+  UFLOANN = "Federal loan recipients",
   log_AGRNT_N = "log(Grant recipients count)",
   log_AGRNT_T = "log(Grant aid total)",
   log_UDGPGRNTN = "log(UG Pell recipients)",
@@ -139,18 +175,31 @@ pretty_names <- c(
 )
 
 enrollment_choices <- c(
+  "Total Enrollment" = "ENRTOT",
   "log(Total Enrollment)" = "log_ENRTOT",
+  "First-time UG Enrollment" = "EFUG1ST",
   "log(First-time UG Enrollment)" = "log_EFUG1ST",
+  "UG Degree-Seeking Count" = "EFUGCNT",
   "log(UG Degree-Seeking Count)" = "log_EFUGCNT",
+  "Asian Enrollment" = "EFASIAT",
   "log(Asian Enrollment)" = "log_EFASIAT",
+  "Hispanic Enrollment" = "EFHISPT",
   "log(Hispanic Enrollment)" = "log_EFHISPT",
+  "White Enrollment" = "EFWHITT",
   "log(White Enrollment)" = "log_EFWHITT",
-  "log(NHPI Enrollment)" = "log_EFNHPIT"
+  "NHPI Enrollment" = "EFNHPIT",
+  "log(NHPI Enrollment)" = "log_EFNHPIT",
+  "Black/African Enrollment" = "EFBKAAT",
+  "log(Black/African Enrollment)" = "log_EFBKAAT",
+  "International Enrollment" = "EFNRALT",
+  "log(International Enrollment)" = "log_EFNRALT"
 )
 
 selectivity_choices <- c(
+  "4 Year Graduation Rate" = "GBA4RTT",
   "6 Year Graduation Rate" = "GBA6RTT",
-  "Graduation Rate (Men) (GRRTM)" = "GRRTM",
+  "Graduation Rate (Men)" = "GRRTM",
+  "Graduation Rate (Women)" = "GRRTW",
   "ACT 50th Percentile" = "ACTCM50",
   "SAT Verbal 50th" = "SATVR50",
   "SAT Math 50th" = "SATMT50",
@@ -158,16 +207,20 @@ selectivity_choices <- c(
 )
 
 campus_choices <- c(
+  "Student-Faculty Ratio" = "STUFACR",
   "sqrt(Student-Faculty Ratio)" = "sqrt_STUFACR",
-  "In-State Room/Board (%)" = "RMINSTTP",
-  "Out-of-State Room/Board (%)" = "RMOUSTTP",
-  "Academic Advising (Yes=1)" = "SLO6_YES"
+  "First-time In-State UG (%)" = "RMINSTTP",
+  "Study Abroad (Yes = 1)" = "SLO6_YES"
 )
 
 costs_choices <- c(
+  "Grant Recipients" = "AGRNT_N",
   "log(Grant Recipients)" = "log_AGRNT_N",
+  "Grant Aid Total" = "AGRNT_T",
   "log(Grant Aid Total)" = "log_AGRNT_T",
+  "UG Pell Recipients" = "UDGPGRNTN",
   "log(UG Pell Recipients)" = "log_UDGPGRNTN",
+  "Federal Loan Recipients" = "UFLOANN",
   "log(Federal Loan Recipients)" = "log_UFLOANN",
   "Application Fee" = "APPLFEEU"
 )
@@ -205,8 +258,27 @@ sig_stars <- function(p) {
 # Map CONTROL values to two display groups
 sector_from_control <- function(ctrl) ifelse(ctrl == "Public", "Public", "Private")
 
+# Combined Y-group control options
+y_group_choices <- c(
+  "Public in state" = "public_in_state",
+  "Public out of state" = "public_out_of_state",
+  "Private" = "private"
+)
+
+y_group_labels <- c(
+  public_in_state = "Public in-state tuition",
+  public_out_of_state = "Public out-of-state tuition",
+  private = "Private tuition"
+)
+
+y_group_meta <- list(
+  public_in_state = list(y_var = "TUITION2", sector = "Public"),
+  public_out_of_state = list(y_var = "TUITION3", sector = "Public"),
+  private = list(y_var = "TUITION3", sector = "Private")
+)
+
 # Predictors whose values are already on a 0-100 percentage scale (IPEDS)
-vars_ipeds_percent_scale <- c("GBA6RTT", "GRRTM", "DVADM01", "RMINSTTP", "RMOUSTTP")
+vars_ipeds_percent_scale <- c("GBA6RTT", "GBA4RTT", "GRRTM", "GRRTW", "DVADM01", "RMINSTTP", "RMOUSTTP")
 
 hover_x_lines <- function(x1, xv) {
   if (is.null(x1) || !length(xv)) return(character(0))
@@ -245,6 +317,12 @@ ui <- fluidPage(
     column(
       width = 3,
       wellPanel(
+        checkboxGroupInput(
+          "y_groups",
+          "Select tuition groups (Y)",
+          choices = y_group_choices,
+          selected = unname(y_group_choices)
+        ),
         tags$p(
           style = "font-weight: bold; margin-bottom: 8px;",
           "Select predictors (X). You may choose more than one per category; log/sqrt transforms are applied in the data where indicated."
@@ -257,15 +335,7 @@ ui <- fluidPage(
           selectInput("costs_vars", "Costs, aid & debt", choices = costs_choices, multiple = TRUE),
           selectInput("profile_vars", "Institution profile", choices = profile_choices, multiple = TRUE)
         ),
-        selectInput("x_axis_var", "Select predictor for X axis", choices = character(0)),
-        selectInput("y_var", "Select tuition type (Y)", choices = c("In-State Tuition" = "TUITION2", "Out-of-State Tuition" = "TUITION3")),
-        checkboxGroupInput(
-          "sector_inc",
-          "Select sector",
-          choices = c("Public" = "Public", "Private" = "Private"),
-          selected = c("Public", "Private"),
-          inline = TRUE
-        )
+        selectInput("x_axis_var", "Select predictor for X axis", choices = character(0))
       )
     ),
     column(
@@ -330,7 +400,7 @@ tuition_plot_layout <- function(p, lims, y_title, x_title) {
     plotly::config(scrollZoom = TRUE, displayModeBar = TRUE)
 }
 
-# Safely fit lm only when there is enough data
+# Fit lm only when there is enough data
 fit_lm_safe <- function(y_var, x_vars, dat, min_n) {
   if (length(x_vars) == 0 || nrow(dat) < min_n) return(NULL)
   stats::lm(as.formula(paste(y_var, "~", paste(x_vars, collapse = " + "))), data = dat)
@@ -343,6 +413,12 @@ null_chr <- function(x) if (is.null(x)) character(0) else x
 `%||%` <- function(a, b) if (!is.null(a) && length(a) && nzchar(a[1])) a else b
 
 server <- function(input, output, session) {
+  selected_y_groups <- reactive({
+    gy <- input$y_groups
+    gy <- gy[gy %in% names(y_group_meta)]
+    if (is.null(gy) || !length(gy)) character(0) else gy
+  })
+
   # Combined predictor list from all category multi-selects
   selected_predictors <- reactive({
     unique(c(
@@ -367,50 +443,40 @@ server <- function(input, output, session) {
     }
   })
 
-  # Public/private check box
-  sectors_included <- reactive({
-    si <- input$sector_inc
-    if (is.null(si) || !length(si)) character(0) else si
-  })
-
-  # Keep complete cases for Y and selected X columns
-  model_data_base <- reactive({
-    y_var <- input$y_var
-    x_vars <- selected_predictors()
-    cols <- unique(c("INSTNM", "CONTROL", y_var, x_vars))
-    dat <- app_df %>% select(all_of(cols)) %>% filter(!is.na(.data[[y_var]]), .data[[y_var]] > 0)
-    if (length(x_vars) > 0) dat <- dat %>% filter(if_all(all_of(x_vars), ~ !is.na(.)))
-    dat
-  })
-
-  # Restrict rows to selected sector(s)
+  # Build selected Y groups as long data
   model_data <- reactive({
-    dat <- model_data_base()
-    sect <- sectors_included()
-    if (!length(sect)) return(dat[0, , drop = FALSE])
-    dat %>%
-      mutate(sector = sector_from_control(CONTROL)) %>%
-      filter(sector %in% sect)
+    x_vars <- selected_predictors()
+    gy <- selected_y_groups()
+    if (!length(gy)) return(app_df[0, , drop = FALSE])
+    cols <- unique(c("INSTNM", "CONTROL", "TUITION2", "TUITION3", x_vars))
+    base_dat <- app_df %>% select(all_of(cols))
+    if (length(x_vars) > 0) base_dat <- base_dat %>% filter(if_all(all_of(x_vars), ~ !is.na(.)))
+
+    out_list <- lapply(gy, function(g) {
+      meta <- y_group_meta[[g]]
+      y_col <- meta$y_var
+      sect <- meta$sector
+      d <- base_dat %>%
+        mutate(sector = sector_from_control(CONTROL)) %>%
+        filter(sector == sect) %>%
+        mutate(y_group = g, y_plot = .data[[y_col]]) %>%
+        filter(!is.na(y_plot), y_plot > 0)
+      d
+    })
+    bind_rows(out_list)
   })
 
-  # Fit one model (single sector) or two models (Public + Private)
+  # Fit one model per selected Y group
   model_fits <- reactive({
     dat <- model_data()
-    y_var <- input$y_var
     x_vars <- selected_predictors()
-    sect <- sectors_included()
-    if (!length(x_vars) || !length(sect)) return(NULL)
+    gy <- selected_y_groups()
+    if (!length(x_vars) || !length(gy)) return(list())
 
-    if (length(sect) == 1) {
-      return(list(mode = "single", fit = fit_lm_safe(y_var, x_vars, dat, MIN_N_MODEL)))
-    }
-    d_pub <- dat[dat$sector == "Public", , drop = FALSE]
-    d_priv <- dat[dat$sector == "Private", , drop = FALSE]
-    list(
-      mode = "dual",
-      public = fit_lm_safe(y_var, x_vars, d_pub, MIN_N_MODEL_SECTOR),
-      private = fit_lm_safe(y_var, x_vars, d_priv, MIN_N_MODEL_SECTOR)
-    )
+    setNames(lapply(gy, function(g) {
+      d <- dat[dat$y_group == g, , drop = FALSE]
+      fit_lm_safe("y_plot", x_vars, d, if (length(gy) == 1) MIN_N_MODEL else MIN_N_MODEL_SECTOR)
+    }), gy)
   })
 
   # X-axis variable from dropdown (must be one of selected_predictors)
@@ -423,17 +489,13 @@ server <- function(input, output, session) {
 
   # Check whether at least one model was fit successfully
   has_valid_plot_model <- function(mf) {
-    !is.null(mf) && (
-      (identical(mf$mode, "single") && !is.null(mf$fit)) ||
-      (identical(mf$mode, "dual") && (!is.null(mf$public) || !is.null(mf$private)))
-    )
+    length(mf) > 0 && any(vapply(mf, function(x) !is.null(x), logical(1)))
   }
 
   # Build plotting data (x, y, sector, search highlight)
   plot_data <- reactive({
     dat <- model_data()
     x_vars <- selected_predictors()
-    y_var <- input$y_var
     x1 <- first_predictor()
     q <- trimws(tolower(input$school_search))
 
@@ -447,7 +509,6 @@ server <- function(input, output, session) {
     }
 
     dat$x_plot <- dat[[x1]]
-    dat$y_plot <- dat[[y_var]]
     dat$is_match <- nchar(q) > 0 & grepl(q, tolower(dat$INSTNM), fixed = TRUE)
     dat
   })
@@ -456,12 +517,11 @@ server <- function(input, output, session) {
   axis_limits <- reactive({
     x1 <- first_predictor()
     dat <- model_data()
-    y_var <- input$y_var
     default <- list(x_range = c(0, 1), y_range = c(0, 1))
-    if (is.null(x1) || !(x1 %in% names(dat)) || !nrow(dat) || !(y_var %in% names(dat))) return(default)
+    if (is.null(x1) || !(x1 %in% names(dat)) || !nrow(dat) || !("y_plot" %in% names(dat))) return(default)
     x_vals <- dat[[x1]]
     x_vals <- x_vals[is.finite(x_vals)]
-    y_vals <- dat[[y_var]]
+    y_vals <- dat[["y_plot"]]
     y_vals <- y_vals[is.finite(y_vals)]
     if (!length(x_vals) || !length(y_vals)) return(default)
     x_span <- diff(range(x_vals))
@@ -481,8 +541,7 @@ server <- function(input, output, session) {
       style = "margin-top:8px; color:#555;",
       HTML(paste0(
         "<em>Model predictors: ", paste(label_var(x_vars), collapse = ", "), "</em><br>",
-        "<em>X-axis: ", x_lab, " (Predictor for X axis).</em><br>",
-        "<em>Open the Residuals tab for Q-Q and histogram.</em>"
+        "<em>X-axis: ", x_lab, " (Predictor for X axis).</em><br>"
       ))
     )
   })
@@ -495,18 +554,18 @@ server <- function(input, output, session) {
     }
 
     lims <- axis_limits()
-    y_var <- input$y_var
-    y_title <- pretty_names[[y_var]]
+    y_title <- "Tuition"
     x1 <- first_predictor()
     xv <- if (!is.null(x1) && x1 %in% names(dat)) dat[[x1]] else rep(NA_real_, nrow(dat))
     hx <- hover_x_lines(x1, xv)
+    y_group_lab <- y_group_labels[dat$y_group]
     hover <- paste0(
       "<b>", dat$INSTNM, "</b><br>",
       if (length(hx)) paste0(hx, "<br>") else "",
-      y_title, ": ",
-      format(dat[[y_var]], big.mark = ",", trim = TRUE, scientific = FALSE)
+      y_group_lab, ": ",
+      format(dat[["y_plot"]], big.mark = ",", trim = TRUE, scientific = FALSE)
     )
-    colors <- c(Public = "#1f77b4", Private = "#ff7f0e")
+    colors <- c(public_in_state = "#1f77b4", public_out_of_state = "#17becf", private = "#ff7f0e")
 
     br <- which(!dat$is_match)
     base_dat <- dat[br, , drop = FALSE]
@@ -516,16 +575,36 @@ server <- function(input, output, session) {
     if (nrow(match_dat) > 0) match_dat$ht <- hover[mr]
 
     p <- plot_ly(type = "scatter", mode = "markers")
-    if (nrow(base_dat) > 0) p <- add_sector_markers(p, base_dat, colors, 7, TRUE, NULL)
+    if (nrow(base_dat) > 0) {
+      for (grp in names(colors)) {
+        dg <- base_dat[base_dat$y_group == grp, , drop = FALSE]
+        if (!nrow(dg)) next
+        p <- plotly::add_markers(
+          p, data = dg, x = ~x_plot, y = ~y_plot, text = ~ht, hoverinfo = "text",
+          name = y_group_labels[[grp]], legendgroup = grp,
+          marker = list(color = colors[[grp]], size = 7, opacity = 0.8),
+          showlegend = TRUE
+        )
+      }
+    }
     if (nrow(match_dat) > 0) {
-      p <- add_sector_markers(p, match_dat, colors, 12, FALSE, list(color = "black", width = 2))
+      for (grp in names(colors)) {
+        dg <- match_dat[match_dat$y_group == grp, , drop = FALSE]
+        if (!nrow(dg)) next
+        p <- plotly::add_markers(
+          p, data = dg, x = ~x_plot, y = ~y_plot, text = ~ht, hoverinfo = "text",
+          name = y_group_labels[[grp]], legendgroup = grp,
+          marker = list(color = colors[[grp]], size = 12, opacity = 1, line = list(color = "black", width = 2)),
+          showlegend = FALSE
+        )
+      }
     }
 
     mf <- model_fits()
     x_vars <- selected_predictors()
     md <- model_data()
 
-    if (length(x_vars) < 1 || is.null(x1) || !nrow(md) || is.null(mf)) {
+    if (length(x_vars) < 1 || is.null(x1) || !nrow(md) || !length(mf)) {
       x_title <- if (!is.null(x1)) label_var(x1) else ""
       return(tuition_plot_layout(p, lims, y_title, x_title))
     }
@@ -550,19 +629,11 @@ server <- function(input, output, session) {
       )
     }
 
-    if (identical(mf$mode, "single") && !is.null(mf$fit)) {
-      sect_one <- sectors_included()
-      line_col <- if (length(sect_one) == 1L && sect_one[1] %in% names(colors)) {
-        colors[[sect_one[1]]]
-      } else {
-        "#1f77b4"
-      }
-      p <- add_line_for_fit(p, mf$fit, md, line_col)
-    } else if (identical(mf$mode, "dual")) {
-      md_pub <- md[md$sector == "Public", , drop = FALSE]
-      md_priv <- md[md$sector == "Private", , drop = FALSE]
-      if (!is.null(mf$public)) p <- add_line_for_fit(p, mf$public, md_pub, colors["Public"])
-      if (!is.null(mf$private)) p <- add_line_for_fit(p, mf$private, md_priv, colors["Private"])
+    for (grp in names(mf)) {
+      fit <- mf[[grp]]
+      if (is.null(fit)) next
+      md_grp <- md[md$y_group == grp, , drop = FALSE]
+      p <- add_line_for_fit(p, fit, md_grp, colors[[grp]])
     }
 
     tuition_plot_layout(p, lims, y_title, label_var(x1))
@@ -572,15 +643,15 @@ server <- function(input, output, session) {
   output$residual_plots <- renderPlot({
     mf <- model_fits()
     x_vars <- selected_predictors()
-    sect <- sectors_included()
+    gy <- selected_y_groups()
 
     empty_msg <- function(msg) {
       graphics::plot.new()
       graphics::text(0.5, 0.5, msg)
     }
 
-    if (!length(sect) || !length(x_vars)) {
-      empty_msg("Select at least one sector and predictor.")
+    if (!length(gy) || !length(x_vars)) {
+      empty_msg("Select at least one tuition group and predictor.")
       return(invisible(NULL))
     }
     if (is.null(mf) || !has_valid_plot_model(mf)) {
@@ -601,34 +672,31 @@ server <- function(input, output, session) {
       )
     }
 
-    if (identical(mf$mode, "single") && !is.null(mf$fit)) {
-      graphics::par(mfrow = c(1, 2), mgp = c(2, 0.7, 0), mar = c(4, 4, 3, 1))
-      res <- stats::residuals(mf$fit)
-      ynm <- pretty_names[[input$y_var]]
-      draw_qq_hist(res, paste0("Normal Q-Q (", ynm, ")"), "Histogram of residuals", "#666666")
-    } else if (identical(mf$mode, "dual")) {
-      graphics::par(mfrow = c(2, 2), mgp = c(2, 0.7, 0), mar = c(3.5, 3.5, 2.5, 1))
-      if (!is.null(mf$public)) {
-        rp <- stats::residuals(mf$public)
-        draw_qq_hist(rp, "Public: Normal Q-Q", "Public: histogram", "#1f77b4")
-      } else {
-        empty_msg("Public: no fit")
-        empty_msg("")
-      }
-      if (!is.null(mf$private)) {
-        rv <- stats::residuals(mf$private)
-        draw_qq_hist(rv, "Private: Normal Q-Q", "Private: histogram", "#ff7f0e")
-      } else {
-        empty_msg("Private: no fit")
-        empty_msg("")
-      }
+    valid_groups <- names(mf)[vapply(mf, function(x) !is.null(x), logical(1))]
+    if (!length(valid_groups)) {
+      empty_msg("Residuals unavailable (model did not fit).")
+      return(invisible(NULL))
+    }
+
+    n_valid <- length(valid_groups)
+    graphics::par(
+      mfrow = c(n_valid, 2),
+      mgp = c(2, 0.7, 0),
+      mar = if (n_valid > 1) c(3.5, 3.5, 2.5, 1) else c(4, 4, 3, 1)
+    )
+    fill_cols <- c(public_in_state = "#1f77b4", public_out_of_state = "#17becf", private = "#ff7f0e")
+    for (grp in valid_groups) {
+      fit <- mf[[grp]]
+      res <- stats::residuals(fit)
+      lab <- y_group_labels[[grp]]
+      draw_qq_hist(res, paste0(lab, ": Normal Q-Q"), paste0(lab, ": histogram"), fill_cols[[grp]])
     }
   })
 
   # Build model summary text for the right panel
   format_model_html <- function(fit, y_name) {
     if (is.null(fit)) {
-      return("<p><em>Not enough rows in this sector to fit the model.</em></p>")
+      return("<p><em>Not enough rows in this group to fit the model.</em></p>")
     }
     s <- summary(fit)
     coefs <- s$coefficients
@@ -683,31 +751,25 @@ server <- function(input, output, session) {
     )
   }
 
-  # Render one summary or separate Public / Private tabs
+  # Render one summary or grouped tabs
   output$model_stats <- renderUI({
-    y_var <- input$y_var
     x_vars <- selected_predictors()
-    y_name <- pretty_names[[y_var]]
+    gy <- selected_y_groups()
     mf <- model_fits()
-    sect <- sectors_included()
-    dat <- model_data()
 
-    if (!length(sect)) return(HTML("Select at least one sector (Public and/or Private)."))
+    if (!length(gy)) return(HTML("Select at least one tuition group."))
     if (!length(x_vars)) return(HTML("Select at least one predictor from the category lists."))
-    if (is.null(mf)) return(HTML("Not enough complete rows to fit a model."))
+    if (!length(mf)) return(HTML("Not enough complete rows to fit a model."))
 
-    if (identical(mf$mode, "single")) {
-      return(tagList(HTML(format_model_html(mf$fit, y_name)), tags$br(), stats_note()))
+    if (length(gy) == 1) {
+      grp <- gy[[1]]
+      return(tagList(HTML(format_model_html(mf[[grp]], y_group_labels[[grp]])), tags$br(), stats_note()))
     }
 
     tab_body <- function(html) tags$div(style = "margin-top: 12px;", HTML(html))
+    tabs <- lapply(gy, function(grp) tabPanel(y_group_labels[[grp]], tab_body(format_model_html(mf[[grp]], y_group_labels[[grp]]))))
     tagList(
-      tabsetPanel(
-        id = "model_stats_tabs",
-        type = "tabs",
-        tabPanel("Public", tab_body(format_model_html(mf$public, y_name))),
-        tabPanel("Private", tab_body(format_model_html(mf$private, y_name)))
-      ),
+      do.call(tabsetPanel, c(list(id = "model_stats_tabs", type = "tabs"), tabs)),
       tags$br(),
       stats_note()
     )
