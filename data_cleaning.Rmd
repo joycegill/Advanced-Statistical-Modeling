@@ -321,6 +321,7 @@ FINANCE_CLEAN <- FINANCE_2024 %>%
     UNITID = as.character(UNITID)
   ) %>%
   select(UNITID, TotalLiabilities, EndowmentAssets)
+write_csv(FINANCE_CLEAN, "data/cleaned/EndowmentAndLiability.csv")
 
 # Step 2: Right join — keeps only schools in DATA, preserves NAs
 DATA <- DATA %>%
