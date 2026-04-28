@@ -308,6 +308,26 @@ unitids <- unitids %>%
 write_csv(unitids, "data/cleaned/unitids.csv")
 ```
 
+## Add Endowment and Liability Data
+
+```{r}
+# Finance Data - Endowment and Liability
+FINANCE_2024 <- read_csv("https://raw.githubusercontent.com/joycegill/Advanced-Statistical-Modeling/main/data/custom_data/FINANCE_2024.csv", show_col_types = FALSE)
+FINANCE_CLEAN <- FINANCE_2024 %>%
+  # Step 1: Coalesce the split columns into single columns
+  mutate(
+    TotalLiabilities = coalesce(`TotalLiabilities...3`, `TotalLiabilities...4`, `TotalLiabilities...5`),
+    EndowmentAssets  = coalesce(`EndowmentAssets...6`, `EndowmentAssets...7`),
+    UNITID = as.character(UNITID)
+  ) %>%
+  select(UNITID, TotalLiabilities, EndowmentAssets)
+
+# Step 2: Right join — keeps only schools in DATA, preserves NAs
+DATA <- DATA %>%
+  left_join(FINANCE_CLEAN, by = "UNITID")
+```
+
+
 ## Get FIPS Code
 
 Instruction:
