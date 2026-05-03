@@ -43,6 +43,7 @@ app_df <- raw_df %>%
     CONTROL = as.character(CONTROL),
     TUITION2 = to_num(TUITION2),
     TUITION3 = to_num(TUITION3),
+    
     # Enrollment & composition (log transforms)
     ENRTOT = to_num(ENRTOT),
     EFUG1ST = to_num(EFUG1ST),
@@ -62,6 +63,7 @@ app_df <- raw_df %>%
     log_EFNRALT = safe_log_pos(EFNRALT),
     log_EFWHITT = safe_log_pos(EFWHITT),
     log_EFNHPIT = safe_log_pos(EFNHPIT),
+    
     # Selectivity / outcomes
     # Graduation/admission/room-board percents: IPEDS stores as 0-100 (not 0-1).
     GBA6RTT = if ("EFUG1ST" %in% names(raw_df)) gba6rtt_clean(GBA6RTT, EFUG1ST) else to_num(GBA6RTT),
@@ -72,6 +74,7 @@ app_df <- raw_df %>%
     SATVR50 = to_num(SATVR50),
     SATMT50 = to_num(SATMT50),
     DVADM01 = if ("ADMSSN" %in% names(raw_df)) dvadm01_clean(DVADM01, ADMSSN) else to_num(DVADM01),
+    
     # Campus / resources
     STUFACR = to_num(STUFACR),
     sqrt_STUFACR = {
@@ -84,6 +87,7 @@ app_df <- raw_df %>%
     RMINSTTP = to_num(RMINSTTP),
     RMOUSTTP = to_num(RMOUSTTP),
     SLO6_YES = as.integer(!is.na(SLO6) & as.character(SLO6) == "Yes"),
+    
     # Costs / aid (log transforms)
     AGRNT_N = to_num(AGRNT_N),
     AGRNT_T = to_num(AGRNT_T),
@@ -94,15 +98,22 @@ app_df <- raw_df %>%
     log_UDGPGRNTN = safe_log_pos(UDGPGRNTN),
     log_UFLOANN = safe_log_pos(UFLOANN),
     APPLFEEU = to_num(APPLFEEU),
+    
     # Institution profile (dummies)
     HBCU_YES = as.integer(!is.na(HBCU) & as.character(HBCU) == "Yes"),
-    RELAFFIL_NO = as.integer(!is.na(RELAFFIL) & as.character(RELAFFIL) == "Not applicable"),
+    RELAFFIL_NO = as.integer(!is.na(RELAFFIL) & as.character(RELAFFIL)%in% c(
+      "Not applicable",
+      "Non-Denominational"
+    )),
+    
+    ATHASSOC_YES = as.integer(!is.na(ATHASSOC) & as.character(ATHASSOC) == "Yes"),
     ASSOC1_YES = as.integer(!is.na(ASSOC1) & as.character(ASSOC1) == "Yes"),
     RSCH_HIGH = as.integer(!is.na(CARNEGIERSCH) & as.character(CARNEGIERSCH) %in% c(
       "Research 1: Very High Spending and Doctorate Production",
       "Research 2: High Spending and Doctorate Production"
     )),
     RSCH_INSTS = as.integer(!is.na(CARNEGIERSCH) & as.character(CARNEGIERSCH) == "Research Colleges and Universities"),
+    
     MIXED = as.integer(!is.na(CARNEGIEAPM) & as.character(CARNEGIEAPM) == "Mixed"),
     HEALTH = as.integer(!is.na(CARNEGIEAPM) & as.character(CARNEGIEAPM) %in% c(
       "Special Focus: Nursing",
@@ -232,8 +243,13 @@ var_meta <- tibble::tribble(
   # Highest degree offered
   "HDEOFR_DOC", "Doctor's Degree", "Highest Degree Offered",
   "HDEOFR_MAS", "Master's Degree", "Highest Degree Offered",
-  "HDEOFR_BAC", "Bachelor's Degree", "Highest Degree Offered"
+  "HDEOFR_BAC", "Bachelor's Degree", "Highest Degree Offered",
   
+  # Institution special type
+  "HBCU_YES", "Historically Black College/University (HBCU)", "Institution Special Type",
+  "RELAFFIL_NO", "No Religious Affiliation", "Institution Special Type",
+  "ASSOC1_YES", "Member of National Collegiate Athletic Association (NCAA)", "Institution Special Type",
+  "ATHASSOC_YES", "Member of National Athletic Association", "Institution Special Type",
 )
 
 label_var <- function(v) {
@@ -382,7 +398,7 @@ ui <- fluidPage(
                 "region_filter",
                 label = "US Region",
                 choices = choices_by_category("School Region"),
-                selected = choices_by_category("School Region") %>% names()
+                selected = NULL
               ),
               
               tags$hr(),
@@ -391,7 +407,16 @@ ui <- fluidPage(
                 "degree_filter",
                 "Highest Degree Offered",
                 choices = choices_by_category("Highest Degree Offered"),
-                selected = choices_by_category("Highest Degree Offered") %>% names()
+                selected = NULL
+              ),
+              
+              tags$hr(),
+              
+              checkboxGroupInput(
+                "special_filter",
+                "Institution Special Type",
+                choices = choices_by_category("Institution Special Type"),
+                selected = NULL
               )
             )
           )
@@ -479,43 +504,94 @@ server <- function(input, output, session) {
     loc <- input$locale_filter
     reg <- input$region_filter
     deg <- input$degree_filter
+    spe <- input$special_filter
 
     # -----------------------
     # LOCALE FILTER
     # -----------------------
     if (!is.null(loc) && length(loc)) {
-      df <- df[
-        (("LOCALE_CITY" %in% loc)   & df$LOCALE_CITY == 1) |
-        (("LOCALE_SUBURB" %in% loc) & df$LOCALE_SUBURB == 1) |
-        (("LOCALE_TOWN" %in% loc)   & df$LOCALE_TOWN == 1) |
-        (("LOCALE_RURAL" %in% loc)  & df$LOCALE_RURAL == 1),
-      ]
+      locale_map <- c(
+        LOCALE_CITY   = "LOCALE_CITY",
+        LOCALE_SUBURB = "LOCALE_SUBURB",
+        LOCALE_TOWN   = "LOCALE_TOWN",
+        LOCALE_RURAL  = "LOCALE_RURAL"
+      )
+      
+      keep <- rep(FALSE, nrow(df))
+      
+      for (v in loc) {
+        keep <- keep | df[[locale_map[[v]]]] == 1
+      }
+      
+      df <- df[keep, ]
     }
     
     # -----------------------
     # REGION FILTER
     # -----------------------
     if (!is.null(reg) && length(reg)) {
-      df <- df[
-        (("NORTHEAST" %in% reg) & df$NORTHEAST == 1) |
-        (("MIDWEST" %in% reg)   & df$MIDWEST == 1) |
-        (("SOUTH" %in% reg)     & df$SOUTH == 1) |
-        (("WEST" %in% reg)      & df$WEST == 1),
-      ]
+      region_map <- c(
+        NORTHEAST = "NORTHEAST",
+        MIDWEST   = "MIDWEST",
+        SOUTH     = "SOUTH",
+        WEST      = "WEST"
+      )
+      
+      keep <- rep(FALSE, nrow(df))
+      
+      for (v in reg) {
+        keep <- keep | df[[region_map[[v]]]] == 1
+      }
+      
+      df <- df[keep, ]
     }
     
     # -----------------------
     # DEGREE FILTER
     # -----------------------
     if (!is.null(deg) && length(deg)) {
-      df <- df[
-        (("HDEOFR_DOC" %in% deg)   & df$HDEOFR_DOC == 1) |
-        (("HDEOFR_MAS" %in% deg)   & df$HDEOFR_MAS == 1) |
-        (("HDEOFR_BAC" %in% deg)   & df$HDEOFR_BAC == 1),
-      ]
+      degree_map <- c(
+        HDEOFR_DOC = "HDEOFR_DOC",
+        HDEOFR_MAS = "HDEOFR_MAS",
+        HDEOFR_BAC = "HDEOFR_BAC"
+      )
+      
+      keep <- rep(FALSE, nrow(df))
+      
+      for (v in deg) {
+        keep <- keep | df[[degree_map[[v]]]] == 1
+      }
+      
+      df <- df[keep, ]
     }
     
-    df
+    # -----------------------
+    # SPECIAL TYPE FILTER
+    # -----------------------
+    if (!is.null(spe) && length(spe)) {
+      
+      if ("HBCU_YES" %in% spe) {
+        df <- df[df$HBCU_YES == 1, ]
+      }
+      
+      if ("RELAFFIL_NO" %in% spe) {
+        df <- df[df$RELAFFIL_NO == 1, ]
+      }
+      
+      if ("HOSPITAL_YES" %in% spe) {
+        df <- df[df$HOSPITAL_YES == 1, ]
+      }
+      
+      if ("ASSOC1_YES" %in% spe) {
+        df <- df[df$ASSOC1_YES == 1, ]
+      }
+      
+      if ("ATHASSOC_YES" %in% spe) {
+        df <- df[df$ATHASSOC_YES == 1, ]
+      }
+    }
+    
+    df 
   })
   
   selected_y_groups <- reactive({
