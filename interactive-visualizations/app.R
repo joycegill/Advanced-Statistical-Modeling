@@ -330,7 +330,13 @@ ui <- fluidPage(
         tags$div(
           style = "color: #737373;",
           selectInput("enrollment_vars", "Enrollment & student composition", choices = enrollment_choices, multiple = TRUE),
-          selectInput("selectivity_vars", "Selectivity & student outcomes", choices = selectivity_choices, multiple = TRUE),
+          selectInput(
+            "selectivity_vars",
+            "Selectivity & student outcomes",
+            choices = selectivity_choices,
+            multiple = TRUE,
+            selected = "GBA6RTT"
+          ),
           selectInput("campus_vars", "Campus life & resources", choices = campus_choices, multiple = TRUE),
           selectInput("costs_vars", "Costs, aid & debt", choices = costs_choices, multiple = TRUE),
           selectInput("profile_vars", "Institution profile", choices = profile_choices, multiple = TRUE)
@@ -437,7 +443,8 @@ server <- function(input, output, session) {
       updateSelectInput(session, "x_axis_var", choices = character(0))
     } else {
       named <- setNames(xs, label_var(xs))
-      sel <- input$x_axis_var %||% xs[[1]]
+      sel <- input$x_axis_var %||%
+        if ("GBA6RTT" %in% xs) "GBA6RTT" else xs[[1]]
       if (!sel %in% xs) sel <- xs[[1]]
       updateSelectInput(session, "x_axis_var", choices = named, selected = sel)
     }
