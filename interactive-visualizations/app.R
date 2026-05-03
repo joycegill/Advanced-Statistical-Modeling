@@ -115,133 +115,95 @@ app_df <- raw_df %>%
       "Special Focus: Arts, Music, and Design"
     )),
     STEM = as.integer(!is.na(CARNEGIEAPM) & as.character(CARNEGIEAPM) == "Special Focus: Technology, Engineering, and Sciences"),
-    FORPROFIT = as.integer(CONTROL == "Private for-profit")
+    FORPROFIT = as.integer(CONTROL == "Private for-profit"),
+    LOCALE_SUBURB = as.integer(LOCALE %in% c("Suburb: Small", "Suburb: Large", "Suburb: Midsize")),
+    LOCALE_TOWN = as.integer(LOCALE %in% c("Town: Distant", "Town: Remote", "Town: Fringe")),
+    LOCALE_RURAL = as.integer(LOCALE %in% c("Rural: Remote", "Rural: Fringe", "Rural: Distant")),
+    LOCALE_CITY = as.integer(LOCALE %in% c("City: Midsize", "City: Small", "City: Large")),
   )
 
-pretty_names <- c(
-  TUITION2 = "In-State Tuition",
-  TUITION3 = "Out-of-State Tuition",
-  ENRTOT = "Total enrollment",
-  EFUG1ST = "First-time UG enrollment",
-  EFUGCNT = "UG degree-seeking count",
-  EFASIAT = "Asian enrollment",
-  EFBKAAT = "Black or African American enrollment",
-  EFHISPT = "Hispanic enrollment",
-  EFNRALT = "U.S. nonresident enrollment",
-  EFWHITT = "White enrollment",
-  EFNHPIT = "Native Hawaiian / Pacific Islander enrollment",
-  log_ENRTOT = "log(Total enrollment)",
-  log_EFUG1ST = "log(First-time UG enrollment)",
-  log_EFUGCNT = "log(UG degree-seeking count)",
-  log_EFASIAT = "log(Asian enrollment)",
-  log_EFBKAAT = "log(Black or African American enrollment)",
-  log_EFHISPT = "log(Hispanic enrollment)",
-  log_EFNRALT = "log(U.S. nonresident enrollment)",
-  log_EFWHITT = "log(White enrollment)",
-  log_EFNHPIT = "log(Native Hawaiian / Pacific Islander enrollment)",
-  GBA6RTT = "6-year grad rate",
-  GBA4RTT = "4-year bachelor's grad rate",
-  GRRTM = "Men's grad rate (IPEDS %, 0-100)",
-  GRRTW = "Graduation Rate (Women)",
-  ACTCM50 = "ACT 50th percentile",
-  SATVR50 = "SAT Verbal 50th percentile",
-  SATMT50 = "SAT Math 50th percentile",
-  DVADM01 = "Admission rate",
-  STUFACR = "Student-faculty ratio",
-  sqrt_STUFACR = "sqrt(Student-faculty ratio)",
-  RMINSTTP = "First-time In-State UG (%)",
-  RMOUSTTP = "Out-of-state room/board (%)",
-  SLO6_YES = "Study Abroad (Yes = 1)",
-  AGRNT_N = "Grant recipients count",
-  AGRNT_T = "Grant aid total",
-  UDGPGRNTN = "UG Pell recipients",
-  UFLOANN = "Federal loan recipients",
-  log_AGRNT_N = "log(Grant recipients count)",
-  log_AGRNT_T = "log(Grant aid total)",
-  log_UDGPGRNTN = "log(UG Pell recipients)",
-  log_UFLOANN = "log(Federal loan recipients)",
-  APPLFEEU = "Application fee",
-  HBCU_YES = "HBCU (1 = Yes)",
-  RELAFFIL_NO = "No religious affiliation (1 = N/A)",
-  ASSOC1_YES = "NCAA member (1 = Yes)",
-  RSCH_HIGH = "Carnegie R1/R2 research (1 = Yes)",
-  RSCH_INSTS = "Carnegie research institutions (1 = Yes)",
-  MIXED = "Carnegie program mix: Mixed (1 = Yes)",
-  HEALTH = "Carnegie health focus (1 = Yes)",
-  PROFESSIONS = "Carnegie professions-focused (1 = Yes)",
-  ARTS = "Carnegie arts focus (1 = Yes)",
-  STEM = "Carnegie STEM focus (1 = Yes)",
-  FORPROFIT = "For-profit institution (1 = Yes)"
-)
-
-enrollment_choices <- c(
-  "Total Enrollment" = "ENRTOT",
-  "log(Total Enrollment)" = "log_ENRTOT",
-  "First-time UG Enrollment" = "EFUG1ST",
-  "log(First-time UG Enrollment)" = "log_EFUG1ST",
-  "UG Degree-Seeking Count" = "EFUGCNT",
-  "log(UG Degree-Seeking Count)" = "log_EFUGCNT",
-  "Asian Enrollment" = "EFASIAT",
-  "log(Asian Enrollment)" = "log_EFASIAT",
-  "Hispanic Enrollment" = "EFHISPT",
-  "log(Hispanic Enrollment)" = "log_EFHISPT",
-  "White Enrollment" = "EFWHITT",
-  "log(White Enrollment)" = "log_EFWHITT",
-  "NHPI Enrollment" = "EFNHPIT",
-  "log(NHPI Enrollment)" = "log_EFNHPIT",
-  "Black/African Enrollment" = "EFBKAAT",
-  "log(Black/African Enrollment)" = "log_EFBKAAT",
-  "International Enrollment" = "EFNRALT",
-  "log(International Enrollment)" = "log_EFNRALT"
-)
-
-selectivity_choices <- c(
-  "4 Year Graduation Rate" = "GBA4RTT",
-  "6 Year Graduation Rate" = "GBA6RTT",
-  "Graduation Rate (Men)" = "GRRTM",
-  "Graduation Rate (Women)" = "GRRTW",
-  "ACT 50th Percentile" = "ACTCM50",
-  "SAT Verbal 50th" = "SATVR50",
-  "SAT Math 50th" = "SATMT50",
-  "Admission Rate" = "DVADM01"
-)
-
-campus_choices <- c(
-  "Student-Faculty Ratio" = "STUFACR",
-  "sqrt(Student-Faculty Ratio)" = "sqrt_STUFACR",
-  "First-time In-State UG (%)" = "RMINSTTP",
-  "Study Abroad (Yes = 1)" = "SLO6_YES"
-)
-
-costs_choices <- c(
-  "Grant Recipients" = "AGRNT_N",
-  "log(Grant Recipients)" = "log_AGRNT_N",
-  "Grant Aid Total" = "AGRNT_T",
-  "log(Grant Aid Total)" = "log_AGRNT_T",
-  "UG Pell Recipients" = "UDGPGRNTN",
-  "log(UG Pell Recipients)" = "log_UDGPGRNTN",
-  "Federal Loan Recipients" = "UFLOANN",
-  "log(Federal Loan Recipients)" = "log_UFLOANN",
-  "Application Fee" = "APPLFEEU"
-)
-
-profile_choices <- c(
-  "HBCU (1=Yes)" = "HBCU_YES",
-  "No Religious Affiliation (1=N/A)" = "RELAFFIL_NO",
-  "NCAA Member (1=Yes)" = "ASSOC1_YES",
-  "Carnegie R1/R2" = "RSCH_HIGH",
-  "Carnegie Research Colleges" = "RSCH_INSTS",
-  "Mixed Programs" = "MIXED",
-  "Health Programs" = "HEALTH",
-  "Professional Programs" = "PROFESSIONS",
-  "Arts Programs" = "ARTS",
-  "STEM Programs" = "STEM",
-  "For-Profit" = "FORPROFIT"
+# ----------- PRETTY NAMES SOURCE ----------- 
+# Format: "VARIABLE_NAME", "Pretty Name", "Category Name"
+var_meta <- tibble::tribble(
+  ~var, ~label, ~category,
+  
+  # Enrollment
+  "ENRTOT", "Total Enrollment", "Enrollment & student composition",
+  "EFUG1ST", "First-time UG Enrollment", "Enrollment & student composition",
+  "EFUGCNT", "UG Degree-Seeking Count", "Enrollment & student composition",
+  
+  "EFASIAT", "Asian Enrollment", "Enrollment & student composition",
+  "EFBKAAT", "Black/African American Enrollment", "Enrollment & student composition",
+  "EFHISPT", "Hispanic Enrollment", "Enrollment & student composition",
+  "EFNRALT", "International Enrollment", "Enrollment & student composition",
+  "EFWHITT", "White Enrollment", "Enrollment & student composition",
+  "EFNHPIT", "NHPI Enrollment", "Enrollment & student composition",
+  
+  # log transforms (still same var, just labeled)
+  "log_ENRTOT", "log(Total Enrollment)", "Enrollment & student composition",
+  "log_EFUG1ST", "log(First-time UG Enrollment)", "Enrollment & student composition",
+  "log_EFUGCNT", "log(UG Degree-Seeking Count)", "Enrollment & student composition",
+  "log_EFASIAT", "log(Asian Enrollment)", "Enrollment & student composition",
+  "log_EFBKAAT", "log(Black Enrollment)", "Enrollment & student composition",
+  "log_EFHISPT", "log(Hispanic Enrollment)", "Enrollment & student composition",
+  "log_EFNRALT", "log(International Enrollment)", "Enrollment & student composition",
+  "log_EFWHITT", "log(White Enrollment)", "Enrollment & student composition",
+  "log_EFNHPIT", "log(NHPI Enrollment)", "Enrollment & student composition",
+  
+  # Selectivity
+  "GBA6RTT", "6-Year Graduation Rate", "Selectivity & outcomes",
+  "GBA4RTT", "4-Year Graduation Rate", "Selectivity & outcomes",
+  "GRRTM", "Graduation Rate (Men)", "Selectivity & outcomes",
+  "GRRTW", "Graduation Rate (Women)", "Selectivity & outcomes",
+  "ACTCM50", "ACT 50th Percentile", "Selectivity & outcomes",
+  "SATVR50", "SAT Verbal 50th", "Selectivity & outcomes",
+  "SATMT50", "SAT Math 50th", "Selectivity & outcomes",
+  "DVADM01", "Admission Rate", "Selectivity & outcomes",
+  
+  # Campus
+  "STUFACR", "Student-Faculty Ratio", "Campus life & resources",
+  "sqrt_STUFACR", "sqrt(Student-Faculty Ratio)", "Campus life & resources",
+  "SLO6_YES", "Study Abroad (Yes=1)", "Campus life & resources",
+  
+  # Costs
+  "AGRNT_N", "Grant Recipients", "Costs & aid",
+  "log_AGRNT_N", "log(Grant Recipients)", "Costs & aid",
+  "AGRNT_T", "Grant Aid Total", "Costs & aid",
+  "log_AGRNT_T", "log(Grant Aid Total)", "Costs & aid",
+  "UDGPGRNTN", "Pell Recipients", "Costs & aid",
+  "log_UDGPGRNTN", "log(Pell Recipients)", "Costs & aid",
+  "UFLOANN", "Federal Loan Recipients", "Costs & aid",
+  "log_UFLOANN", "log(Loan Recipients)", "Costs & aid",
+  "APPLFEEU", "Application Fee", "Costs & aid",
+  
+  # Profile
+  "HBCU_YES", "HBCU (Yes=1)", "Institution profile",
+  "RELAFFIL_NO", "No Religious Affiliation", "Institution profile",
+  "ASSOC1_YES", "NCAA Member", "Institution profile",
+  "RSCH_HIGH", "High Research (R1/R2)", "Institution profile",
+  "RSCH_INSTS", "Research Institutions", "Institution profile",
+  "MIXED", "Mixed Carnegie Type", "Institution profile",
+  "HEALTH", "Health Focus", "Institution profile",
+  "PROFESSIONS", "Professional Focus", "Institution profile",
+  "ARTS", "Arts Focus", "Institution profile",
+  "STEM", "STEM Focus", "Institution profile",
+  "FORPROFIT", "For-Profit", "Institution profile",
+  
+  # Locale 
+  "LOCALE_SUBURB", "Suburban Campus", "School Location",
+  "LOCALE_TOWN", "Small Town / College Town", "School Location",
+  "LOCALE_RURAL", "Rural / Remote Campus", "School Location",
+  "LOCALE_CITY", "Urban / City Campus", "School Location"
 )
 
 label_var <- function(v) {
-  if (!length(v)) return(character(0))
-  ifelse(v %in% names(pretty_names), pretty_names[v], v)
+  out <- var_meta$label[match(v, var_meta$var)]
+  ifelse(is.na(out), v, out)
+}
+
+choices_by_category <- function(cat) {
+  subset <- var_meta[var_meta$category == cat, ]
+  setNames(subset$var, subset$label)
 }
 
 sig_stars <- function(p) {
@@ -342,17 +304,18 @@ ui <- fluidPage(
             
             tags$div(
               style = "color: #737373;",
-              selectInput("enrollment_vars", "Enrollment & student composition", choices = enrollment_choices, multiple = TRUE),
+              selectInput("enrollment_vars", "Enrollment & student composition", choices = choices_by_category("Enrollment & student composition"), multiple = TRUE),
               selectInput(
                 "selectivity_vars",
                 "Selectivity & student outcomes",
-                choices = selectivity_choices,
+                choices = choices_by_category("Selectivity & outcomes"),
                 multiple = TRUE,
+                # pre-select
                 selected = "GBA6RTT"
                 ),
-              selectInput("campus_vars", "Campus life & resources", choices = campus_choices, multiple = TRUE),
-              selectInput("costs_vars", "Costs, aid & debt", choices = costs_choices, multiple = TRUE),
-              selectInput("profile_vars", "Institution profile", choices = profile_choices, multiple = TRUE)
+              selectInput("campus_vars", "Campus life & resources", choices = choices_by_category("Campus life & resources"), multiple = TRUE),
+              selectInput("costs_vars", "Costs, aid & debt", choices = choices_by_category("Costs & aid"), multiple = TRUE),
+              selectInput("profile_vars", "Institution profile", choices = choices_by_category("Institution profile"), multiple = TRUE)
             ),
             
             selectInput("x_axis_var", "Select predictor for X axis", choices = character(0))
@@ -365,7 +328,12 @@ ui <- fluidPage(
             "School Filter",
             tags$div(
               style = "padding:10px; color:#666;",
-              "School filtering controls will go here (e.g., HBCU, Carnegie type, public/private, etc.)."
+              checkboxGroupInput(
+                "locale_filter",
+                label = "Degree of urbanization (Locale)",
+                choices = choices_by_category("School Location"),
+                selected = c("LOCALE_CITY", "LOCALE_SUBURB", "LOCALE_TOWN", "LOCALE_RURAL")
+              )
             )
           )
         )
@@ -446,6 +414,34 @@ null_chr <- function(x) if (is.null(x)) character(0) else x
 `%||%` <- function(a, b) if (!is.null(a) && length(a) && nzchar(a[1])) a else b
 
 server <- function(input, output, session) {
+  filtered_data <- reactive({
+    df <- app_df
+    
+    loc <- input$locale_filter
+    
+    # if nothing selected
+    if (is.null(loc) || length(loc) == 0) {
+      return(app_df)   # show everything by default
+    }
+    
+    keep <- rep(FALSE, nrow(df))
+    
+    if ("LOCALE_CITY" %in% loc) {
+      keep <- keep | df$LOCALE_CITY == 1
+    }
+    if ("LOCALE_SUBURB" %in% loc) {
+      keep <- keep | df$LOCALE_SUBURB == 1
+    }
+    if ("LOCALE_TOWN" %in% loc) {
+      keep <- keep | df$LOCALE_TOWN == 1
+    }
+    if ("LOCALE_RURAL" %in% loc) {
+      keep <- keep | df$LOCALE_RURAL == 1
+    }
+    
+    df[keep, ]
+  })
+  
   selected_y_groups <- reactive({
     gy <- input$y_groups
     gy <- gy[gy %in% names(y_group_meta)]
@@ -483,7 +479,7 @@ server <- function(input, output, session) {
     gy <- selected_y_groups()
     if (!length(gy)) return(app_df[0, , drop = FALSE])
     cols <- unique(c("INSTNM", "CONTROL", "TUITION2", "TUITION3", x_vars))
-    base_dat <- app_df %>% select(all_of(cols))
+    base_dat <- filtered_data() %>% select(all_of(cols))
     if (length(x_vars) > 0) base_dat <- base_dat %>% filter(if_all(all_of(x_vars), ~ !is.na(.)))
 
     out_list <- lapply(gy, function(g) {
