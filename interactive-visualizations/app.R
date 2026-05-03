@@ -105,6 +105,13 @@ app_df <- raw_df %>%
       "Not applicable",
       "Non-Denominational"
     )),
+    RELAFFIL_YES = as.integer(
+      !is.na(RELAFFIL) &
+        !(as.character(RELAFFIL) %in% c(
+          "Not applicable",
+          "Non-Denominational"
+        ))
+    ),
     
     ATHASSOC_YES = as.integer(!is.na(ATHASSOC) & as.character(ATHASSOC) == "Yes"),
     ASSOC1_YES = as.integer(!is.na(ASSOC1) & as.character(ASSOC1) == "Yes"),
@@ -249,7 +256,7 @@ var_meta <- tibble::tribble(
   
   # Institution special type
   "HBCU_YES", "Historically Black College/University (HBCU)", "Institution Special Type",
-  "RELAFFIL_NO", "No Religious Affiliation", "Institution Special Type",
+  "RELAFFIL_YES", "Religious Affliated", "Institution Special Type",
   "ASSOC1_YES", "Member of National Collegiate Athletic Association (NCAA)", "Institution Special Type",
   "ATHASSOC_YES", "Member of National Athletic Association", "Institution Special Type",
 )
@@ -576,8 +583,8 @@ server <- function(input, output, session) {
         df <- df[df$HBCU_YES == 1, ]
       }
       
-      if ("RELAFFIL_NO" %in% spe) {
-        df <- df[df$RELAFFIL_NO == 1, ]
+      if ("RELAFFIL_YES" %in% spe) {
+        df <- df[df$RELAFFIL_YES == 1, ]
       }
       
       if ("ASSOC1_YES" %in% spe) {
