@@ -580,10 +580,6 @@ server <- function(input, output, session) {
         df <- df[df$RELAFFIL_NO == 1, ]
       }
       
-      if ("HOSPITAL_YES" %in% spe) {
-        df <- df[df$HOSPITAL_YES == 1, ]
-      }
-      
       if ("ASSOC1_YES" %in% spe) {
         df <- df[df$ASSOC1_YES == 1, ]
       }
