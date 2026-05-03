@@ -116,10 +116,14 @@ app_df <- raw_df %>%
     )),
     STEM = as.integer(!is.na(CARNEGIEAPM) & as.character(CARNEGIEAPM) == "Special Focus: Technology, Engineering, and Sciences"),
     FORPROFIT = as.integer(CONTROL == "Private for-profit"),
+    
+    # Locale
     LOCALE_SUBURB = as.integer(LOCALE %in% c("Suburb: Small", "Suburb: Large", "Suburb: Midsize")),
     LOCALE_TOWN = as.integer(LOCALE %in% c("Town: Distant", "Town: Remote", "Town: Fringe")),
     LOCALE_RURAL = as.integer(LOCALE %in% c("Rural: Remote", "Rural: Fringe", "Rural: Distant")),
     LOCALE_CITY = as.integer(LOCALE %in% c("City: Midsize", "City: Small", "City: Large")),
+    
+    # Region
     NORTHEAST = as.integer(OBEREG %in% c(
       "New England (CT, ME, MA, NH, RI, VT)",
       "Mid East (DE, DC, MD, NJ, NY, PA)"
@@ -139,6 +143,11 @@ app_df <- raw_df %>%
       "Far West (AK, CA, HI, NV, OR, WA)",
       "Rocky Mountains (CO, ID, MT, UT, WY)"
     )),
+    
+    # Highest degree offered
+    HDEOFR_DOC = ifelse(HDEGOFR1 %in% c("Doctor's degree - research/scholarship", "Doctor's degree - professional practice", "Doctor's degree - research/scholarship and professional practice", "Doctor's degree - other"), 1, 0),
+    HDEOFR_MAS = ifelse(HDEGOFR1 %in% c("Master's degree"), 1, 0),
+    HDEOFR_BAC = ifelse(HDEGOFR1 %in% c("Bachelor's degree"), 1, 0)
   )
 
 # ----------- PRETTY NAMES SOURCE ----------- 
@@ -218,7 +227,13 @@ var_meta <- tibble::tribble(
   "NORTHEAST", "Northeast Region", "School Region",
   "MIDWEST", "Midwest Region", "School Region",
   "SOUTH", "Southern Region", "School Region",
-  "WEST", "Western Region", "School Region"
+  "WEST", "Western Region", "School Region",
+  
+  # Highest degree offered
+  "HDEOFR_DOC", "Doctor's Degree", "Highest Degree Offered",
+  "HDEOFR_MAS", "Master's Degree", "Highest Degree Offered",
+  "HDEOFR_BAC", "Bachelor's Degree", "Highest Degree Offered"
+  
 )
 
 label_var <- function(v) {
@@ -368,6 +383,15 @@ ui <- fluidPage(
                 label = "US Region",
                 choices = choices_by_category("School Region"),
                 selected = choices_by_category("School Region") %>% names()
+              ),
+              
+              tags$hr(),
+              
+              checkboxGroupInput(
+                "degree_filter",
+                "Highest Degree Offered",
+                choices = choices_by_category("Highest Degree Offered"),
+                selected = choices_by_category("Highest Degree Offered") %>% names()
               )
             )
           )
@@ -454,6 +478,7 @@ server <- function(input, output, session) {
     
     loc <- input$locale_filter
     reg <- input$region_filter
+    deg <- input$degree_filter
 
     # -----------------------
     # LOCALE FILTER
@@ -461,9 +486,9 @@ server <- function(input, output, session) {
     if (!is.null(loc) && length(loc)) {
       df <- df[
         (("LOCALE_CITY" %in% loc)   & df$LOCALE_CITY == 1) |
-          (("LOCALE_SUBURB" %in% loc) & df$LOCALE_SUBURB == 1) |
-          (("LOCALE_TOWN" %in% loc)   & df$LOCALE_TOWN == 1) |
-          (("LOCALE_RURAL" %in% loc)  & df$LOCALE_RURAL == 1),
+        (("LOCALE_SUBURB" %in% loc) & df$LOCALE_SUBURB == 1) |
+        (("LOCALE_TOWN" %in% loc)   & df$LOCALE_TOWN == 1) |
+        (("LOCALE_RURAL" %in% loc)  & df$LOCALE_RURAL == 1),
       ]
     }
     
@@ -473,9 +498,20 @@ server <- function(input, output, session) {
     if (!is.null(reg) && length(reg)) {
       df <- df[
         (("NORTHEAST" %in% reg) & df$NORTHEAST == 1) |
-          (("MIDWEST" %in% reg)   & df$MIDWEST == 1) |
-          (("SOUTH" %in% reg)     & df$SOUTH == 1) |
-          (("WEST" %in% reg)      & df$WEST == 1),
+        (("MIDWEST" %in% reg)   & df$MIDWEST == 1) |
+        (("SOUTH" %in% reg)     & df$SOUTH == 1) |
+        (("WEST" %in% reg)      & df$WEST == 1),
+      ]
+    }
+    
+    # -----------------------
+    # DEGREE FILTER
+    # -----------------------
+    if (!is.null(deg) && length(deg)) {
+      df <- df[
+        (("HDEOFR_DOC" %in% deg)   & df$HDEOFR_DOC == 1) |
+        (("HDEOFR_MAS" %in% deg)   & df$HDEOFR_MAS == 1) |
+        (("HDEOFR_BAC" %in% deg)   & df$HDEOFR_BAC == 1),
       ]
     }
     

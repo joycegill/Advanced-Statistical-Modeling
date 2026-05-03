@@ -83,7 +83,7 @@ public1 <- df %>%
     
     # HDEGOFR1: Highest degree offered
     ## not include Bachelor
-    HDEOFR_DOC = ifelse(HDEGOFR1 %in% c("Doctor's degree - research/scholarship", "Doctor's degree - professional practice", "Doctor's degree - research/scholarship and professional practice"), 1, 0),
+    HDEOFR_DOC = ifelse(HDEGOFR1 %in% c("Doctor's degree - research/scholarship", "Doctor's degree - professional practice", "Doctor's degree - research/scholarship and professional practice", "Doctor's degree - other"), 1, 0),
     HDEOFR_MAS = ifelse(HDEGOFR1 %in% c("Master's degree"), 1, 0),
     
     # OBEREG: Bureau of Economic Analysis (BEA) regions
