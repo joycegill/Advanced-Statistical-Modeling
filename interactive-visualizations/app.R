@@ -317,31 +317,58 @@ ui <- fluidPage(
     column(
       width = 3,
       wellPanel(
-        checkboxGroupInput(
-          "y_groups",
-          "Select tuition groups (Y)",
-          choices = y_group_choices,
-          selected = unname(y_group_choices)
-        ),
-        tags$p(
-          style = "font-weight: bold; margin-bottom: 8px;",
-          "Select predictors (X). You may choose more than one per category; log/sqrt transforms are applied in the data where indicated."
-        ),
-        tags$div(
-          style = "color: #737373;",
-          selectInput("enrollment_vars", "Enrollment & student composition", choices = enrollment_choices, multiple = TRUE),
-          selectInput(
-            "selectivity_vars",
-            "Selectivity & student outcomes",
-            choices = selectivity_choices,
-            multiple = TRUE,
-            selected = "GBA6RTT"
+        h4("Model Builder"),
+        tabsetPanel(
+          id = "left_panel_tabs",
+          type = "tabs",
+          
+          # -------------------------
+          # TAB 1: MODEL INPUTS
+          # -------------------------
+          tabPanel(
+            "Model Inputs",
+            
+            checkboxGroupInput(
+              "y_groups",
+              "Select tuition groups (Y)",
+              choices = y_group_choices,
+              selected = unname(y_group_choices)
+            ),
+            
+            tags$p(
+              style = "font-weight: bold; margin-bottom: 8px;",
+              "Select predictors (X). You may choose more than one per category; log/sqrt transforms are applied in the data where indicated."
+            ),
+            
+            tags$div(
+              style = "color: #737373;",
+              selectInput("enrollment_vars", "Enrollment & student composition", choices = enrollment_choices, multiple = TRUE),
+              selectInput(
+                "selectivity_vars",
+                "Selectivity & student outcomes",
+                choices = selectivity_choices,
+                multiple = TRUE,
+                selected = "GBA6RTT"
+                ),
+              selectInput("campus_vars", "Campus life & resources", choices = campus_choices, multiple = TRUE),
+              selectInput("costs_vars", "Costs, aid & debt", choices = costs_choices, multiple = TRUE),
+              selectInput("profile_vars", "Institution profile", choices = profile_choices, multiple = TRUE)
+            ),
+            
+            selectInput("x_axis_var", "Select predictor for X axis", choices = character(0))
           ),
-          selectInput("campus_vars", "Campus life & resources", choices = campus_choices, multiple = TRUE),
-          selectInput("costs_vars", "Costs, aid & debt", choices = costs_choices, multiple = TRUE),
-          selectInput("profile_vars", "Institution profile", choices = profile_choices, multiple = TRUE)
-        ),
-        selectInput("x_axis_var", "Select predictor for X axis", choices = character(0))
+          
+          # -------------------------
+          # TAB 2: SCHOOL FILTER
+          # -------------------------
+          tabPanel(
+            "School Filter",
+            tags$div(
+              style = "padding:10px; color:#666;",
+              "School filtering controls will go here (e.g., HBCU, Carnegie type, public/private, etc.)."
+            )
+          )
+        )
       )
     ),
     column(
