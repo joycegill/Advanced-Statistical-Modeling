@@ -120,6 +120,25 @@ app_df <- raw_df %>%
     LOCALE_TOWN = as.integer(LOCALE %in% c("Town: Distant", "Town: Remote", "Town: Fringe")),
     LOCALE_RURAL = as.integer(LOCALE %in% c("Rural: Remote", "Rural: Fringe", "Rural: Distant")),
     LOCALE_CITY = as.integer(LOCALE %in% c("City: Midsize", "City: Small", "City: Large")),
+    NORTHEAST = as.integer(OBEREG %in% c(
+      "New England (CT, ME, MA, NH, RI, VT)",
+      "Mid East (DE, DC, MD, NJ, NY, PA)"
+    )),
+    
+    MIDWEST = as.integer(OBEREG %in% c(
+      "Great Lakes (IL, IN, MI, OH, WI)",
+      "Plains (IA, KS, MN, MO, NE, ND, SD)"
+    )),
+    
+    SOUTH = as.integer(OBEREG %in% c(
+      "Southeast (AL, AR, FL, GA, KY, LA, MS, NC, SC, TN, VA, WV)",
+      "Southwest (AZ, NM, OK, TX)"
+    )),
+    
+    WEST = as.integer(OBEREG %in% c(
+      "Far West (AK, CA, HI, NV, OR, WA)",
+      "Rocky Mountains (CO, ID, MT, UT, WY)"
+    )),
   )
 
 # ----------- PRETTY NAMES SOURCE ----------- 
@@ -193,7 +212,13 @@ var_meta <- tibble::tribble(
   "LOCALE_SUBURB", "Suburban Campus", "School Location",
   "LOCALE_TOWN", "Small Town / College Town", "School Location",
   "LOCALE_RURAL", "Rural / Remote Campus", "School Location",
-  "LOCALE_CITY", "Urban / City Campus", "School Location"
+  "LOCALE_CITY", "Urban / City Campus", "School Location",
+  
+  # Region
+  "NORTHEAST", "Northeast Region", "School Region",
+  "MIDWEST", "Midwest Region", "School Region",
+  "SOUTH", "Southern Region", "School Region",
+  "WEST", "Western Region", "School Region"
 )
 
 label_var <- function(v) {
@@ -328,11 +353,21 @@ ui <- fluidPage(
             "School Filter",
             tags$div(
               style = "padding:10px; color:#666;",
+              
               checkboxGroupInput(
                 "locale_filter",
                 label = "Degree of urbanization (Locale)",
                 choices = choices_by_category("School Location"),
-                selected = c("LOCALE_CITY", "LOCALE_SUBURB", "LOCALE_TOWN", "LOCALE_RURAL")
+                selected = choices_by_category("School Location") %>% names()
+              ),
+              
+              tags$hr(),
+              
+              checkboxGroupInput(
+                "region_filter",
+                label = "US Region",
+                choices = choices_by_category("School Region"),
+                selected = choices_by_category("School Region") %>% names()
               )
             )
           )
@@ -418,28 +453,33 @@ server <- function(input, output, session) {
     df <- app_df
     
     loc <- input$locale_filter
-    
-    # if nothing selected
-    if (is.null(loc) || length(loc) == 0) {
-      return(app_df)   # show everything by default
+    reg <- input$region_filter
+
+    # -----------------------
+    # LOCALE FILTER
+    # -----------------------
+    if (!is.null(loc) && length(loc)) {
+      df <- df[
+        (("LOCALE_CITY" %in% loc)   & df$LOCALE_CITY == 1) |
+          (("LOCALE_SUBURB" %in% loc) & df$LOCALE_SUBURB == 1) |
+          (("LOCALE_TOWN" %in% loc)   & df$LOCALE_TOWN == 1) |
+          (("LOCALE_RURAL" %in% loc)  & df$LOCALE_RURAL == 1),
+      ]
     }
     
-    keep <- rep(FALSE, nrow(df))
-    
-    if ("LOCALE_CITY" %in% loc) {
-      keep <- keep | df$LOCALE_CITY == 1
-    }
-    if ("LOCALE_SUBURB" %in% loc) {
-      keep <- keep | df$LOCALE_SUBURB == 1
-    }
-    if ("LOCALE_TOWN" %in% loc) {
-      keep <- keep | df$LOCALE_TOWN == 1
-    }
-    if ("LOCALE_RURAL" %in% loc) {
-      keep <- keep | df$LOCALE_RURAL == 1
+    # -----------------------
+    # REGION FILTER
+    # -----------------------
+    if (!is.null(reg) && length(reg)) {
+      df <- df[
+        (("NORTHEAST" %in% reg) & df$NORTHEAST == 1) |
+          (("MIDWEST" %in% reg)   & df$MIDWEST == 1) |
+          (("SOUTH" %in% reg)     & df$SOUTH == 1) |
+          (("WEST" %in% reg)      & df$WEST == 1),
+      ]
     }
     
-    df[keep, ]
+    df
   })
   
   selected_y_groups <- reactive({
