@@ -216,6 +216,8 @@ var_meta <- tibble::tribble(
   "APPLFEEU", "Application Fee", "Costs & aid",
   
   # Profile
+  "HDEOFR_DOC", "Doctor - Highest Degree (Yes=1)", "Institution profile",
+  "HDEOFR_MAS", "Master - Highest Degree (Yes=1)", "Institution profile",
   "HBCU_YES", "HBCU (Yes=1)", "Institution profile",
   "RELAFFIL_NO", "No Religious Affiliation", "Institution profile",
   "ASSOC1_YES", "NCAA Member", "Institution profile",
