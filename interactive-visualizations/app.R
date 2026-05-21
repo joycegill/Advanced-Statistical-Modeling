@@ -323,8 +323,8 @@ hover_x_lines <- function(x1, xv) {
   }
 }
 
-MIN_N_MODEL <- 25L
-MIN_N_MODEL_SECTOR <- 15L
+# Minimum rows for OLS: intercept + p predictors needs residual df >= 1 => n >= p + 2
+MIN_ROWS_LM <- function(p) as.integer(p) + 2L
 
 ui <- fluidPage(
   titlePanel(
@@ -494,10 +494,52 @@ tuition_plot_layout <- function(p, lims, y_title, x_title) {
     plotly::config(scrollZoom = TRUE, displayModeBar = TRUE)
 }
 
-# Fit lm only when there is enough data
-fit_lm_safe <- function(y_var, x_vars, dat, min_n) {
-  if (length(x_vars) == 0 || nrow(dat) < min_n) return(NULL)
-  stats::lm(as.formula(paste(y_var, "~", paste(x_vars, collapse = " + "))), data = dat)
+# Fit lm when complete cases meet minimum for identifiability (n >= p + 2); else fit = NULL with diagnostics in returned list
+fit_lm_for_group <- function(y_var, x_vars, dat) {
+  p <- length(x_vars)
+  n <- nrow(dat)
+  need <- MIN_ROWS_LM(p)
+  if (p == 0L) {
+    return(list(fit = NULL, n_complete = n, p = p, min_needed = need))
+  }
+  fit <- if (n >= need) {
+    tryCatch(
+      stats::lm(as.formula(paste(y_var, "~", paste(x_vars, collapse = " + "))), data = dat),
+      error = function(e) NULL,
+      warning = function(w) NULL
+    )
+  } else {
+    NULL
+  }
+  list(fit = fit, n_complete = n, p = p, min_needed = need)
+}
+
+# R² and adjusted R² for Gaussian lm, matching stats::summary.lm (see ?summary.lm).
+# With intercept: R² = 1 − RSS/Σ(y−ȳ)², adj. R² = 1 − (1−R²)(n−1)/df.residual.
+# Without intercept: R² = 1 − RSS/Σy², adj. R² = 1 − (1−R²)n/df.residual.
+lm_rsquared_stats <- function(fit) {
+  m <- stats::model.frame(fit)
+  y <- stats::model.response(m)
+  n <- stats::nobs(fit)
+  rss <- sum(stats::residuals(fit)^2, na.rm = TRUE)
+  tt <- stats::terms(fit)
+  has_int <- !is.null(attr(tt, "intercept")) && attr(tt, "intercept") > 0L
+  if (has_int) {
+    tss <- sum((y - mean(y))^2)
+    r2 <- if (is.finite(tss) && tss > 0) 1 - rss / tss else NA_real_
+    df_int <- 1L
+  } else {
+    tss <- sum(y^2)
+    r2 <- if (is.finite(tss) && tss > 0) 1 - rss / tss else NA_real_
+    df_int <- 0L
+  }
+  rdf <- fit$df.residual
+  adj_r2 <- if (is.finite(r2) && !is.na(r2) && rdf > 0) {
+    1 - (1 - r2) * ((n - df_int) / rdf)
+  } else {
+    NA_real_
+  }
+  list(r_squared = r2, adj_r_squared = adj_r2)
 }
 
 # Multi-select inputs can be NULL; treat as no selection
@@ -662,7 +704,7 @@ server <- function(input, output, session) {
 
     setNames(lapply(gy, function(g) {
       d <- dat[dat$y_group == g, , drop = FALSE]
-      fit_lm_safe("y_plot", x_vars, d, if (length(gy) == 1) MIN_N_MODEL else MIN_N_MODEL_SECTOR)
+      fit_lm_for_group("y_plot", x_vars, d)
     }), gy)
   })
 
@@ -676,7 +718,7 @@ server <- function(input, output, session) {
 
   # Check whether at least one model was fit successfully
   has_valid_plot_model <- function(mf) {
-    length(mf) > 0 && any(vapply(mf, function(x) !is.null(x), logical(1)))
+    length(mf) > 0 && any(vapply(mf, function(x) !is.null(x$fit), logical(1)))
   }
 
   # Build plotting data (x, y, sector, search highlight)
@@ -817,7 +859,7 @@ server <- function(input, output, session) {
     }
 
     for (grp in names(mf)) {
-      fit <- mf[[grp]]
+      fit <- mf[[grp]]$fit
       if (is.null(fit)) next
       md_grp <- md[md$y_group == grp, , drop = FALSE]
       p <- add_line_for_fit(p, fit, md_grp, colors[[grp]])
@@ -859,7 +901,7 @@ server <- function(input, output, session) {
       )
     }
 
-    valid_groups <- names(mf)[vapply(mf, function(x) !is.null(x), logical(1))]
+    valid_groups <- names(mf)[vapply(mf, function(x) !is.null(x$fit), logical(1))]
     if (!length(valid_groups)) {
       empty_msg("Residuals unavailable (model did not fit).")
       return(invisible(NULL))
@@ -873,33 +915,55 @@ server <- function(input, output, session) {
     )
     fill_cols <- c(public_in_state = "#1f77b4", public_out_of_state = "#17becf", private = "#ff7f0e")
     for (grp in valid_groups) {
-      fit <- mf[[grp]]
+      fit <- mf[[grp]]$fit
       res <- stats::residuals(fit)
       lab <- y_group_labels[[grp]]
       draw_qq_hist(res, paste0(lab, ": Normal Q-Q"), paste0(lab, ": histogram"), fill_cols[[grp]])
     }
   })
 
-  # Build model summary text for the right panel
-  format_model_html <- function(fit, y_name) {
+  # Build model summary text for the right panel (obj = list(fit, n_complete, p, min_needed))
+  format_model_html <- function(obj, y_name) {
+    fit <- obj$fit
+    n_c <- obj$n_complete
+    min_need <- obj$min_needed
+    p_n <- obj$p
+
     if (is.null(fit)) {
-      return("<p><em>Not enough rows in this group to fit the model.</em></p>")
+      msg <- if (n_c < min_need) {
+        paste0(
+          "The linear model is not estimated for this group: complete cases N = ",
+          format(n_c, big.mark = ","), " but at least ", format(min_need, big.mark = ","),
+          " rows are required for ", p_n, " predictor", if (p_n != 1L) "s" else "", " (intercept + predictors)."
+        )
+      } else {
+        "The model could not be estimated (for example, collinear predictors or a singular design matrix)."
+      }
+      return(paste0(
+        "<p><em>", msg, "</em></p>",
+        "<p><b>N (complete cases in group)</b><br>", format(n_c, big.mark = ","), "</p>"
+      ))
     }
+
     s <- summary(fit)
     coefs <- s$coefficients
     pred <- setdiff(rownames(coefs), "(Intercept)")
     lbl <- label_var(pred)
 
-    eq <- paste0(
-      y_name, " = ", round(coefs["(Intercept)", "Estimate"], 3),
-      paste0(" + (", round(coefs[pred, "Estimate"], 3), " × ", lbl, ")", collapse = "")
-    )
-
-    p_lines <- vapply(seq_along(pred), function(i) {
-      pv <- coefs[pred[i], "Pr(>|t|)"]
-      st <- sig_stars(pv)
-      paste0(lbl[i], ": p = ", formatC(pv, format = "e", digits = 2), if (nzchar(st)) paste0(" ", st) else "")
-    }, character(1))
+    if (length(pred) == 0L) {
+      eq <- paste0(y_name, " = ", round(coefs["(Intercept)", "Estimate"], 3))
+      p_lines_chr <- character(0)
+    } else {
+      eq <- paste0(
+        y_name, " = ", round(coefs["(Intercept)", "Estimate"], 3),
+        paste0(" + (", round(coefs[pred, "Estimate"], 3), " × ", lbl, ")", collapse = "")
+      )
+      p_lines_chr <- vapply(seq_along(pred), function(i) {
+        pv <- coefs[pred[i], "Pr(>|t|)"]
+        st <- sig_stars(pv)
+        paste0(lbl[i], ": p = ", formatC(pv, format = "e", digits = 2), if (nzchar(st)) paste0(" ", st) else "")
+      }, character(1))
+    }
 
     fs <- s$fstatistic
     n_obs <- stats::nobs(fit)
@@ -920,13 +984,24 @@ server <- function(input, output, session) {
       f_line <- "F-statistic not available"
     }
 
+    rs <- lm_rsquared_stats(fit)
+    r2 <- rs$r_squared
+    adj_r2 <- rs$adj_r_squared
+
+    p_block <- if (length(p_lines_chr)) {
+      paste0("<br><br><b>Predictor p-values</b><br>", paste(p_lines_chr, collapse = "<br>"))
+    } else {
+      ""
+    }
+
     paste0(
       "<b>Equation</b><br>", eq,
-      "<br><br><b>Predictor p-values</b><br>", paste(p_lines, collapse = "<br>"),
+      p_block,
       "<br><br><b>Overall model</b><br>", f_line,
       "<br>p-value: ", f_p_str,
-      "<br><br><b>R-squared</b><br>", round(s$r.squared, 4),
-      "<br><b>Adjusted R-squared</b><br>", round(s$adj.r.squared, 4)
+      "<br><br><b>R-squared</b><br>", round(r2, 4),
+      "<br><b>Adjusted R-squared</b><br>", round(adj_r2, 4),
+      "<br><br><b>N (complete cases)</b><br>", format(n_obs, big.mark = ",")
     )
   }
 
@@ -946,7 +1021,7 @@ server <- function(input, output, session) {
 
     if (!length(gy)) return(HTML("Select at least one tuition group."))
     if (!length(x_vars)) return(HTML("Select at least one predictor from the category lists."))
-    if (!length(mf)) return(HTML("Not enough complete rows to fit a model."))
+    if (!length(mf)) return(HTML("Select predictors and at least one tuition group to see model statistics."))
 
     if (length(gy) == 1) {
       grp <- gy[[1]]
