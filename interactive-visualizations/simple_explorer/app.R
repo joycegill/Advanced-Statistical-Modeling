@@ -221,6 +221,7 @@ var_meta <- tibble::tribble(
   # Profile
   "HDEOFR_DOC", "Doctor - Highest Degree (Yes=1)", "Institution profile",
   "HDEOFR_MAS", "Master - Highest Degree (Yes=1)", "Institution profile",
+  "HDEOFR_BAC", "Bachelor - Highest Degree (Yes=1)", "Institution profile",
   "HBCU_YES", "HBCU (Yes=1)", "Institution profile",
   "RELAFFIL_NO", "No Religious Affiliation", "Institution profile",
   "ASSOC1_YES", "NCAA Member", "Institution profile",
@@ -245,21 +246,13 @@ var_meta <- tibble::tribble(
   "SOUTH", "Southern Region", "School Region",
   "WEST", "Western Region", "School Region",
 
-  # Highest degree offered
-  "HDEOFR_DOC", "Doctor's Degree", "Highest Degree Offered",
-  "HDEOFR_MAS", "Master's Degree", "Highest Degree Offered",
-  "HDEOFR_BAC", "Bachelor's Degree", "Highest Degree Offered",
-
-  # Institution special type
-  "HBCU_YES", "Historically Black College/University (HBCU)", "Institution Special Type",
-  "RELAFFIL_YES", "Religious Affliated", "Institution Special Type",
-  "ASSOC1_YES", "Member of National Collegiate Athletic Association (NCAA)", "Institution Special Type",
-  "ATHASSOC_YES", "Member of National Athletic Association", "Institution Special Type"
+  "RELAFFIL_YES", "Religious Affliated", "Institution profile",
+  "ATHASSOC_YES", "Member of National Athletic Association", "Institution profile"
 )
 
-model_var_tbl <- dplyr::distinct(var_meta, var, .keep_all = TRUE)
-model_var_tbl <- model_var_tbl[model_var_tbl$var %in% names(app_df), , drop = FALSE]
-model_var_tbl <- model_var_tbl[!model_var_tbl$var %in% c("INSTNM", "CONTROL"), , drop = FALSE]
+model_var_tbl <- var_meta %>%
+  distinct(var, .keep_all = TRUE) %>%
+  filter(var %in% names(app_df), !var %in% c("INSTNM", "CONTROL"))
 
 xy_choices <- setNames(model_var_tbl$var, model_var_tbl$label)
 
@@ -321,8 +314,8 @@ fit_lm_xy <- function(dat, xv, yv, min_n) {
   )
 }
 
-add_lm_band <- function(p, d, xv, yv, line_color = "rgba(0,0,0,0.85)", fill_color = "rgba(31,119,180,0.18)", name_prefix = "") {
-  fit <- fit_lm_xy(d, xv, yv, MIN_N_MODEL)
+add_lm_band <- function(p, d, xv, yv, fit = NULL, line_color = "rgba(0,0,0,0.85)", fill_color = "rgba(31,119,180,0.18)", name_prefix = "") {
+  if (is.null(fit)) fit <- fit_lm_xy(d, xv, yv, MIN_N_MODEL)
   if (is.null(fit)) return(p)
   xr <- range(d[[xv]], na.rm = TRUE)
   if (!all(is.finite(xr)) || diff(xr) == 0) return(p)
@@ -448,7 +441,7 @@ server <- function(input, output, session) {
       return(plot_ly() %>% layout(title = "X and Y must be different variables"))
     }
 
-    d <- plot_df(app_df, xv, yv)
+    d <- plot_data()
     if (nrow(d) < 3) {
       return(plot_ly() %>% layout(title = "Not enough complete data for this combination"))
     }
@@ -466,7 +459,8 @@ server <- function(input, output, session) {
       hoverinfo = "text+x+y",
       inherit = FALSE
     )
-    p <- add_lm_band(p, d, xv, yv)
+    mf <- model_fit()
+    p <- add_lm_band(p, d, xv, yv, fit = if (!is.null(mf)) mf$fit else NULL)
 
     p %>% plotly::layout(
       title = list(text = ttl, font = list(size = 15)),

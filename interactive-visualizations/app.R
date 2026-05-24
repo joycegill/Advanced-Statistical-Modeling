@@ -499,9 +499,6 @@ fit_lm_for_group <- function(y_var, x_vars, dat) {
   p <- length(x_vars)
   n <- nrow(dat)
   need <- MIN_ROWS_LM(p)
-  if (p == 0L) {
-    return(list(fit = NULL, n_complete = n, p = p, min_needed = need))
-  }
   fit <- if (n >= need) {
     tryCatch(
       stats::lm(as.formula(paste(y_var, "~", paste(x_vars, collapse = " + "))), data = dat),
@@ -512,34 +509,6 @@ fit_lm_for_group <- function(y_var, x_vars, dat) {
     NULL
   }
   list(fit = fit, n_complete = n, p = p, min_needed = need)
-}
-
-# R² and adjusted R² for Gaussian lm, matching stats::summary.lm (see ?summary.lm).
-# With intercept: R² = 1 − RSS/Σ(y−ȳ)², adj. R² = 1 − (1−R²)(n−1)/df.residual.
-# Without intercept: R² = 1 − RSS/Σy², adj. R² = 1 − (1−R²)n/df.residual.
-lm_rsquared_stats <- function(fit) {
-  m <- stats::model.frame(fit)
-  y <- stats::model.response(m)
-  n <- stats::nobs(fit)
-  rss <- sum(stats::residuals(fit)^2, na.rm = TRUE)
-  tt <- stats::terms(fit)
-  has_int <- !is.null(attr(tt, "intercept")) && attr(tt, "intercept") > 0L
-  if (has_int) {
-    tss <- sum((y - mean(y))^2)
-    r2 <- if (is.finite(tss) && tss > 0) 1 - rss / tss else NA_real_
-    df_int <- 1L
-  } else {
-    tss <- sum(y^2)
-    r2 <- if (is.finite(tss) && tss > 0) 1 - rss / tss else NA_real_
-    df_int <- 0L
-  }
-  rdf <- fit$df.residual
-  adj_r2 <- if (is.finite(r2) && !is.na(r2) && rdf > 0) {
-    1 - (1 - r2) * ((n - df_int) / rdf)
-  } else {
-    NA_real_
-  }
-  list(r_squared = r2, adj_r_squared = adj_r2)
 }
 
 # Multi-select inputs can be NULL; treat as no selection
@@ -716,11 +685,6 @@ server <- function(input, output, session) {
     if (!is.null(xa) && length(xa) && nzchar(xa[1]) && xa[1] %in% xs) xa[1] else xs[[1]]
   })
 
-  # Check whether at least one model was fit successfully
-  has_valid_plot_model <- function(mf) {
-    length(mf) > 0 && any(vapply(mf, function(x) !is.null(x$fit), logical(1)))
-  }
-
   # Build plotting data (x, y, sector, search highlight)
   plot_data <- reactive({
     dat <- model_data()
@@ -883,10 +847,6 @@ server <- function(input, output, session) {
       empty_msg("Select at least one tuition group and predictor.")
       return(invisible(NULL))
     }
-    if (is.null(mf) || !has_valid_plot_model(mf)) {
-      empty_msg("Residuals unavailable (model did not fit).")
-      return(invisible(NULL))
-    }
 
     draw_qq_hist <- function(res, qq_main, hist_main, fill_col) {
       stats::qqnorm(res, main = qq_main, ylab = "Sample quantiles")
@@ -950,19 +910,22 @@ server <- function(input, output, session) {
     pred <- setdiff(rownames(coefs), "(Intercept)")
     lbl <- label_var(pred)
 
-    if (length(pred) == 0L) {
-      eq <- paste0(y_name, " = ", round(coefs["(Intercept)", "Estimate"], 3))
-      p_lines_chr <- character(0)
-    } else {
-      eq <- paste0(
-        y_name, " = ", round(coefs["(Intercept)", "Estimate"], 3),
+    eq <- paste0(
+      y_name, " = ", round(coefs["(Intercept)", "Estimate"], 3),
+      if (length(pred)) {
         paste0(" + (", round(coefs[pred, "Estimate"], 3), " × ", lbl, ")", collapse = "")
-      )
-      p_lines_chr <- vapply(seq_along(pred), function(i) {
+      } else {
+        ""
+      }
+    )
+    p_lines_chr <- if (length(pred)) {
+      vapply(seq_along(pred), function(i) {
         pv <- coefs[pred[i], "Pr(>|t|)"]
         st <- sig_stars(pv)
         paste0(lbl[i], ": p = ", formatC(pv, format = "e", digits = 2), if (nzchar(st)) paste0(" ", st) else "")
       }, character(1))
+    } else {
+      character(0)
     }
 
     fs <- s$fstatistic
@@ -984,10 +947,6 @@ server <- function(input, output, session) {
       f_line <- "F-statistic not available"
     }
 
-    rs <- lm_rsquared_stats(fit)
-    r2 <- rs$r_squared
-    adj_r2 <- rs$adj_r_squared
-
     p_block <- if (length(p_lines_chr)) {
       paste0("<br><br><b>Predictor p-values</b><br>", paste(p_lines_chr, collapse = "<br>"))
     } else {
@@ -999,8 +958,8 @@ server <- function(input, output, session) {
       p_block,
       "<br><br><b>Overall model</b><br>", f_line,
       "<br>p-value: ", f_p_str,
-      "<br><br><b>R-squared</b><br>", round(r2, 4),
-      "<br><b>Adjusted R-squared</b><br>", round(adj_r2, 4),
+      "<br><br><b>R-squared</b><br>", round(s$r.squared, 4),
+      "<br><b>Adjusted R-squared</b><br>", round(s$adj.r.squared, 4),
       "<br><br><b>N (complete cases)</b><br>", format(n_obs, big.mark = ",")
     )
   }
