@@ -136,12 +136,15 @@ app_df <- raw_df %>%
     FORPROFIT = as.integer(CONTROL == "Private for-profit"),
     
     # Locale
+    LOCALE        = as.character(LOCALE),
     LOCALE_SUBURB = as.integer(LOCALE %in% c("Suburb: Small", "Suburb: Large", "Suburb: Midsize")),
-    LOCALE_TOWN = as.integer(LOCALE %in% c("Town: Distant", "Town: Remote", "Town: Fringe")),
-    LOCALE_RURAL = as.integer(LOCALE %in% c("Rural: Remote", "Rural: Fringe", "Rural: Distant")),
-    LOCALE_CITY = as.integer(LOCALE %in% c("City: Midsize", "City: Small", "City: Large")),
+    LOCALE_TOWN   = as.integer(LOCALE %in% c("Town: Distant", "Town: Remote", "Town: Fringe")),
+    LOCALE_RURAL  = as.integer(LOCALE %in% c("Rural: Remote", "Rural: Fringe", "Rural: Distant")),
+    LOCALE_CITY   = as.integer(LOCALE %in% c("City: Midsize", "City: Small", "City: Large")),
     
     # Region
+    OBEREG    = as.character(OBEREG),
+    
     NORTHEAST = as.integer(OBEREG %in% c(
       "New England (CT, ME, MA, NH, RI, VT)",
       "Mid East (DE, DC, MD, NJ, NY, PA)"
@@ -163,10 +166,30 @@ app_df <- raw_df %>%
     )),
     
     # Highest degree offered
+    HDEGOFR1   = as.character(HDEGOFR1),
     HDEOFR_DOC = ifelse(HDEGOFR1 %in% c("Doctor's degree - research/scholarship", "Doctor's degree - professional practice", "Doctor's degree - research/scholarship and professional practice", "Doctor's degree - other"), 1, 0),
     HDEOFR_MAS = ifelse(HDEGOFR1 %in% c("Master's degree"), 1, 0),
     HDEOFR_BAC = ifelse(HDEGOFR1 %in% c("Bachelor's degree"), 1, 0)
   )
+
+# Map CONTROL values to two display groups
+sector_from_control <- function(ctrl) ifelse(ctrl == "Public", "Public", "Private")
+
+# Tuition slider bounds: computed once from full dataset, never change
+TUITION_BOUNDS <- list(
+  public_in_state     = list(var = "TUITION2", sector = "Public",  label = "Public In-State Tuition ($)"),
+  public_out_of_state = list(var = "TUITION3", sector = "Public",  label = "Public Out-of-State Tuition ($)"),
+  private             = list(var = "TUITION3", sector = "Private", label = "Private Tuition ($)")
+)
+
+tuition_slider_range <- lapply(TUITION_BOUNDS, function(m) {
+  vals <- app_df[[m$var]][sector_from_control(app_df$CONTROL) == m$sector]
+  vals <- vals[!is.na(vals) & vals > 0]
+  list(
+    mn = floor(min(vals)   / 100) * 100,
+    mx = ceiling(max(vals) / 100) * 100
+  )
+})
 
 # ----------- PRETTY NAMES SOURCE ----------- 
 # Format: "VARIABLE_NAME", "Pretty Name", "Category Name"
@@ -282,9 +305,6 @@ sig_stars <- function(p) {
   }, character(1))
 }
 
-# Map CONTROL values to two display groups
-sector_from_control <- function(ctrl) ifelse(ctrl == "Public", "Public", "Private")
-
 # Combined Y-group control options
 y_group_choices <- c(
   "Public in state" = "public_in_state",
@@ -304,28 +324,101 @@ y_group_meta <- list(
   private = list(y_var = "TUITION3", sector = "Private")
 )
 
+# Minimum rows for OLS: intercept + p predictors needs residual df >= 1 => n >= p + 2
+MIN_ROWS_LM <- function(p) as.integer(p) + 2L
+null_chr <- function(x) if (is.null(x)) character(0) else x
+`%||%` <- function(a, b) if (!is.null(a) && length(a) && nzchar(a[1])) a else b
+
 # Predictors whose values are already on a 0-100 percentage scale (IPEDS)
 vars_ipeds_percent_scale <- c("GBA6RTT", "GBA4RTT", "GRRTM", "GRRTW", "DVADM01", "RMINSTTP", "RMOUSTTP")
 
+# HOVER HELPER
+# Format the x-axis predictor value for each row
 hover_x_lines <- function(x1, xv) {
   if (is.null(x1) || !length(xv)) return(character(0))
   lab <- label_var(x1)
   if (x1 %in% vars_ipeds_percent_scale) {
-    paste0(
-      lab, ": ",
-      ifelse(is.na(xv), "\u2014", paste0(format(xv, trim = TRUE, scientific = FALSE), "%"))
-    )
+    paste0(lab, ": ", ifelse(is.na(xv), "\u2014", paste0(xv, "%")))
   } else {
-    paste0(
-      lab, ": ",
-      ifelse(is.na(xv), "\u2014", format(xv, big.mark = ",", trim = TRUE, scientific = FALSE))
-    )
+    paste0(lab, ": ", ifelse(is.na(xv), "\u2014", format(xv, big.mark = ",", trim = TRUE, scientific = FALSE)))
   }
 }
 
-# Minimum rows for OLS: intercept + p predictors needs residual df >= 1 => n >= p + 2
-MIN_ROWS_LM <- function(p) as.integer(p) + 2L
+# Build per-row hover text (vectorised over all rows in dat)
+build_hover <- function(dat, x1, input) {
+  xv <- if (!is.null(x1) && x1 %in% names(dat)) dat[[x1]] else rep(NA_real_, nrow(dat))
+  hx <- hover_x_lines(x1, xv)
+  
+  y_group_lab  <- y_group_labels[dat$y_group]
+  tuition_line <- paste0(y_group_lab, ": $",
+                         format(dat[["y_plot"]], big.mark = ",", trim = TRUE, scientific = FALSE))
+  
+  filter_line <- build_filter_summary(dat, input)
+  
+  paste0(
+    "<b>", dat$INSTNM, "</b><br>",
+    if (length(hx)) paste0(hx, "<br>") else "",
+    tuition_line,
+    if (nzchar(filter_line[1])) paste0("<br>", filter_line) else ""
+  )
+}
 
+# Build a single filter-summary string showing only non-default active filters
+build_filter_summary <- function(dat, input) {
+  n <- nrow(dat)
+  
+  # Admission rate — per-row, only when slider is moved
+  adm_s <- input$adm_rate_filter
+  adm_line <- if (!is.null(adm_s) && !(adm_s[1] == 0 && adm_s[2] == 100)) {
+    ifelse(is.na(dat$DVADM01), "Admission Rate: \u2014",
+           paste0("Admission Rate: ", dat$DVADM01, "%"))
+  } else {
+    rep("", n)
+  }
+  
+  # Locale — per-row, only when subset selected
+  loc     <- input$locale_filter
+  loc_all <- unname(choices_by_category("School Location"))
+  locale_line <- if (!is.null(loc) && length(loc) > 0 && length(loc) < length(loc_all)) {
+    ifelse(is.na(dat$LOCALE) | dat$LOCALE == "", "Location: \u2014",
+           paste0("Location: ", dat$LOCALE))
+  } else {
+    rep("", n)
+  }
+  
+  # Region — per-row, only when something checked
+  reg <- input$region_filter
+  region_line <- if (!is.null(reg) && length(reg) > 0) {
+    ifelse(is.na(dat$OBEREG) | dat$OBEREG == "", "Region: \u2014",
+           paste0("Region: ", dat$OBEREG))
+  } else {
+    rep("", n)
+  }
+  
+  # Degree — per-row, only when something checked
+  deg <- input$degree_filter
+  degree_line <- if (!is.null(deg) && length(deg) > 0) {
+    ifelse(is.na(dat$HDEGOFR1) | dat$HDEGOFR1 == "", "Highest Degree: \u2014",
+           paste0("Highest Degree: ", dat$HDEGOFR1))
+  } else {
+    rep("", n)
+  }
+  
+  # Combine all four vectors row-wise, dropping empty strings
+  apply_lines <- list(adm_line, locale_line, region_line, degree_line)
+  Reduce(function(acc, x) {
+    both_empty  <- !nzchar(acc) & !nzchar(x)
+    acc_empty   <- !nzchar(acc) &  nzchar(x)
+    x_empty     <-  nzchar(acc) & !nzchar(x)
+    neither     <-  nzchar(acc) &  nzchar(x)
+    ifelse(both_empty, "",
+           ifelse(acc_empty,  x,
+                  ifelse(x_empty,    acc,
+                         paste0(acc, "<br>", x))))
+  }, apply_lines)
+}
+
+# UI
 ui <- fluidPage(
   titlePanel(
     title = div(style = "text-align:center;", "Interactive Visualizations (Tuition)"),
@@ -426,7 +519,22 @@ ui <- fluidPage(
                 "Institution Special Type",
                 choices = choices_by_category("Institution Special Type"),
                 selected = NULL
-              )
+              ),
+              
+              tags$hr(),
+              
+              sliderInput(
+                "adm_rate_filter",
+                "Admission Rate (%)",
+                min = 0, max = 100,
+                value = c(0, 100),
+                step = 1,
+                post = "%"
+              ),
+              
+              tags$hr(),
+              
+              uiOutput("tuition_sliders_ui")
             )
           )
         )
@@ -519,95 +627,65 @@ null_chr <- function(x) if (is.null(x)) character(0) else x
 
 server <- function(input, output, session) {
   filtered_data <- reactive({
-    df <- app_df
-    
+    df  <- app_df
     loc <- input$locale_filter
     reg <- input$region_filter
     deg <- input$degree_filter
     spe <- input$special_filter
-
-    # -----------------------
-    # LOCALE FILTER
-    # -----------------------
+    
+    # Locale (OR logic across selected options)
     if (!is.null(loc) && length(loc)) {
-      locale_map <- c(
-        LOCALE_CITY   = "LOCALE_CITY",
-        LOCALE_SUBURB = "LOCALE_SUBURB",
-        LOCALE_TOWN   = "LOCALE_TOWN",
-        LOCALE_RURAL  = "LOCALE_RURAL"
-      )
-      
-      keep <- rep(FALSE, nrow(df))
-      
-      for (v in loc) {
-        keep <- keep | df[[locale_map[[v]]]] == 1
-      }
-      
-      df <- df[keep, ]
+      keep <- Reduce(`|`, lapply(loc, function(v) df[[v]] == 1), accumulate = FALSE)
+      df   <- df[keep, ]
     }
     
-    # -----------------------
-    # REGION FILTER
-    # -----------------------
+    # Region
     if (!is.null(reg) && length(reg)) {
-      region_map <- c(
-        NORTHEAST = "NORTHEAST",
-        MIDWEST   = "MIDWEST",
-        SOUTH     = "SOUTH",
-        WEST      = "WEST"
-      )
-      
-      keep <- rep(FALSE, nrow(df))
-      
-      for (v in reg) {
-        keep <- keep | df[[region_map[[v]]]] == 1
-      }
-      
-      df <- df[keep, ]
+      keep <- Reduce(`|`, lapply(reg, function(v) df[[v]] == 1), accumulate = FALSE)
+      df   <- df[keep, ]
     }
     
-    # -----------------------
-    # DEGREE FILTER
-    # -----------------------
+    # Highest degree
     if (!is.null(deg) && length(deg)) {
-      degree_map <- c(
-        HDEOFR_DOC = "HDEOFR_DOC",
-        HDEOFR_MAS = "HDEOFR_MAS",
-        HDEOFR_BAC = "HDEOFR_BAC"
+      keep <- Reduce(`|`, lapply(deg, function(v) df[[v]] == 1), accumulate = FALSE)
+      df   <- df[keep, ]
+    }
+    
+    # Special type (AND logic — each checked box must be satisfied)
+    for (v in spe) df <- df[df[[v]] == 1, ]
+    
+    # Admission rate slider
+    adm <- input$adm_rate_filter
+    if (!is.null(adm) && length(adm) == 2)
+      df <- df[is.na(df$DVADM01) | (df$DVADM01 >= adm[1] & df$DVADM01 <= adm[2]), ]
+    
+    # Tuition sliders — per Y-group, applied only to the matching sector
+    for (g in names(TUITION_BOUNDS)) {
+      sv <- input[[paste0("tuition_filter_", g)]]
+      if (is.null(sv) || length(sv) != 2) next
+      m         <- TUITION_BOUNDS[[g]]
+      in_sector <- sector_from_control(df$CONTROL) == m$sector
+      out_range <- !is.na(df[[m$var]]) & (df[[m$var]] < sv[1] | df[[m$var]] > sv[2])
+      df        <- df[!(in_sector & out_range), ]
+    }
+    
+    df
+  })
+  
+  output$tuition_sliders_ui <- renderUI({
+    gy <- selected_y_groups()
+    if (!length(gy)) return(NULL)
+    sliders <- lapply(gy, function(g) {
+      b <- tuition_slider_range[[g]]
+      sliderInput(
+        inputId = paste0("tuition_filter_", g),
+        label   = TUITION_BOUNDS[[g]]$label,
+        min = b$mn, max = b$mx,
+        value = c(b$mn, b$mx),
+        step = 100, pre = "$", sep = ","
       )
-      
-      keep <- rep(FALSE, nrow(df))
-      
-      for (v in deg) {
-        keep <- keep | df[[degree_map[[v]]]] == 1
-      }
-      
-      df <- df[keep, ]
-    }
-    
-    # -----------------------
-    # SPECIAL TYPE FILTER
-    # -----------------------
-    if (!is.null(spe) && length(spe)) {
-      
-      if ("HBCU_YES" %in% spe) {
-        df <- df[df$HBCU_YES == 1, ]
-      }
-      
-      if ("RELAFFIL_YES" %in% spe) {
-        df <- df[df$RELAFFIL_YES == 1, ]
-      }
-      
-      if ("ASSOC1_YES" %in% spe) {
-        df <- df[df$ASSOC1_YES == 1, ]
-      }
-      
-      if ("ATHASSOC_YES" %in% spe) {
-        df <- df[df$ATHASSOC_YES == 1, ]
-      }
-    }
-    
-    df 
+    })
+    do.call(tagList, sliders)
   })
   
   selected_y_groups <- reactive({
@@ -646,7 +724,7 @@ server <- function(input, output, session) {
     x_vars <- selected_predictors()
     gy <- selected_y_groups()
     if (!length(gy)) return(app_df[0, , drop = FALSE])
-    cols <- unique(c("INSTNM", "CONTROL", "TUITION2", "TUITION3", x_vars))
+    cols <- unique(c("INSTNM", "CONTROL", "LOCALE", "OBEREG", "HDEGOFR1", "DVADM01", "TUITION2", "TUITION3", x_vars))
     base_dat <- filtered_data() %>% select(all_of(cols))
     if (length(x_vars) > 0) base_dat <- base_dat %>% filter(if_all(all_of(x_vars), ~ !is.na(.)))
 
@@ -742,94 +820,63 @@ server <- function(input, output, session) {
   # Main scatter plot + fitted line(s)
   output$tuition_plot <- renderPlotly({
     dat <- plot_data()
-    if (!nrow(dat)) {
-      return(plot_ly() %>% layout(title = "No data available for selected options"))
-    }
-
-    lims <- axis_limits()
-    y_title <- "Tuition"
-    x1 <- first_predictor()
-    xv <- if (!is.null(x1) && x1 %in% names(dat)) dat[[x1]] else rep(NA_real_, nrow(dat))
-    hx <- hover_x_lines(x1, xv)
-    y_group_lab <- y_group_labels[dat$y_group]
-    hover <- paste0(
-      "<b>", dat$INSTNM, "</b><br>",
-      if (length(hx)) paste0(hx, "<br>") else "",
-      y_group_lab, ": ",
-      format(dat[["y_plot"]], big.mark = ",", trim = TRUE, scientific = FALSE)
-    )
+    if (!nrow(dat)) return(plot_ly() %>% layout(title = "No data available for selected options"))
+    
+    lims   <- axis_limits()
+    x1     <- first_predictor()
     colors <- c(public_in_state = "#1f77b4", public_out_of_state = "#17becf", private = "#ff7f0e")
-
-    br <- which(!dat$is_match)
-    base_dat <- dat[br, , drop = FALSE]
-    if (nrow(base_dat) > 0) base_dat$ht <- hover[br]
-    mr <- which(dat$is_match)
-    match_dat <- dat[mr, , drop = FALSE]
-    if (nrow(match_dat) > 0) match_dat$ht <- hover[mr]
-
+    hover  <- build_hover(dat, x1, input)
+    
+    base_dat  <- dat[!dat$is_match, , drop = FALSE]
+    match_dat <- dat[ dat$is_match, , drop = FALSE]
+    if (nrow(base_dat)  > 0) base_dat$ht  <- hover[!dat$is_match]
+    if (nrow(match_dat) > 0) match_dat$ht <- hover[ dat$is_match]
+    
     p <- plot_ly(type = "scatter", mode = "markers")
-    if (nrow(base_dat) > 0) {
-      for (grp in names(colors)) {
-        dg <- base_dat[base_dat$y_group == grp, , drop = FALSE]
-        if (!nrow(dg)) next
-        p <- plotly::add_markers(
-          p, data = dg, x = ~x_plot, y = ~y_plot, text = ~ht, hoverinfo = "text",
-          name = y_group_labels[[grp]], legendgroup = grp,
-          marker = list(color = colors[[grp]], size = 7, opacity = 0.8),
-          showlegend = TRUE
-        )
-      }
+    
+    # Base markers
+    for (grp in names(colors)) {
+      dg <- base_dat[base_dat$y_group == grp, , drop = FALSE]
+      if (!nrow(dg)) next
+      p <- plotly::add_markers(p, data = dg, x = ~x_plot, y = ~y_plot,
+                               text = ~ht, hoverinfo = "text", name = y_group_labels[[grp]], legendgroup = grp,
+                               marker = list(color = colors[[grp]], size = 7, opacity = 0.8), showlegend = TRUE)
     }
-    if (nrow(match_dat) > 0) {
-      for (grp in names(colors)) {
-        dg <- match_dat[match_dat$y_group == grp, , drop = FALSE]
-        if (!nrow(dg)) next
-        p <- plotly::add_markers(
-          p, data = dg, x = ~x_plot, y = ~y_plot, text = ~ht, hoverinfo = "text",
-          name = y_group_labels[[grp]], legendgroup = grp,
-          marker = list(color = colors[[grp]], size = 12, opacity = 1, line = list(color = "black", width = 2)),
-          showlegend = FALSE
-        )
-      }
+    
+    # Highlighted search markers
+    for (grp in names(colors)) {
+      dg <- match_dat[match_dat$y_group == grp, , drop = FALSE]
+      if (!nrow(dg)) next
+      p <- plotly::add_markers(p, data = dg, x = ~x_plot, y = ~y_plot,
+                               text = ~ht, hoverinfo = "text", name = y_group_labels[[grp]], legendgroup = grp,
+                               marker = list(color = colors[[grp]], size = 12, opacity = 1,
+                                             line = list(color = "black", width = 2)),
+                               showlegend = FALSE)
     }
-
-    mf <- model_fits()
+    
+    # Fitted lines (other predictors held at median)
+    mf     <- model_fits()
     x_vars <- selected_predictors()
-    md <- model_data()
-
-    if (length(x_vars) < 1 || is.null(x1) || !nrow(md) || !length(mf)) {
-      x_title <- if (!is.null(x1)) label_var(x1) else ""
-      return(tuition_plot_layout(p, lims, y_title, x_title))
+    md     <- model_data()
+    if (length(x_vars) >= 1 && !is.null(x1) && nrow(md) && length(mf)) {
+      x_seq <- seq(lims$x_range[1], lims$x_range[2], length.out = 100)
+      for (grp in names(mf)) {
+        fit <- mf[[grp]]$fit
+        if (is.null(fit)) next
+        md_grp  <- md[md$y_group == grp, x_vars, drop = FALSE]
+        meds    <- vapply(md_grp, median, na.rm = TRUE, FUN.VALUE = numeric(1))
+        newdata <- as.data.frame(lapply(meds, rep, length(x_seq)))
+        names(newdata) <- x_vars
+        newdata[[x1]]  <- x_seq
+        p <- plotly::add_lines(p,
+                               data = data.frame(x_plot = x_seq, y_hat = as.numeric(predict(fit, newdata = newdata))),
+                               x = ~x_plot, y = ~y_hat,
+                               line = list(color = colors[[grp]], width = 2),
+                               hoverinfo = "skip", showlegend = FALSE, inherit = FALSE)
+      }
     }
-
-    x_seq <- seq(lims$x_range[1], lims$x_range[2], length.out = 100)
-
-    # Draw fitted line while holding non-x predictors at medians
-    add_line_for_fit <- function(p, fit, med_df, line_color) {
-      if (is.null(fit)) return(p)
-      meds <- vapply(med_df[x_vars], stats::median, na.rm = TRUE, FUN.VALUE = numeric(1))
-      newdata <- as.data.frame(lapply(meds, rep, length(x_seq)))
-      names(newdata) <- x_vars
-      newdata[[x1]] <- x_seq
-      plotly::add_lines(
-        p,
-        data = data.frame(x_plot = x_seq, y_hat = as.numeric(predict(fit, newdata = newdata))),
-        x = ~x_plot, y = ~y_hat,
-        line = list(color = line_color, width = 2),
-        hoverinfo = "skip",
-        showlegend = FALSE,
-        inherit = FALSE
-      )
-    }
-
-    for (grp in names(mf)) {
-      fit <- mf[[grp]]$fit
-      if (is.null(fit)) next
-      md_grp <- md[md$y_group == grp, , drop = FALSE]
-      p <- add_line_for_fit(p, fit, md_grp, colors[[grp]])
-    }
-
-    tuition_plot_layout(p, lims, y_title, label_var(x1))
+    
+    tuition_plot_layout(p, lims, "Tuition", if (!is.null(x1)) label_var(x1) else "")
   })
 
   # Q-Q + histogram of residuals (single model or Public / Private rows)
