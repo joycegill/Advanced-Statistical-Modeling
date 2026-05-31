@@ -318,6 +318,12 @@ y_group_labels <- c(
   private = "Private tuition"
 )
 
+y_group_tab_labels <- c(
+  public_in_state     = "In-State",
+  public_out_of_state = "Out-of-State",
+  private             = "Private"
+)
+
 y_group_meta <- list(
   public_in_state = list(y_var = "TUITION2", sector = "Public"),
   public_out_of_state = list(y_var = "TUITION3", sector = "Public"),
@@ -420,109 +426,279 @@ build_filter_summary <- function(dat, input) {
 
 # UI
 ui <- fluidPage(
-  titlePanel(
-    title = div(style = "text-align:center;", "Interactive Visualizations (Tuition)"),
-    windowTitle = "Interactive Visualizations (Tuition)"
+  title = "Interactive Tuition Visualizations",
+
+  tags$head(
+    tags$style(HTML("
+      body {
+        font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+        background-color: #f0f2f7;
+        color: #2c3e50;
+      }
+
+      /* ---- App header ---- */
+      .app-header {
+        padding: 16px 0 4px;
+        margin-bottom: 12px;
+      }
+      .app-header h2 {
+        margin: 0 0 3px 0;
+        font-size: 1.5em;
+        font-weight: 700;
+        color: #1c2b3a;
+        letter-spacing: 0.1px;
+      }
+      .app-header .subtitle {
+        margin: 0;
+        font-size: 0.88em;
+        color: #7a90a8;
+        font-weight: 400;
+      }
+
+      /* ---- Search bar ---- */
+      .search-wrap { margin-top: 20px; margin-bottom: 16px; }
+      .search-wrap label { display: none; }
+      .search-wrap .form-control {
+        border-radius: 22px;
+        padding: 8px 18px;
+        border: 1.5px solid #c8d3e0;
+        box-shadow: 0 1px 4px rgba(44,62,80,0.07);
+        font-size: 0.91em;
+        transition: border-color 0.18s, box-shadow 0.18s;
+      }
+      .search-wrap .form-control:focus {
+        border-color: #2471a3;
+        box-shadow: 0 0 0 3px rgba(36,113,163,0.13);
+        outline: none;
+      }
+
+      /* ---- Card panels ---- */
+      .well {
+        background: #ffffff;
+        border: 1px solid #dde4ef;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(44,62,80,0.07);
+        padding: 16px 15px 14px;
+      }
+      .well h4 {
+        font-size: 0.8em;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.9px;
+        color: #1a3a5c;
+        border-bottom: 2px solid #e8eef6;
+        padding-bottom: 8px;
+        margin: 0 0 12px 0;
+      }
+
+      /* ---- Tabs ---- */
+      .nav-tabs { border-bottom: 2px solid #dde4ef; }
+      .nav-tabs > li > a {
+        color: #6b89a5;
+        border: none !important;
+        border-radius: 0 !important;
+        padding: 7px 14px;
+        font-size: 0.85em;
+        font-weight: 500;
+        transition: color 0.15s;
+        background: transparent !important;
+      }
+      .nav-tabs > li > a:hover { color: #2471a3; }
+      .nav-tabs > li.active > a,
+      .nav-tabs > li.active > a:focus,
+      .nav-tabs > li.active > a:hover {
+        color: #1a3a5c !important;
+        border-bottom: 2.5px solid #2471a3 !important;
+        font-weight: 500;
+        background: transparent !important;
+      }
+      #model_stats_tabs > .nav-tabs { text-align: left; }
+      .tab-content {
+        background: #ffffff;
+        border: 1px solid #dde4ef;
+        border-top: none;
+        border-radius: 0 0 8px 8px;
+      }
+
+      /* ---- Form controls ---- */
+      .control-label {
+        font-size: 0.83em;
+        font-weight: 600;
+        color: #3b5268;
+        margin-bottom: 3px;
+      }
+      .selectize-input {
+        border-radius: 6px !important;
+        border: 1.5px solid #c8d3e0 !important;
+        font-size: 0.87em !important;
+        box-shadow: none !important;
+      }
+      .selectize-input.focus {
+        border-color: #2471a3 !important;
+        box-shadow: 0 0 0 3px rgba(36,113,163,0.1) !important;
+      }
+      .checkbox label, .radio label {
+        font-size: 0.86em;
+        color: #46647d;
+        cursor: pointer;
+      }
+
+      /* ---- Slider ---- */
+      .irs-bar, .irs-bar-edge {
+        background: #2471a3;
+        border-top: 1px solid #1a5f8a;
+        border-bottom: 1px solid #1a5f8a;
+      }
+      .irs-slider { background: #2471a3; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.18); }
+      .irs-from, .irs-to, .irs-single {
+        background: #1a3a5c;
+        font-size: 0.8em;
+        border-radius: 4px;
+      }
+
+      /* ---- Dividers ---- */
+      hr { border-top: 1px solid #e8eef6; margin: 10px 0; }
+
+      /* ---- Model stats panel ---- */
+      #model_stats { font-size: 0.87em; line-height: 1.55; }
+      #model_stats b { color: #1a3a5c; }
+
+      /* ---- X-axis note ---- */
+      #selected_x_note { margin-top: 8px; }
+      #selected_x_note em { color: #8a9eb5; font-size: 0.83em; }
+
+      /* ---- Scrollable filter panel ---- */
+      .filter-scroll {
+        max-height: calc(100vh - 200px);
+        overflow-y: auto;
+        padding-right: 4px;
+      }
+      .filter-scroll::-webkit-scrollbar { width: 4px; }
+      .filter-scroll::-webkit-scrollbar-thumb { background: #c8d3e0; border-radius: 3px; }
+
+      /* ---- Predictor note text ---- */
+      .predictor-note {
+        font-size: 0.82em;
+        color: #5a7a94;
+        font-weight: 600;
+        margin: 6px 0 10px 0;
+        line-height: 1.45;
+      }
+    "))
   ),
+
   fluidRow(
     column(
-      width = 12,
+      width = 3,
       div(
-        style = "max-width:420px; margin: 0 auto 12px auto;",
-        textInput("school_search", "Search school name", placeholder = "Type part of a school name...")
+        class = "app-header",
+        h2("Interactive Tuition Visualizations"),
+        p(class = "subtitle", "Explore relationships between institutional characteristics and tuition across U.S. colleges and universities")
       )
-    )
+    ),
+    column(
+      width = 6,
+      div(
+        class = "search-wrap",
+        textInput("school_search", "Search school name", placeholder = "Search school name...")
+      )
+    ),
+    column(width = 3)
   ),
+
   fluidRow(
     column(
       width = 3,
       wellPanel(
-        h4("Model Builder"),
+        h4("Build Model"),
         tabsetPanel(
           id = "left_panel_tabs",
           type = "tabs",
-          
+
           # -------------------------
           # TAB 1: MODEL INPUTS
           # -------------------------
           tabPanel(
             "Model Inputs",
-            
-            checkboxGroupInput(
-              "y_groups",
-              "Select tuition groups (Y)",
-              choices = y_group_choices,
-              selected = unname(y_group_choices)
-            ),
-            
-            tags$p(
-              style = "font-weight: bold; margin-bottom: 8px;",
-              "Select predictors (X). You may choose more than one per category; log/sqrt transforms are applied in the data where indicated."
-            ),
-            
             tags$div(
-              style = "color: #737373;",
-              selectInput("enrollment_vars", "Enrollment & student composition", choices = choices_by_category("Enrollment & student composition"), multiple = TRUE),
-              selectInput(
-                "selectivity_vars",
-                "Selectivity & student outcomes",
-                choices = choices_by_category("Selectivity & outcomes"),
-                multiple = TRUE,
-                # pre-select
-                selected = "GBA6RTT"
+              style = "padding: 10px 2px 6px;",
+
+              checkboxGroupInput(
+                "y_groups",
+                "Select tuition groups (Y)",
+                choices = y_group_choices,
+                selected = unname(y_group_choices)
+              ),
+
+              tags$p(
+                class = "predictor-note",
+                "Select predictors (X). You may choose more than one per category; log/sqrt transforms are applied in the data where indicated."
+              ),
+
+              tags$div(
+                selectInput("enrollment_vars", "Enrollment & student composition", choices = choices_by_category("Enrollment & student composition"), multiple = TRUE),
+                selectInput(
+                  "selectivity_vars",
+                  "Selectivity & student outcomes",
+                  choices = choices_by_category("Selectivity & outcomes"),
+                  multiple = TRUE,
+                  # pre-select
+                  selected = "GBA6RTT"
                 ),
-              selectInput("campus_vars", "Campus life & resources", choices = choices_by_category("Campus life & resources"), multiple = TRUE),
-              selectInput("costs_vars", "Costs, aid & debt", choices = choices_by_category("Costs & aid"), multiple = TRUE),
-              selectInput("profile_vars", "Institution profile", choices = choices_by_category("Institution profile"), multiple = TRUE)
-            ),
-            
-            selectInput("x_axis_var", "Select predictor for X axis", choices = character(0))
+                selectInput("campus_vars", "Campus life & resources", choices = choices_by_category("Campus life & resources"), multiple = TRUE),
+                selectInput("costs_vars", "Costs, aid & debt", choices = choices_by_category("Costs & aid"), multiple = TRUE),
+                selectInput("profile_vars", "Institution profile", choices = choices_by_category("Institution profile"), multiple = TRUE)
+              ),
+
+              selectInput("x_axis_var", "Select predictor for X axis", choices = character(0))
+            )
           ),
-          
+
           # -------------------------
           # TAB 2: SCHOOL FILTER
           # -------------------------
           tabPanel(
             "School Filter",
             tags$div(
-              style = "padding:10px; color:#666;",
-              
+              class = "filter-scroll",
+              style = "padding: 10px 2px 6px;",
+
               checkboxGroupInput(
                 "locale_filter",
                 label = "Degree of urbanization (Locale)",
                 choices = choices_by_category("School Location"),
                 selected = choices_by_category("School Location") %>% names()
               ),
-              
+
               tags$hr(),
-              
+
               checkboxGroupInput(
                 "region_filter",
                 label = "US Region",
                 choices = choices_by_category("School Region"),
                 selected = NULL
               ),
-              
+
               tags$hr(),
-              
+
               checkboxGroupInput(
                 "degree_filter",
                 "Highest Degree Offered",
                 choices = choices_by_category("Highest Degree Offered"),
                 selected = NULL
               ),
-              
+
               tags$hr(),
-              
+
               checkboxGroupInput(
                 "special_filter",
                 "Institution Special Type",
                 choices = choices_by_category("Institution Special Type"),
                 selected = NULL
               ),
-              
+
               tags$hr(),
-              
+
               sliderInput(
                 "adm_rate_filter",
                 "Admission Rate (%)",
@@ -531,9 +707,9 @@ ui <- fluidPage(
                 step = 1,
                 post = "%"
               ),
-              
+
               tags$hr(),
-              
+
               uiOutput("tuition_sliders_ui")
             )
           )
@@ -812,7 +988,7 @@ server <- function(input, output, session) {
       style = "margin-top:8px; color:#555;",
       HTML(paste0(
         "<em>Model predictors: ", paste(label_var(x_vars), collapse = ", "), "</em><br>",
-        "<em>X-axis: ", x_lab, " (Predictor for X axis).</em><br>"
+        "<em>X-axis: ", x_lab, "</em><br>"
       ))
     )
   })
@@ -1035,7 +1211,7 @@ server <- function(input, output, session) {
     }
 
     tab_body <- function(html) tags$div(style = "margin-top: 12px;", HTML(html))
-    tabs <- lapply(gy, function(grp) tabPanel(y_group_labels[[grp]], tab_body(format_model_html(mf[[grp]], y_group_labels[[grp]]))))
+    tabs <- lapply(gy, function(grp) tabPanel(y_group_tab_labels[[grp]], tab_body(format_model_html(mf[[grp]], y_group_labels[[grp]]))))
     tagList(
       do.call(tabsetPanel, c(list(id = "model_stats_tabs", type = "tabs"), tabs)),
       tags$br(),
